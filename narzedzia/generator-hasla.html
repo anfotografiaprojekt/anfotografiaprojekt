@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generator hasła do panelu</title>
+<style>
+  :root{--bg:#FAF7F2;--t:#2B2622;--t2:#5E544C;--gl:#7A5240;--lin:#E4D9CD;--ok:#2E6B3A;--cz:#A3312A}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--t);font:16px/1.55 'Segoe UI',system-ui,sans-serif;padding:32px 16px}
+  main{max-width:640px;margin:0 auto;background:#fff;border:1px solid var(--lin);border-radius:12px;padding:28px}
+  h1{font-family:Georgia,serif;font-weight:400;font-size:1.9rem;margin:0 0 6px}
+  p{margin:0 0 14px;color:var(--t2)}
+  label{display:block;font-weight:600;margin:14px 0 6px}
+  input{width:100%;min-height:46px;padding:10px 12px;border:1px solid #CDBFB2;border-radius:6px;font:inherit}
+  input:focus{outline:none;border-color:var(--gl);box-shadow:0 0 0 3px rgba(122,82,64,.2)}
+  button{min-height:44px;padding:0 18px;border-radius:6px;border:1px solid var(--gl);background:var(--gl);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+  button.jasny{background:#fff;color:var(--gl)}
+  button:focus-visible{outline:2px solid var(--gl);outline-offset:2px}
+  .blad{color:var(--cz);font-weight:600;margin-top:10px}
+  .wynik{margin-top:22px;border-top:1px solid var(--lin);padding-top:16px}
+  .pole{display:flex;gap:8px;margin-bottom:6px}
+  .pole input{font-family:Consolas,monospace;font-size:.85rem;background:#F2EBE3}
+  .ok{color:var(--ok);font-weight:600}
+  ol{padding-left:20px;color:var(--t2)} li{margin-bottom:6px}
+  code{background:#F2EBE3;padding:1px 5px;border-radius:3px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Hasło do panelu administratora</h1>
+  <p>Narzędzie działa wyłącznie w tej przeglądarce — nic nie jest wysyłane do internetu. Hasło nie jest nigdzie zapisywane.</p>
+
+  <form id="f" novalidate>
+    <label for="h1">Nowe hasło (min. 10 znaków)</label>
+    <input id="h1" type="password" autocomplete="new-password" required>
+    <label for="h2">Powtórz hasło</label>
+    <input id="h2" type="password" autocomplete="new-password" required>
+    <p style="margin-top:14px"><button type="submit">Wygeneruj</button></p>
+    <p class="blad" id="blad" role="alert" hidden></p>
+  </form>
+
+  <section class="wynik" id="wynik" hidden aria-live="polite">
+    <p class="ok">Gotowe. Dodaj obie wartości w Cloudflare jako sekrety (typ „Secret”):</p>
+    <label for="w1">Nazwa: <code>ADMIN_PASSWORD_HASH</code></label>
+    <div class="pole"><input id="w1" readonly><button type="button" class="jasny" data-kopiuj="w1">Kopiuj</button></div>
+    <label for="w2">Nazwa: <code>SESSION_SECRET</code></label>
+    <div class="pole"><input id="w2" readonly><button type="button" class="jasny" data-kopiuj="w2">Kopiuj</button></div>
+    <ol>
+      <li>Cloudflare → <strong>Workers &amp; Pages</strong> → projekt → <strong>Settings → Variables and Secrets → Add</strong>.</li>
+      <li>Type: <strong>Secret</strong>, wpisz nazwę i wklej wartość. Powtórz dla drugiej.</li>
+      <li><strong>Deployments → ⋯ → Retry deployment</strong> (sekrety działają po ponownym wdrożeniu).</li>
+    </ol>
+  </section>
+</main>
+<script>
+(function () {
+  'use strict';
+  var b64u = function (buf) {
+    var b = new Uint8Array(buf), s = '';
+    for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+    return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  };
+  async function hash(haslo) {
+    var sol = crypto.getRandomValues(new Uint8Array(16));
+    var k = await crypto.subtle.importKey('raw', new TextEncoder().encode(haslo), 'PBKDF2', false, ['deriveBits']);
+    var bity = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: sol, iterations: 100000 }, k, 256);
+    return 'pbkdf2$100000$' + b64u(sol) + '$' + b64u(bity);
+  }
+  var f = document.getElementById('f'), bl = document.getElementById('blad');
+  f.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var a = document.getElementById('h1').value, b = document.getElementById('h2').value, msg = '';
+    if (a.length < 10) msg = 'Hasło musi mieć co najmniej 10 znaków.';
+    else if (a !== b) msg = 'Hasła się różnią.';
+    else if (!window.crypto || !crypto.subtle) msg = 'Ta przeglądarka nie obsługuje szyfrowania — otwórz plik w Chrome, Edge lub Firefox.';
+    bl.textContent = msg; bl.hidden = !msg;
+    if (msg) return;
+    document.getElementById('w1').value = await hash(a);
+    document.getElementById('w2').value = b64u(crypto.getRandomValues(new Uint8Array(48)));
+    document.getElementById('h1').value = document.getElementById('h2').value = '';
+    document.getElementById('wynik').hidden = false;
+    document.getElementById('w1').focus(); document.getElementById('w1').select();
+  });
+  document.addEventListener('click', function (e) {
+    var id = e.target.getAttribute('data-kopiuj'); if (!id) return;
+    var inp = document.getElementById(id); inp.select();
+    var gotowe = function () { e.target.textContent = 'Skopiowano ✓'; setTimeout(function () { e.target.textContent = 'Kopiuj'; }, 2000); };
+    if (navigator.clipboard) navigator.clipboard.writeText(inp.value).then(gotowe, function () { document.execCommand('copy'); gotowe(); });
+    else { document.execCommand('copy'); gotowe(); }
+  });
+})();
+</script>
+</body>
+</html>

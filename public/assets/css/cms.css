@@ -9,6 +9,7 @@ html.cmsp-otwarty,html.cmsp-otwarty body{overflow:hidden}
   font-family:Jost,'Segoe UI',system-ui,sans-serif;font-size:15px;line-height:1.5;color:var(--c-t)
 }
 .cmsp *,.cmsp-tlo-modal *{box-sizing:border-box}
+.cmsp [hidden],.cmsp-tlo-modal [hidden]{display:none!important}
 .cmsp{position:fixed;inset:0;z-index:1000;background:var(--c-bg);display:flex;flex-direction:column}
 :where(.cmsp,.cmsp-tlo-modal) :where(h1,h2,h3){font-family:Cormorant,Georgia,serif;font-weight:500;line-height:1.15;margin:0;color:var(--c-t)}
 :where(.cmsp) :where(p){margin:0 0 .6em}
