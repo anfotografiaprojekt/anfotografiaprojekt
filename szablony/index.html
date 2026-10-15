@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title data-ssr="title"><!--SSR:title--></title>
+<meta name="description" content="<!--SSR:description-->" data-ssr="description">
+<link rel="canonical" href="{{DOMENA}}/">
+<meta name="anf-hreflang" data-ssr="hreflang"><!--SSR:hreflang-->
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="Anna Niedobitek">
+<meta name="theme-color" content="#FAF7F2">
+<meta name="format-detection" content="telephone=no">
+<meta name="anf-ssr" content="<!--SSR:znacznik-->">
+
+<!-- Open Graph / Twitter -->
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pl_PL">
+<meta property="og:site_name" content="Anna Niedobitek Fotografia">
+<meta property="og:title" content="<!--SSR:title-->" data-ssr="og-title">
+<meta property="og:description" content="<!--SSR:description-->" data-ssr="og-description">
+<meta property="og:url" content="{{DOMENA}}/">
+<meta property="og:image" content="{{DOMENA}}/assets/img/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Anna Niedobitek Fotografia — Z miłości do pięknych kadrów">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="<!--SSR:title-->" data-ssr="tw-title">
+<meta name="twitter:description" content="<!--SSR:description-->" data-ssr="tw-description">
+<meta name="twitter:image" content="{{DOMENA}}/assets/img/og-image.jpg">
+
+<!-- Ikony i manifest -->
+<link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+
+<!-- Czcionki własne (bez Google Fonts — zgodnie z RODO), font-display: swap -->
+<link rel="preload" href="assets/fonts/cormorant-garamond-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/jost-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" as="image" href="assets/img/fotograf-zgorzelec-sesja-plenerowa-1200.webp" imagesrcset="assets/img/fotograf-zgorzelec-sesja-plenerowa-800.webp 800w, assets/img/fotograf-zgorzelec-sesja-plenerowa-1200.webp 1200w, assets/img/fotograf-zgorzelec-sesja-plenerowa-1600.webp 1600w, assets/img/fotograf-zgorzelec-sesja-plenerowa.webp 2400w" imagesizes="100vw" fetchpriority="high" data-ssr="preload-hero">
+
+<!-- Google Search Console — weryfikacja (odkomentuj i wklej kod z GSC):
+<meta name="google-site-verification" content="WKLEJ_KOD_WERYFIKACYJNY">
+-->
+
+<!-- Google Analytics 4 — NIE włączaj bez banera zgody na cookies (RODO).
+     Po wdrożeniu banera zgody (Consent Mode v2) odkomentuj i podmień G-XXXXXXXXXX:
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('consent', 'default', { ad_storage: 'denied', analytics_storage: 'denied' });
+  gtag('js', new Date()); gtag('config', 'G-XXXXXXXXXX');
+</script>
+-->
+
+<style>/*!SSR:css*/</style>
+<script>document.documentElement.classList.add('js')</script>
+<script type="application/ld+json" data-ssr="jsonld"><!--SSR:jsonld--></script>
+</head>
+<body>
+<a class="skip" href="#tresc">Przejdź do treści</a>
+
+<div class="gora" id="gora">
+  <!--SSR:pasek-->
+  <header class="naglowek naglowek--przezr" id="naglowek">
+    <div class="naglowek-in">
+      <a class="marka" href="#start" aria-label="Anna Niedobitek Fotografia — początek strony"><span>Anna Niedobitek</span> <em>Fotografia</em></a>
+      <nav class="menu" aria-label="Menu główne">
+        <button type="button" class="burger" aria-expanded="false" aria-controls="menu-lista" aria-label="Otwórz menu"><span aria-hidden="true"></span></button>
+        <!--SSR:nav-->
+        <!--SSR:jezyki-->
+      </nav>
+    </div>
+  </header>
+</div>
+
+<!--SSR:kropki-->
+
+<main id="tresc">
+<!--SSR:start-->
+<!--SSR:oMnie-->
+<!--SSR:historia-->
+<!--SSR:aktualnosci-->
+<!--SSR:kadra-->
+<!--SSR:portfolio-->
+<!--SSR:instagram-->
+<!--SSR:kontakt-->
+</main>
+
+<!--SSR:stopka-->
+
+<!-- Dolny pasek przycisków (telefon) -->
+<div class="dolny" id="dolny">
+  <a href="#kontakt" data-dolny="kontakt"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2C6.4 2 2 6.1 2 11.4c0 3 1.5 5.6 3.8 7.3V22l3.5-1.9c.9.3 1.8.4 2.7.4 5.6 0 10-4.1 10-9.4S17.6 2 12 2zm1 12.6-2.6-2.7-5 2.7 5.5-5.8 2.6 2.7 4.9-2.7L13 14.6z"/></svg>Kontakt</a>
+  <a href="#portfolio">Portfolio</a>
+</div>
+
+<!-- Panel administratora: kłódka (panel ładuje się dopiero po kliknięciu) -->
+<button type="button" class="klodka" id="klodka" aria-label="Panel administratora — zaloguj"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span class="klodka-et">Panel</span></button>
+
+<!-- Okno „czytaj więcej” -->
+<dialog class="okno" id="okno" aria-labelledby="okno-tytul">
+  <div class="okno-glowa"><h2 id="okno-tytul">Szczegóły</h2><button type="button" class="zamknij" data-zamknij aria-label="Zamknij okno">×</button></div>
+  <div class="okno-tresc" id="okno-tresc"></div>
+</dialog>
+
+<!-- Powiększenie zdjęć (lightbox) -->
+<dialog class="lightbox" id="lightbox" aria-label="Powiększone zdjęcie">
+  <div class="lb-in">
+    <img id="lb-img" alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" width="1" height="1">
+    <button type="button" class="lb-btn lb-prev" aria-label="Poprzednie zdjęcie">←</button>
+    <button type="button" class="lb-btn lb-next" aria-label="Następne zdjęcie">→</button>
+    <button type="button" class="zamknij" data-zamknij aria-label="Zamknij powiększenie">×</button>
+    <p class="lb-dol"><span id="lb-licznik" aria-live="polite"></span><span id="lb-podpis"></span></p>
+  </div>
+</dialog>
+
+<script defer src="assets/js/dane.js?v={{WERSJA}}"></script>
+<script defer src="assets/js/render.js?v={{WERSJA}}"></script>
+<script defer src="assets/js/site.js?v={{WERSJA}}"></script>
+</body>
+</html>
