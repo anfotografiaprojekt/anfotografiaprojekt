@@ -1,0 +1,17 @@
+# Cloudflare Pages — Anna Niedobitek Fotografia
+# Wdrożenie: npx wrangler pages deploy   (albo połączenie repozytorium GitHub w panelu Cloudflare)
+name = "anna-niedobitek-fotografia"
+pages_build_output_dir = "public"
+compatibility_date = "2026-09-01"
+
+# Baza KV na treści strony, zdjęcia z panelu, sesje i wiadomości.
+# 1) npx wrangler kv namespace create TRESCI
+# 2) wklej zwrócone id poniżej (zamiast WSTAW_ID_Z_KROKU_1)
+[[kv_namespaces]]
+binding = "TRESCI"
+id = "WSTAW_ID_Z_KROKU_1"
+
+# Sekrety NIE trafiają do tego pliku. Ustaw je poleceniami:
+#   npx wrangler pages secret put ADMIN_PASSWORD_HASH
+#   npx wrangler pages secret put SESSION_SECRET
+# (opcjonalnie) INSTAGRAM_TOKEN, RESEND_API_KEY, MAIL_DO, MAIL_OD

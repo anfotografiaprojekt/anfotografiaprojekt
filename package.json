@@ -1,0 +1,16 @@
+{
+  "name": "anna-niedobitek-fotografia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Strona wizerunkowa Anna Niedobitek Fotografia z panelem administracyjnym (Cloudflare Pages + KV)",
+  "type": "module",
+  "scripts": {
+    "zbuduj": "node narzedzia/zbuduj.mjs",
+    "haslo": "node narzedzia/hash-hasla.mjs",
+    "dev": "wrangler pages dev public --kv TRESCI",
+    "wdroz": "node narzedzia/zbuduj.mjs && wrangler pages deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
