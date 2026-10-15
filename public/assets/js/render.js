@@ -139,6 +139,10 @@
   function scal(def, zap) {
     if (zap === undefined) return clone(def);
     if (Array.isArray(def) || Array.isArray(zap)) return clone(zap);
+    /* Zdjęcie (obiekt z „src”) to całość — nie wolno go łączyć z domyślnym, bo np. srcset
+     * zdjęcia zastępczego „przykleiłby się” do nowo wgranego i przeglądarka pokazałaby stare.
+     * null = zdjęcie usunięte w panelu (a nie „weź domyślne”). */
+    if ((def && typeof def === 'object' && 'src' in def) || (zap && typeof zap === 'object' && 'src' in zap)) return clone(zap);
     if (def && typeof def === 'object' && zap && typeof zap === 'object') {
       var o = {}, k;
       for (k in def) o[k] = scal(def[k], zap[k]);
