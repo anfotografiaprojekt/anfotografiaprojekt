@@ -82,6 +82,9 @@
     obietnica.then(function (r) {
       if (r._ok) {
         wskaznik('ok', (P.demo ? 'Zapisano lokalnie ' : 'Zapisano ') + godzina()); alarmZapisu('');
+        /* Cloudflare KV rozsyła nową wersję po serwerach do ok. minuty — do tego czasu ta przeglądarka
+         * pokazuje stronę z własnej kopii, więc w nowej karcie od razu widać zapisane zmiany */
+        if (!P.demo && r.zapisano) { try { localStorage.setItem('anf-zapis', JSON.stringify({ z: r.zapisano, d: dane })); } catch (e) { } }
         if (P.toastPoZapisie) { toast(P.toastPoZapisie); P.toastPoZapisie = null; }
         return;
       }

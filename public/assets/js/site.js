@@ -27,6 +27,14 @@
   var osadzony = doc.getElementById('cms-state'), state;
   try { state = Rn.stan(osadzony ? JSON.parse(osadzony.textContent) : null); } catch (e) { state = Rn.stan(); }
   site.state = state;
+  /* Świeżo zapisana wersja z panelu (ta przeglądarka) jest nowsza niż to, co podał serwer?
+   * Serwery Cloudflare potrzebują do ~60 s, żeby wszędzie pokazać nową treść — w tym czasie
+   * pokazujemy kopię zapisaną lokalnie i sprawdzamy serwer, aż ją dogoni. */
+  var lokalny = null, zapSerwera = (osadzony && osadzony.getAttribute('data-zapisano')) || '';
+  try { lokalny = JSON.parse(localStorage.getItem('anf-zapis') || 'null'); } catch (e) { }
+  if (lokalny && lokalny.z && lokalny.d && lokalny.z > zapSerwera) {
+    try { state = Rn.stan(lokalny.d); site.state = state; } catch (e) { lokalny = null; }
+  } else if (lokalny && zapSerwera) { try { localStorage.removeItem('anf-zapis'); } catch (e) { } lokalny = null; }
   site.lang = wybierzJezyk(state);
 
   /* ---------- renderowanie całości ---------- */
@@ -101,7 +109,7 @@
         if (ct.indexOf('json') < 0) throw new Error('to nie JSON');
         return r.json();
       })
-      .then(function (d) { return Rn.stan(d && d.dane ? d.dane : null); })
+      .then(function (d) { site.zapisanoSerwer = (d && d.zapisano) || ''; return Rn.stan(d && d.dane ? d.dane : null); })
       .catch(function () {
         site.demo = true;
         return IDB.get('stan').then(function (d) { return d ? Rn.stan(d) : null; });
@@ -700,9 +708,21 @@
   if (!reduced) html.classList.add('plynnie');
   if (!aktualnyHtml(state)) renderuj(state, { bezInit: true });
   initDynamiczne();
-  wczytaj().then(function (s) {
-    if (!s) return;
-    if (site.hash(s) !== site.hash(site.state) || !aktualnyHtml(s)) renderuj(s);
-  });
+  var proby = 0;
+  function sprawdzSerwer() {
+    wczytaj().then(function (s) {
+      if (!s) return;
+      if (lokalny && !site.demo) {
+        if (!site.zapisanoSerwer || site.zapisanoSerwer < lokalny.z) {     // serwer jeszcze nie ma najnowszej wersji
+          if (++proby < 24) setTimeout(sprawdzSerwer, 5000);
+          return;
+        }
+        try { localStorage.removeItem('anf-zapis'); } catch (e) { }
+        lokalny = null;
+      }
+      if (site.hash(s) !== site.hash(site.state) || !aktualnyHtml(s)) renderuj(s);
+    });
+  }
+  sprawdzSerwer();
   if (location.hash === '#panel') otworzPanel();
 })();
