@@ -79,7 +79,9 @@ Otwarcie `public/index.html` bezpośrednio z dysku uruchamia **tryb demonstracyj
 - limit: 5 nieudanych logowań / 15 min z jednego IP (komunikat „Zbyt wiele prób”),
 - zapis tylko z nagłówkiem `X-CMS: 1` i zgodnym `Origin` (CSRF),
 - zmiana hasła unieważnia sesje na innych urządzeniach; stare hasło przestaje działać od razu,
-- automatyczna kopia **10 ostatnich zapisów** (Panel → Kopia zapasowa → Przywróć),
+- automatyczna kopia poprzedniej wersji (najwyżej co 10 min, **10 ostatnich**; Panel → Kopia zapasowa → Przywróć),
+- uwaga: plan darmowy Cloudflare KV = 1000 zapisów na dobę; przy przekroczeniu panel pokazuje czerwony komunikat „Zmiany NIE zostały zapisane”,
+- każde zdjęcie ma w panelu **kadrowanie** (punkt, który zostaje widoczny po przycięciu — strzałki lub kliknięcie na zdjęciu).
 - nagłówki bezpieczeństwa i CSP w `public/_headers`.
 
 ---
