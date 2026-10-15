@@ -87,13 +87,13 @@ Otwarcie `public/index.html` bezpośrednio z dysku uruchamia **tryb demonstracyj
 |---|---|
 | Pierwszy ekran | imię i nazwisko (H1), podpis, myśl przewodnia, przycisk, tło: zdjęcie / wideo / kolor + przyciemnienie |
 | O mnie | misja, tekst „Czytaj więcej”, zdjęcie, rodzaje sesji, wartości |
-| Historia | pełnoekranowe rozdziały (rok, tytuł, tekst, zdjęcie) |
+| Historia | **2 układy do wyboru**: oś czasu przewijana w poziomie (etapy: rok, tytuł, tekst, zdjęcie) albo jedna opowieść ze zdjęciem i wyróżnionym rokiem |
 | Aktualności | wpisy z datami „pokazuj od / do”, wstrzymanie, górny pasek komunikatów |
 | Kto fotografuje | Anna + drugi fotograf (domyślnie ukryty — do uzupełnienia) |
 | Portfolio | zdjęcia i filmy (YouTube/MP4), kolejność, kategorie (filtry) |
 | Instagram | tryb automatyczny / ręczny |
 | Kontakt i stopka | Kanały kontaktu pod sobą z ikonami (Messenger, Facebook, Instagram, telefon/e-mail — domyślnie ukryte, formularz w osobnym oknie), obszar, mapa, opinie Google, NIP, hasło w stopce |
-| Ustawienia → Wygląd i efekty | **3 motywy kolorystyczne** (Kremowy beż, Szałwia i len, Grafit i złoto), kropki nawigacji, animacje |
+| Ustawienia → Wygląd i efekty | **3 motywy kolorystyczne** (Kremowy beż, Nocna galeria — ciemny ze złotem, Biel i terakota — nowoczesny bezszeryfowy), kropki nawigacji, animacje |
 | Sekcje strony | włączanie/wyłączanie sekcji, **kolejność sekcji w menu i na stronie** (▲▼), nagłówki |
 | Kontakt → Pola formularza | **dodawanie, edycja, kolejność i ukrywanie pól formularza** (tekst, e-mail, telefon, data, lista wyboru, pole do zaznaczenia); imię i e-mail są stałe |
 | Ustawienia | SEO (title/description), wersje językowe, hasło, kopia zapasowa |
