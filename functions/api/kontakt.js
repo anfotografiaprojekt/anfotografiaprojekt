@@ -1,57 +1,68 @@
-// POST /api/kontakt — formularz kontaktowy (publiczny)
-// Pola formularza pochodzą z panelu (Kontakt → Pola formularza) — serwer sprawdza je według
-// tej samej definicji: wymagane, typ (e-mail, telefon…), długość.
-// Antyspam: ukryte pole-pułapka, minimalny czas wypełnienia, limit 5 wiadomości / godzinę z jednego IP,
-// sprawdzenie nagłówka i pochodzenia żądania. Wiadomości trafiają do panelu (KV, 12 miesięcy),
-// opcjonalnie także e-mailem przez Resend (RESEND_API_KEY + MAIL_DO).
+// POST /api/kontakt — formularz kontaktowy (publiczny) → e-mail na prywatną skrzynkę
+// Pola formularza pochodzą z panelu (Kontakt → Pola formularza). Serwer sprawdza je tą samą
+// funkcją co przeglądarka (render.js → ANF.form): e-mail, telefon (długość numeru zależna
+// od kraju), data, imię itd. Wiadomości NIE są przechowywane na serwerze — idą tylko e-mailem.
+// Antyspam: ukryte pole-pułapka, minimalny czas wypełnienia, limit 5 wiadomości / godzinę z IP,
+// sprawdzenie nagłówka i pochodzenia żądania, limit linków.
 import '../../public/assets/js/dane.js';
 import '../../public/assets/js/render.js';
-import { json, blad, kv, losowe, limit, zwieksz, ip, zgodnyOrigin } from '../../lib/serwer.js';
+import { json, blad, kv, limit, zwieksz, ip, zgodnyOrigin } from '../../lib/serwer.js';
+import { wyslijMail, mailZFormularza, odbiorca, skonfigurowany } from '../../lib/poczta.js';
 
-const ROK = 365 * 24 * 3600;
-const tnij = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
+const NIEDOSTEPNY = 'Formularz jest chwilowo niedostępny. Proszę napisać przez Messengera — odpowiem jak najszybciej.';
 
-export async function onRequestPost({ request, env, waitUntil }) {
+export async function onRequestPost({ request, env }) {
   if (request.headers.get('X-ANF') !== '1' || !zgodnyOrigin(request)) return blad('Nieprawidłowe żądanie.', 403);
   let b = {}; try { b = await request.json(); } catch { return blad('Nieprawidłowe dane.'); }
-  // pułapki na boty: udajemy sukces, nic nie zapisujemy
-  if (b.www) return json({ ok: true });
+  if (b.www) return json({ ok: true });                       // pułapka na boty: udajemy sukces
   if (!(+b.t > 2500)) return blad('Formularz został wysłany zbyt szybko. Proszę spróbować ponownie.');
   if (b.zgoda !== true) return blad('Do wysłania wiadomości potrzebna jest zgoda.');
 
-  const Rn = globalThis.ANF.render;
+  const A = globalThis.ANF, Rn = A.render, F = A.form;
   let zap = null; try { zap = await kv(env).get('tresci', 'json'); } catch { }
   const stan = Rn.stan(zap && zap.dane);
   const def = Rn.widoczne(stan.kontakt.pola || []);
   const wej = b.pola && typeof b.pola === 'object' ? b.pola : {};
-  const pola = [];
+  const dzis = Rn.dzis();
+  const pola = [], bledy = {};
   for (const p of def) {
-    const v = tnij(wej[p.id], p.typ === 'obszar' ? 4000 : 300);
+    let v = String(wej[p.id] == null ? '' : wej[p.id]).trim().slice(0, p.typ === 'obszar' ? 4000 : 300);
     const et = Rn.t(p.etykieta, 'pl') || p.id;
-    if (!v) { if (p.wym) return blad('Proszę uzupełnić pole: ' + et + '.'); continue; }
-    if (p.typ === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return blad('Proszę podać poprawny adres e-mail.');
-    if (p.typ === 'telefon' && !/^[+\d][\d\s-]{6,}$/.test(v)) return blad('Numer telefonu jest niepoprawny.');
-    pola.push({ id: p.id, etykieta: et, wartosc: v });
-  }
-  if (!pola.length) return blad('Formularz jest pusty.');
-  const calosc = pola.map((x) => x.wartosc).join(' ');
-  if ((calosc.match(/https?:\/\//g) || []).length > 3) return blad('Wiadomość zawiera zbyt wiele linków.');
-  const wart = (id) => (pola.find((x) => x.id === id) || {}).wartosc || '';
-
-  try {
-    const l = await limit(env, 'kontakt:' + ip(request), 5, 3600);
-    if (l.przekroczony) return blad('Wysłano już kilka wiadomości. Proszę spróbować za ' + l.minut + ' min lub napisać przez Messengera.', 429);
-    await zwieksz(env, l, 3600);
-    const czas = new Date().toISOString(), id = Date.now().toString(36) + '-' + losowe(5);
-    const wiad = { id, czas, imie: wart('imie'), email: wart('email'), pola, przeczytana: false };
-    await kv(env).put('msg:' + id, JSON.stringify(wiad), { expirationTtl: ROK, metadata: { czas, przeczytana: false } });
-    if (env.RESEND_API_KEY && env.MAIL_DO) {
-      const tresc = 'Nowa wiadomość ze strony\n\n' + pola.map((x) => x.etykieta + ': ' + x.wartosc).join('\n');
-      waitUntil(fetch('https://api.resend.com/emails', {
-        method: 'POST', headers: { Authorization: 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: env.MAIL_OD || 'Strona <onboarding@resend.dev>', to: [env.MAIL_DO], reply_to: wiad.email || undefined, subject: 'Wiadomość ze strony: ' + (wiad.imie || 'formularz'), text: tresc }),
-      }).catch(() => { }));
+    const msg = F.walidujPole(p, v, dzis);
+    if (msg) { bledy[p.id] = msg; continue; }
+    if (!v) continue;
+    if (p.typ === 'telefon') v = F.telefon('PL', v).wartosc;
+    if (p.typ === 'tak') v = 'tak';
+    if (p.typ === 'wybor') {
+      const op = p.zrodlo === 'kategorie' ? (stan.portfolio.kategorie || []).map((c) => Rn.t(c.nazwa, 'pl')).concat(['Inne', 'Other'])
+        : String(Rn.t(p.opcje, 'pl') || '').split(/\n+/).map((x) => x.trim()).filter(Boolean);
+      if (op.indexOf(v) < 0) { bledy[p.id] = 'Proszę wybrać jedną z opcji z listy.'; continue; }
     }
-    return json({ ok: true });
-  } catch (e) { return blad('Nie udało się zapisać wiadomości. Proszę napisać przez Messengera.', 503); }
+    if (p.typ === 'data') v = v.split('-').reverse().join('.');
+    pola.push({ id: p.id, typ: p.typ, etykieta: et, wartosc: v });
+  }
+  const pierwszy = Object.keys(bledy)[0];
+  if (pierwszy) return blad(bledy[pierwszy], 400, { pole: pierwszy, bledy });
+  if (!pola.length) return blad('Formularz jest pusty.');
+  if ((pola.map((x) => x.wartosc).join(' ').match(/https?:\/\/|www\./g) || []).length > 3) return blad('Wiadomość zawiera zbyt wiele linków.');
+
+  if (!skonfigurowany(env)) return blad(NIEDOSTEPNY, 503);
+  const do_ = await odbiorca(env);
+  if (!do_) return blad(NIEDOSTEPNY, 503);
+
+  const l = await limit(env, 'kontakt:' + ip(request), 5, 3600);
+  if (l.przekroczony) return blad('Wysłano już kilka wiadomości. Proszę spróbować za ' + l.minut + ' min lub napisać przez Messengera.', 429);
+
+  const imie = (pola.find((x) => x.id === 'imie') || {}).wartosc || 'formularz';
+  const email = (pola.find((x) => x.typ === 'email') || {}).wartosc || '';
+  const rodzaj = (pola.find((x) => x.typ === 'wybor') || {}).wartosc || '';
+  const { html, tekst } = mailZFormularza({ pola, host: new URL(request.url).host, czas: new Date() });
+  const r = await wyslijMail(env, {
+    do: do_, odpowiedzDo: email,
+    temat: 'Wiadomość ze strony: ' + imie + (rodzaj ? ' — ' + rodzaj : ''),
+    html, tekst,
+  });
+  if (!r.ok) return blad('Nie udało się wysłać wiadomości. Proszę spróbować za chwilę lub napisać przez Messengera.', 502);
+  await zwieksz(env, l, 3600);
+  return json({ ok: true });
 }

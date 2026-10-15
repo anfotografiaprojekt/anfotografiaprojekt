@@ -254,14 +254,6 @@ html.cmsp-otwarty,html.cmsp-otwarty body{overflow:hidden}
 .cmsp-sek-w-r{margin-top:14px;padding:14px;background:var(--c-bg);border-radius:8px}
 
 /* wiadomości */
-.cmsp-wiad{list-style:none;margin:10px 0 0;padding:0}
-.cmsp-wiad li{border:1px solid var(--c-lin);border-radius:8px;padding:14px;margin-bottom:10px}
-.cmsp-wiad--nowa{border-left:4px solid var(--c-ziel)!important}
-.cmsp-wiad-g{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.cmsp-wiad-g time{margin-left:auto;color:var(--c-t2);font-size:.85rem}
-.cmsp-wiad-meta{font-size:.88rem;color:var(--c-t2);margin:4px 0 8px!important}
-.cmsp-wiad-meta a{color:var(--c-gl)}
-.cmsp-wiad-t{white-space:normal;background:var(--c-bg);padding:10px 12px;border-radius:6px}
 
 /* języki, hasło, kopie, SEO */
 .cmsp-jez-lista{list-style:none;margin:10px 0;padding:0}
@@ -337,11 +329,15 @@ html.cmsp-otwarty,html.cmsp-otwarty body{overflow:hidden}
 .cmsp-kolej--pusta{width:32px}
 @media (max-width:899px){.cmsp-sek-w-g{grid-template-columns:auto 1fr}.cmsp-sek-w-g .cmsp-mini{grid-column:2}.cmsp-sek-w-t,.cmsp-sek-w-a{grid-column:1 / -1}}
 /* wiadomości z dowolnymi polami */
-.cmsp-wiad-pola{display:grid;grid-template-columns:minmax(120px,auto) 1fr;gap:4px 14px;margin:8px 0 10px;background:var(--c-bg);padding:10px 12px;border-radius:6px;font-size:.92rem}
-.cmsp-wiad-pola dt{color:var(--c-t2);font-weight:500}
-.cmsp-wiad-pola dd{margin:0;overflow-wrap:anywhere}
-.cmsp-wiad-pola a{color:var(--c-gl)}
 /* podgląd formularza w panelu */
 .cmsp-mini-in .cmsp-form-podglad{display:block;position:relative;max-width:660px;margin:30px auto 50px;background:var(--bg);color:var(--tekst);border-radius:4px;box-shadow:0 20px 50px -20px rgba(0,0,0,.4)}
 .cmsp-mini-in .cmsp-form-podglad form{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
 .cmsp-mini-in .cmsp-form-podglad .pole--pelne,.cmsp-mini-in .cmsp-form-podglad form > button,.cmsp-mini-in .cmsp-form-podglad .form-status{grid-column:1 / -1}
+
+/* Wiadomości e-mail */
+.cmsp-status{padding:10px 14px;border-radius:8px;font-weight:500;margin:6px 0 14px!important}
+.cmsp-status--ziel{background:#E6F2E8;color:#1F5A2B}
+.cmsp-status--czer{background:#FBE9E7;color:#8E2A20}
+.cmsp-kroki{margin:6px 0 12px;padding-left:1.3em;line-height:1.6}
+.cmsp-kroki li{margin-bottom:.45em}
+.cmsp-kroki code{background:var(--c-bg);padding:1px 6px;border-radius:4px;font-size:.9em}

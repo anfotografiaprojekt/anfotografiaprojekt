@@ -30,7 +30,7 @@ Wymagane: konto Cloudflare (darmowe), Node.js 18+.
    node narzedzia/zbuduj.mjs
    ```
    (skrypt podmieni adres w `index.html`, podstronach, `sitemap.xml`, `robots.txt`, JSON-LD i OG).
-2. **Baza KV** (treści, zdjęcia z panelu, sesje, wiadomości):
+2. **Baza KV** (treści, zdjęcia z panelu, sesje, adres e-mail do powiadomień):
    ```bash
    npx wrangler login
    npx wrangler kv namespace create TRESCI
@@ -60,7 +60,9 @@ Wymagane: konto Cloudflare (darmowe), Node.js 18+.
 | Zmienna (Secret) | Do czego |
 |---|---|
 | `INSTAGRAM_TOKEN` | automatyczne „Najnowsze zdjęcia z Instagrama”. Konto IG musi być **profesjonalne (twórca/firma)**. Token: [developers.facebook.com](https://developers.facebook.com) → aplikacja → *Instagram API with Instagram Login* → wygeneruj token dla konta. Serwer odnawia go sam co ~7 dni. Bez tokenu w panelu można dodać zdjęcia ręcznie. |
-| `RESEND_API_KEY`, `MAIL_DO`, `MAIL_OD` | kopia każdej wiadomości z formularza na e-mail (np. `MAIL_DO=ania252@vp.pl`) przez [resend.com](https://resend.com). Bez tego wiadomości są w panelu → *Wiadomości*. |
+| `RESEND_API_KEY` (Secret) | **wymagane do działania formularza** — wiadomości z formularza są wysyłane e-mailem przez [resend.com](https://resend.com) (bezpłatnie do 3000 / mies.). Adres odbiorcy ustawia się w panelu → *Wiadomości e-mail* (nie jest publiczny). Bez własnej domeny Resend dostarcza pocztę tylko na adres, na który założono konto Resend. |
+| `MAIL_OD` | opcjonalnie, po zweryfikowaniu domeny w Resend: nadawca, np. `Formularz <formularz@twojadomena.pl>` |
+| `MAIL_DO` | opcjonalnie: adres odbiorcy, gdy nie ustawiono go w panelu |
 
 ### Test lokalny
 ```bash
@@ -87,7 +89,7 @@ Otwarcie `public/index.html` bezpośrednio z dysku uruchamia **tryb demonstracyj
 |---|---|
 | Pierwszy ekran | imię i nazwisko (H1), podpis, myśl przewodnia, przycisk, tło: zdjęcie / wideo / kolor + przyciemnienie |
 | O mnie | misja, tekst „Czytaj więcej”, zdjęcie, rodzaje sesji, wartości |
-| Historia | **2 układy do wyboru**: oś czasu przewijana w poziomie (etapy: rok, tytuł, tekst, zdjęcie) albo jedna opowieść ze zdjęciem i wyróżnionym rokiem |
+| Historia | **2 układy do wyboru**: oś czasu przewijana w poziomie (etap: rok lub data, krótki opis z wyłącznikiem, opis wydarzenia, opcjonalne zdjęcie) albo jedno duże zdjęcie z historią obok (nagłówek opcjonalny — pusty znika, tekst przesuwa się w górę) |
 | Aktualności | wpisy z datami „pokazuj od / do”, wstrzymanie, górny pasek komunikatów |
 | Kto fotografuje | Anna + drugi fotograf (domyślnie ukryty — do uzupełnienia) |
 | Portfolio | zdjęcia i filmy (YouTube/MP4), kolejność, kategorie (filtry) |
@@ -95,7 +97,8 @@ Otwarcie `public/index.html` bezpośrednio z dysku uruchamia **tryb demonstracyj
 | Kontakt i stopka | Kanały kontaktu pod sobą z ikonami (Messenger, Facebook, Instagram, telefon/e-mail — domyślnie ukryte, formularz w osobnym oknie), obszar, mapa, opinie Google, NIP, hasło w stopce |
 | Ustawienia → Wygląd i efekty | **3 motywy kolorystyczne** (Kremowy beż, Nocna galeria — ciemny ze złotem, Biel i terakota — nowoczesny bezszeryfowy), kropki nawigacji, animacje |
 | Sekcje strony | włączanie/wyłączanie sekcji, **kolejność sekcji w menu i na stronie** (▲▼), nagłówki |
-| Kontakt → Pola formularza | **dodawanie, edycja, kolejność i ukrywanie pól formularza** (tekst, e-mail, telefon, data, lista wyboru, pole do zaznaczenia); imię i e-mail są stałe |
+| Kontakt i dane → Wiadomości e-mail | prywatny adres, na który przychodzą wiadomości z formularza, wiadomość testowa, instrukcja konfiguracji Resend |
+| Kontakt → Pola formularza | **dodawanie, edycja, kolejność i ukrywanie pól formularza** (tekst, e-mail, telefon, data, lista wyboru, pole do zaznaczenia); imię i e-mail są stałe. Walidacja: e-mail (znak @, domena, podpowiedź literówek np. gmial.com → gmail.com), telefon z wyborem kraju (+48 = 9 cyfr, liczba cyfr dopasowana do kraju), data nie z przeszłości — sprawdzane w przeglądarce i ponownie na serwerze |
 | Ustawienia | SEO (title/description), wersje językowe, hasło, kopia zapasowa |
 
 Puste pola znikają ze strony (np. pusty nagłówek sekcji — treść przesuwa się w górę). Każda sekcja pilnuje, żeby mieścić się na jednym ekranie.
@@ -113,7 +116,7 @@ Zdjęcia dzieci — tylko za zgodą rodziców (miejsca w galerii pozwalają uży
 - **„KRS, NIP”** — jednoosobowa działalność zwykle nie ma KRS; w stopce jest NIP `[DO UZUPEŁNIENIA]`, pole KRS pojawi się, gdy zostanie wpisane.
 - **Kontakt** — w briefie wybrano Messenger: główny przycisk to „Napisz na Messengerze” (do czasu podania linku m.me prowadzi do profilu FB). Telefon i e-mail z briefu dotyczyły projektu, więc są w panelu, ale domyślnie **ukryte** (włącznik „Pokazuj na stronie”).
 - **Pierwszy ekran** — w układzie pełnoekranowym 1 przycisk („Zobacz portfolio”); kontakt jest w menu i na dolnym pasku na telefonie. Zamiast slidera w nagłówku — jedno duże zdjęcie lub wideo (zgodnie z regułami układu immersive).
-- **Panel** — pominięto podstrony bez odpowiednika na stronie: promocje, cennik, usługi, rezerwacje, opinie, godziny otwarcia i dni specjalne, terminarz, drużyny, sponsorzy, dokumenty, nabór. Pulpit pokazuje aktualności (harmonogram Gantta, najbliższe 45 dni), portfolio, wiadomości i stan sekcji.
+- **Panel** — pominięto podstrony bez odpowiednika na stronie: promocje, cennik, usługi, rezerwacje, opinie, godziny otwarcia i dni specjalne, terminarz, drużyny, sponsorzy, dokumenty, nabór. Pulpit pokazuje aktualności (harmonogram Gantta, najbliższe 45 dni), portfolio i stan sekcji.
 - **Panel ładuje się na żądanie** (kłódka/#panel), a nie przy każdym wejściu — odwiedzający nie pobierają ~70 kB kodu panelu (lepsze Core Web Vitals).
 - **Renderowanie na serwerze** (`functions/_middleware.js`) — zmiany z panelu trafiają do HTML wysyłanego Google (title, opis, JSON-LD, treść), a nie tylko do JavaScriptu.
 - **Instagram** — zdjęcia przechodzą przez serwer strony, więc odwiedzający nie łączą się z Meta (RODO); bez tokenu sekcja pokazuje przycisk do profilu.

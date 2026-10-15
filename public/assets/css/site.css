@@ -544,10 +544,17 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 .os{list-style:none;margin:0;padding:4px var(--gut) 12px;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-padding-inline:var(--gut);scrollbar-width:thin;scrollbar-color:var(--dekor) transparent;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
 .os:focus-visible{outline-offset:-2px}
 .os.da-sie{cursor:grab}
+/* wygaszenie krawędzi, gdy w danym kierunku jest jeszcze coś do przewinięcia */
+.os.da-sie:not(.os--koniec){-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 90px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 90px),transparent)}
+.os.da-sie:not(.os--start):not(.os--koniec){-webkit-mask-image:linear-gradient(90deg,transparent,#000 60px,#000 calc(100% - 90px),transparent);mask-image:linear-gradient(90deg,transparent,#000 60px,#000 calc(100% - 90px),transparent)}
+.os.da-sie.os--koniec:not(.os--start){-webkit-mask-image:linear-gradient(90deg,transparent,#000 60px);mask-image:linear-gradient(90deg,transparent,#000 60px)}
+.os-postep{height:2px;background:rgba(var(--dekor-rgb),.35);margin:clamp(6px,1.4vh,14px) 0 0;position:relative;overflow:hidden;max-width:320px}
+.os-postep span{position:absolute;left:0;top:0;bottom:0;background:var(--glowny);width:30%;transition:transform .2s}
+.os-postep[hidden]{display:none}
 .os.ciagnij{cursor:grabbing;scroll-snap-type:none;-webkit-user-select:none;user-select:none}
 .os.ciagnij *{pointer-events:none}
-.os-el{flex:0 0 clamp(270px,27vw,370px);scroll-snap-align:start;position:relative;padding-right:clamp(18px,2.4vw,34px);display:flex;flex-direction:column}
-.os--1 .os-el,.os--2 .os-el,.os--3 .os-el{flex-grow:1}
+.os-el{flex:0 0 clamp(280px,33vw,430px);scroll-snap-align:start;position:relative;padding-right:clamp(18px,2.4vw,34px);display:flex;flex-direction:column}
+.os--1 .os-el,.os--2 .os-el{flex-grow:1}
 .os--1 .os-el{max-width:760px}
 .os-rok{font-family:var(--f-szer);font-style:italic;font-size:clamp(2rem,.9rem + 2vw + 1.8vh,3.8rem);line-height:1;margin:0 0 .2em;color:var(--akcent);font-variant-numeric:lining-nums;white-space:nowrap}
 .t-jasny .os-rok{color:var(--akcent-j)}
@@ -574,18 +581,16 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 @media (max-height:700px){.os-foto img{max-height:calc(var(--wys) * .26)}.os-tekst{padding:10px 14px 4px}}
 
 /* Wariant 2: jedna opowieść — duże zdjęcie + tekst + wyróżnienie */
-.opowiesc{display:grid;gap:clamp(18px,4vw,72px);align-items:center}
+.opowiesc{display:grid;gap:clamp(18px,4vw,72px);align-items:start}
+.op-tekst{padding-top:clamp(0px,2vh,24px)}
 .op-foto{margin:0;position:relative;justify-self:stretch}
 .op-foto img{width:100%;height:calc(var(--wys) * .34);object-fit:cover;border-radius:var(--r);box-shadow:var(--cien)}
 .op-foto::after{content:"";position:absolute;right:-12px;bottom:-12px;width:38%;height:38%;border-right:1px solid var(--dekor);border-bottom:1px solid var(--dekor);pointer-events:none}
 .op-tresc{font-family:var(--f-szer);font-size:clamp(1.08rem,.72rem + .6vw + .65vh,1.6rem);line-height:1.45;margin-top:.6em}
 .op-tresc p{margin-bottom:.45em}
-.op-wyr{display:flex;align-items:center;gap:18px;margin:clamp(8px,2.2vh,26px) 0 clamp(4px,1.2vh,14px);padding:clamp(8px,1.8vh,18px) 0;border-top:1px solid var(--linia);border-bottom:1px solid var(--linia)}
-.t-jasny .op-wyr{border-color:rgba(var(--bg-rgb),.35)}
-.op-wyr-l{font-family:var(--f-szer);font-style:italic;font-size:clamp(2.4rem,1rem + 3vw + 2.2vh,4.8rem);line-height:1;color:var(--akcent);font-variant-numeric:lining-nums;flex:none}
-.t-jasny .op-wyr-l{color:var(--akcent-j)}
-.op-wyr-o{font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;font-weight:500;max-width:28ch;line-height:1.5;color:var(--tekst2)}
-.t-jasny .op-wyr-o{color:inherit;opacity:.9}
+.op-tresc{position:relative}
+.op-tresc--ucieta{overflow:hidden;-webkit-mask-image:linear-gradient(#000 calc(100% - 3.2em),transparent);mask-image:linear-gradient(#000 calc(100% - 3.2em),transparent)}
+.op-wiecej{margin-top:.5em}
 @media (min-width:900px){
   .opowiesc{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}
   .opowiesc--bez-foto{grid-template-columns:minmax(0,820px)}
@@ -621,7 +626,6 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 [data-motyw="noc"] .t-jasny .btn--obrys:hover{background:var(--jasny);color:var(--ciemne)}
 [data-motyw="noc"] .omnie-foto::before{border-color:var(--glowny)}
 [data-motyw="noc"] .omnie-foto img,[data-motyw="noc"] .osoba-foto img,[data-motyw="noc"] .op-foto img{outline:1px solid rgba(var(--glowny-rgb),.4);outline-offset:6px}
-[data-motyw="noc"] .op-foto::after{border-color:var(--glowny)}
 [data-motyw="noc"] .kafel{box-shadow:inset 0 0 0 1px rgba(var(--glowny-rgb),.18)}
 [data-motyw="noc"] .kafel figcaption{color:var(--akcent-j)}
 [data-motyw="noc"] .wpis,[data-motyw="noc"] .os-karta{background:var(--karta)}
@@ -676,7 +680,7 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 [data-motyw="terakota"] .lead,[data-motyw="terakota"] .op-tresc{font-family:var(--f-tekst);font-weight:300;letter-spacing:-.005em}
 [data-motyw="terakota"] .miasta,[data-motyw="terakota"] .stopka-haslo,[data-motyw="terakota"] .kafel figcaption,[data-motyw="terakota"] .marka-tekst{font-style:normal;font-family:var(--f-tekst)}
 [data-motyw="terakota"] .marka-tekst{text-transform:uppercase;font-weight:600;letter-spacing:.06em;font-size:1.4rem}
-[data-motyw="terakota"] .os-rok,[data-motyw="terakota"] .op-wyr-l{font-style:normal;font-weight:600;letter-spacing:-.03em}
+[data-motyw="terakota"] .os-rok{font-style:normal;font-weight:600;letter-spacing:-.03em}
 [data-motyw="terakota"] .os-rok{color:var(--glowny)}
 [data-motyw="terakota"] .t-jasny .os-rok{color:var(--akcent-j)}
 [data-motyw="terakota"] .os-kropka::before{height:3px;margin-top:-1px;background:var(--tekst)}
@@ -687,7 +691,6 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 [data-motyw="terakota"] .os-karta,[data-motyw="terakota"] .wpis{border:2px solid var(--tekst);background:#fff}
 [data-motyw="terakota"] .os-el:hover .os-karta{box-shadow:8px 8px 0 0 var(--glowny)}
 [data-motyw="terakota"] .op-foto::after{border-width:0 5px 5px 0;border-color:var(--glowny)}
-[data-motyw="terakota"] .op-wyr{border-width:2px;border-color:var(--tekst)}
 [data-motyw="terakota"] .omnie-foto::before{inset:-14px 14px 14px -14px;border:0;background:var(--bg2)}
 [data-motyw="terakota"] .obszary li{border-radius:0;border-color:var(--tekst);background:transparent;font-weight:500}
 [data-motyw="terakota"] .filtr{border-radius:0;border-width:2px;font-weight:600}
@@ -725,3 +728,16 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
   [data-motyw="terakota"] .sek h2{font-size:clamp(1.3rem,.7rem + 1.2vw + 1.2vh,2.5rem)}
 }
 @media (max-height:660px){[data-motyw="terakota"] .sek h2::after{display:none}}
+
+/* ---------- Formularz: telefon z numerem kierunkowym, podpowiedzi ---------- */
+.tel{display:flex;gap:6px;align-items:stretch}
+.tel-kier{position:relative;flex:none;min-width:5.6em;display:flex;align-items:center;justify-content:center;gap:4px;border:1px solid var(--pole-ramka);background:var(--karta);border-radius:var(--r);padding:0 26px 0 10px;font-size:.95rem;white-space:nowrap}
+.tel-kier::after{content:"";position:absolute;right:10px;top:50%;width:7px;height:7px;margin-top:-5px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);opacity:.7;pointer-events:none}
+.tel-kier:focus-within{border-color:var(--glowny);box-shadow:0 0 0 3px rgba(var(--glowny-rgb),.2)}
+.tel-kraj{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;min-height:0!important;border:0!important;padding:0!important}
+.tel input{flex:1;min-width:0}
+.pole-pod{font-size:.76rem;color:var(--tekst2);margin:3px 0 0;line-height:1.35}
+.podpow{color:var(--tekst)}
+.podpow-btn{border:0;background:none;padding:0 2px;font:inherit;font-weight:600;color:var(--glowny);text-decoration:underline;cursor:pointer;min-height:24px}
+.blad{line-height:1.35}
+@media (max-width:899px){.op-foto::after{display:none}.op-foto img{box-shadow:none}}

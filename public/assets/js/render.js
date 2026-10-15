@@ -51,7 +51,7 @@
       f_imie: 'Imię i nazwisko', f_email: 'Adres e-mail', f_tel: 'Telefon (opcjonalnie)', f_rodzaj: 'Czego dotyczy wiadomość?',
       f_wybierz: 'Proszę wybrać…', f_inne: 'Inne', f_termin: 'Planowany termin (opcjonalnie)', f_wiad: 'Wiadomość',
       f_zgoda: 'Wyrażam zgodę na przetwarzanie moich danych w celu odpowiedzi na wiadomość. Szczegóły w',
-      f_wyslij: 'Wyślij wiadomość', f_wym: 'pole wymagane', f_hp: 'Nie wypełniaj tego pola',
+      f_wyslij: 'Wyślij wiadomość', f_kraj: 'Kraj (numer kierunkowy)', f_wym: 'pole wymagane', f_hp: 'Nie wypełniaj tego pola',
       sekcje: 'Sekcje strony', skip: 'Przejdź do treści', wartosci: 'Wartości', formOtworz: 'Napisz wiadomość', strona: 'Strona', formPod: 'Wiadomość prosto ze strony', f_opc: 'opcjonalnie', osPoprz: 'Wcześniej', osNast: 'Później', osLista: 'Oś czasu — przewiń w poziomie', czytajHist: 'Czytaj całą historię'
     },
     en: {
@@ -71,7 +71,7 @@
       f_imie: 'Full name', f_email: 'E-mail address', f_tel: 'Phone (optional)', f_rodzaj: 'What is your message about?',
       f_wybierz: 'Please choose…', f_inne: 'Other', f_termin: 'Planned date (optional)', f_wiad: 'Message',
       f_zgoda: 'I agree to the processing of my data in order to reply to my message. Details in the',
-      f_wyslij: 'Send message', f_wym: 'required', f_hp: 'Leave this field empty',
+      f_wyslij: 'Send message', f_kraj: 'Country (dialling code)', f_wym: 'required', f_hp: 'Leave this field empty',
       sekcje: 'Page sections', skip: 'Skip to content', wartosci: 'Values', formOtworz: 'Write a message', strona: 'Page', formPod: 'Send a message from this page', f_opc: 'optional', osPoprz: 'Earlier', osNast: 'Later', osLista: 'Timeline — scroll horizontally', czytajHist: 'Read the whole story'
     }
   };
@@ -283,39 +283,47 @@
       '</section>';
   };
 
+  /* tekst opowieści: dawne zapisy miały krótki tekst + osobny „pełny” — bierzemy dłuższy */
+  function trescOpowiesci(o, L) {
+    var a = t(o.tresc, L), b = t(o.wiecej, L);
+    return plain(b).length > plain(a).length ? b : a;
+  }
+  A.trescOpowiesci = trescOpowiesci;
   R.historia = function (s, ctx) {
     if (!sekWidoczna(s, 'historia', ctx.today)) return pusta('historia');
     var L = ctx.lang, d = s.historia || {}, sek = s.sekcje.historia;
     var glowa = naglowek('historia', s, ctx, 'h-historia');
-    /* Wariant 2: jedna opowieść ze zdjęciem */
+    /* Wariant 2: jedno duże zdjęcie i historia obok (bez roku).
+     * Pusty nagłówek = tekst zaczyna się od samej góry. Gdy tekst nie zmieści się na ekranie,
+     * site.js skraca go płynnie i pokazuje przycisk „Czytaj całą historię”. */
     if (d.wariant === 'opowiesc') {
-      var o = d.opowiesc || {}, foto = o.zdjecie && o.zdjecie.src;
-      var tr = t(o.tresc, L), wi = t(o.wiecej, L), lic = t(o.wyrLiczba, L), op = t(o.wyrOpis, L);
+      var o = d.opowiesc || {}, foto = o.zdjecie && o.zdjecie.src, tr = trescOpowiesci(o, L);
       return otworzSekcje('historia', s, ctx, 'sek--opowiesc', ' aria-labelledby="h-historia"') +
         tloHtml(sek.tlo, ctx) +
-        '<div class="sek-in opowiesc' + (foto ? '' : ' opowiesc--bez-foto') + '">' +
+        '<div class="sek-in opowiesc' + (foto ? '' : ' opowiesc--bez-foto') + (glowa ? '' : ' opowiesc--bez-glowy') + '">' +
         (foto ? '<figure class="op-foto">' + imgTag(o.zdjecie, { lang: L, sizes: '(min-width: 900px) 46vw, 100vw', f: 'historia.opowiesc.zdjecie' }) + '</figure>' : '') +
         '<div class="op-tekst">' + glowa +
-        (tr ? '<div class="op-tresc" data-f="historia.opowiesc.tresc">' + fmt(tr) + '</div>' : '') +
-        (lic || op ? '<div class="op-wyr" data-f="historia.opowiesc.wyrLiczba">' + (lic ? '<span class="op-wyr-l">' + esc(lic) + '</span>' : '') + (op ? '<span class="op-wyr-o">' + inline(op) + '</span>' : '') + '</div>' : '') +
-        (wi ? czytajWiecej('historia-wiecej', ui(ctx, 'czytajHist'), t(sek.menu, L)) : '') +
+        (tr ? '<div class="op-tresc" data-f="historia.opowiesc.tresc">' + fmt(tr) + '</div>' +
+          '<button type="button" class="link-wiecej op-wiecej" data-wiecej="historia-wiecej" aria-haspopup="dialog" data-tytul="' + esc(t(sek.naglowek, L) || t(sek.menu, L)) + '" hidden>' + esc(ui(ctx, 'czytajHist')) + '<span aria-hidden="true"> →</span></button>' : '') +
         '</div></div>' +
-        (wi ? '<div class="rm" id="historia-wiecej" data-f="historia.opowiesc.wiecej">' + fmt(wi) + '</div>' : '') +
+        (tr ? '<div class="rm" id="historia-wiecej">' + fmt(tr) + '</div>' : '') +
         '</section>';
     }
-    /* Wariant 1 (domyślny): oś czasu przewijana w poziomie */
+    /* Wariant 1 (domyślny): oś czasu przewijana w poziomie.
+     * Etap: rok lub data, krótki opis (można wyłączyć) i opis tego, co się wtedy wydarzyło. */
     var el = widoczne(d.rozdzialy || []);
     var etapy = el.map(function (r, i) {
-      var f = 'historia:' + r.id, tr = t(r.tresc, L), dl = plain(tr).length > 170, idw = 'hist-' + esc(r.id);
+      var f = 'historia:' + r.id, tr = t(r.tresc, L), dl = plain(tr).length > 220, idw = 'hist-' + esc(r.id);
+      var krotki = r.krotki !== false && t(r.tytul, L);
       return '<li class="os-el" data-f="' + esc(f) + '">' +
         '<p class="os-rok"' + (t(r.rok, L) ? ' data-f="' + esc(f) + ':rok"' : '') + '>' + (t(r.rok, L) ? esc(t(r.rok, L)) : String(i + 1).padStart(2, '0')) + '</p>' +
         '<span class="os-kropka" aria-hidden="true"></span>' +
         '<article class="os-karta">' +
-        (r.tlo && r.tlo.src ? '<figure class="os-foto">' + imgTag(r.tlo, { lang: L, sizes: '(min-width: 900px) 360px, 78vw', f: f + ':tlo' }) + '</figure>' : '') +
+        (r.tlo && r.tlo.src ? '<figure class="os-foto">' + imgTag(r.tlo, { lang: L, sizes: '(min-width: 900px) 420px, 80vw', f: f + ':tlo' }) + '</figure>' : '') +
         '<div class="os-tekst">' +
-        (t(r.tytul, L) ? '<h3 data-f="' + esc(f) + ':tytul">' + esc(t(r.tytul, L)) + '</h3>' : '') +
-        (tr ? '<div class="os-opis" data-f="' + esc(f) + ':tresc">' + (dl ? '<p>' + esc(skrot(tr, 150)) + '</p>' : fmt(tr)) + '</div>' : '') +
-        (dl ? czytajWiecej(idw, ui(ctx, 'czytaj'), t(r.tytul, L) || t(r.rok, L)) : '') +
+        (krotki ? '<h3 data-f="' + esc(f) + ':tytul">' + esc(t(r.tytul, L)) + '</h3>' : '') +
+        (tr ? '<div class="os-opis" data-f="' + esc(f) + ':tresc">' + (dl ? '<p>' + esc(skrot(tr, 200)) + '</p>' : fmt(tr)) + '</div>' : '') +
+        (dl ? czytajWiecej(idw, ui(ctx, 'czytaj'), (t(r.rok, L) ? t(r.rok, L) + ' — ' : '') + (t(r.tytul, L) || '')) : '') +
         '</div></article>' +
         (dl ? '<div class="rm" id="' + idw + '">' + fmt(tr) + '</div>' : '') +
         '</li>';
@@ -323,10 +331,10 @@
     return otworzSekcje('historia', s, ctx, 'sek--os', ' aria-labelledby="h-historia"') +
       tloHtml(sek.tlo, ctx) +
       '<div class="sek-in historia-os">' +
-      '<div class="os-glowa"><div class="os-tyt">' + glowa + '</div>' +
+      '<div class="os-glowa">' + (glowa ? '<div class="os-tyt">' + glowa + '</div>' : '') +
       (el.length > 1 ? '<div class="os-ster"><button type="button" class="moz-btn os-btn" data-os="-1" aria-label="' + esc(ui(ctx, 'osPoprz')) + '">←</button><button type="button" class="moz-btn os-btn" data-os="1" aria-label="' + esc(ui(ctx, 'osNast')) + '">→</button></div>' : '') +
       '</div>' +
-      (etapy ? '<div class="os-okno"><ol class="os os--' + Math.min(el.length, 4) + '" tabindex="0" aria-label="' + esc(ui(ctx, 'osLista')) + '">' + etapy + '</ol></div>' : '') +
+      (etapy ? '<div class="os-okno"><ol class="os os--' + Math.min(el.length, 4) + '" tabindex="0" aria-label="' + esc(ui(ctx, 'osLista')) + '">' + etapy + '</ol></div><div class="os-postep" aria-hidden="true" hidden><span></span></div>' : '') +
       '</div></section>';
   };
 
@@ -452,6 +460,122 @@
   }
 
   /* Pole formularza zdefiniowane w panelu (Kontakt → Pola formularza) */
+  /* ================= WALIDACJA FORMULARZA =================
+   * Ten sam kod sprawdza dane w przeglądarce (od razu, przy wpisywaniu) i na serwerze
+   * (functions/api/kontakt.js) — nie da się go obejść, wyłączając JavaScript. */
+  /* Kraje: [kod ISO, nazwa, numer kierunkowy, min. cyfr, maks. cyfr, czy krajowe „0” na początku się pomija, przykład] */
+  var KRAJE = [
+    ['PL', 'Polska', '48', 9, 9, 0, '600 123 456'],
+    ['DE', 'Niemcy', '49', 10, 11, 1, '1512 3456789'],
+    ['CZ', 'Czechy', '420', 9, 9, 0, '601 123 456'],
+    ['SK', 'Słowacja', '421', 9, 9, 1, '912 123 456'],
+    ['UA', 'Ukraina', '380', 9, 9, 1, '50 123 4567'],
+    ['LT', 'Litwa', '370', 8, 8, 0, '612 34567'],
+    ['GB', 'Wielka Brytania', '44', 10, 10, 1, '7400 123456'],
+    ['IE', 'Irlandia', '353', 9, 9, 1, '85 123 4567'],
+    ['NL', 'Holandia', '31', 9, 9, 1, '6 12345678'],
+    ['BE', 'Belgia', '32', 8, 9, 1, '470 12 34 56'],
+    ['FR', 'Francja', '33', 9, 9, 1, '6 12 34 56 78'],
+    ['ES', 'Hiszpania', '34', 9, 9, 0, '612 345 678'],
+    ['IT', 'Włochy', '39', 9, 10, 0, '312 345 6789'],
+    ['AT', 'Austria', '43', 10, 12, 1, '664 1234567'],
+    ['CH', 'Szwajcaria', '41', 9, 9, 1, '78 123 45 67'],
+    ['NO', 'Norwegia', '47', 8, 8, 0, '412 34 567'],
+    ['SE', 'Szwecja', '46', 7, 9, 1, '70 123 45 67'],
+    ['DK', 'Dania', '45', 8, 8, 0, '20 12 34 56'],
+    ['US', 'USA i Kanada', '1', 10, 10, 0, '201 555 0123']
+  ].map(function (k) { return { iso: k[0], nazwa: k[1], kod: k[2], min: k[3], max: k[4], zero: !!k[5], przyklad: k[6] }; });
+  var KRAJ_INNY = { iso: 'XX', nazwa: 'Inny kraj', kod: '', min: 7, max: 15, zero: false, przyklad: '+421 912 123 456' };
+  function kraj(iso) { return KRAJE.filter(function (k) { return k.iso === iso; })[0] || (iso === 'XX' ? KRAJ_INNY : KRAJE[0]); }
+  function cyfr(n) { return n === 1 ? 'cyfrę' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) ? 'cyfry' : 'cyfr'; }
+  function grupuj(d) {
+    var w = { 7: [3, 4], 8: [4, 4], 9: [3, 3, 3], 10: [3, 3, 4], 11: [3, 4, 4], 12: [3, 3, 3, 3] }[d.length];
+    if (!w) return d;
+    var o = [], i = 0; w.forEach(function (n) { o.push(d.substr(i, n)); i += n; }); return o.join(' ');
+  }
+  /* Rozbiór numeru: iso = kraj wybrany na liście, numer = to, co wpisano.
+   * Zwraca { ok, blad, wartosc ('+48 600 123 456'), iso, krajowy }. Wpisany „+49…” / „0049…” sam zmienia kraj. */
+  function telefon(iso, numer) {
+    var raw = String(numer == null ? '' : numer).trim(), k = kraj(iso);
+    if (!raw) return { ok: true, pusty: true, iso: k.iso, wartosc: '' };
+    if (/[^\d\s\-().+\/]/.test(raw)) return { ok: false, iso: k.iso, blad: 'Numer telefonu może zawierać tylko cyfry (dopuszczalne są spacje i myślniki).' };
+    if (raw.indexOf('+') > 0 || (raw.match(/\+/g) || []).length > 1) return { ok: false, iso: k.iso, blad: 'Znak + może stać tylko na początku numeru.' };
+    var d = raw.replace(/\D/g, ''), miedzy = /^\+|^00/.test(raw.replace(/\s/g, ''));
+    if (miedzy) {
+      if (/^00/.test(d)) d = d.slice(2);
+      var znal = KRAJE.slice().sort(function (a, b) { return b.kod.length - a.kod.length; }).filter(function (x) { return d.indexOf(x.kod) === 0; })[0];
+      if (znal) { k = znal; d = d.slice(k.kod.length); }
+      else {
+        if (d.length < 8 || d.length > 15) return { ok: false, iso: 'XX', blad: 'Numer międzynarodowy powinien mieć od 8 do 15 cyfr razem z numerem kierunkowym.' };
+        return { ok: true, iso: 'XX', wartosc: '+' + d, krajowy: d };
+      }
+    } else if (k.iso === 'XX') {
+      return { ok: false, iso: 'XX', blad: 'Dla innego kraju proszę wpisać numer z numerem kierunkowym, np. +421 912 123 456.' };
+    } else if (d.indexOf(k.kod) === 0 && d.length - k.kod.length >= k.min && d.length - k.kod.length <= k.max && d.length > k.max) {
+      d = d.slice(k.kod.length);   // ktoś wpisał „48 600 123 456” bez plusa
+    }
+    if (k.zero && d.charAt(0) === '0') d = d.slice(1);    // krajowe „0” (np. 0151… w Niemczech, 07… w Anglii)
+    if (k.iso === 'PL' && d.charAt(0) === '0') return { ok: false, iso: k.iso, blad: 'Polski numer nie zaczyna się od 0 — proszę wpisać 9 cyfr, np. 600 123 456.' };
+    var n = d.length, ile = k.min === k.max ? k.min + ' ' + cyfr(k.min) : 'od ' + k.min + ' do ' + k.max + ' cyfr';
+    if (n < k.min || n > k.max) return { ok: false, iso: k.iso, blad: 'Numer telefonu (' + k.nazwa + ', +' + k.kod + ') powinien mieć ' + ile + ' — wpisano ' + n + ' ' + cyfr(n) + '.' };
+    return { ok: true, iso: k.iso, wartosc: '+' + k.kod + ' ' + grupuj(d), krajowy: grupuj(d) };
+  }
+  function opisDlugosci(iso) { var k = kraj(iso); return k.iso === 'XX' ? 'numer z kierunkowym, np. +421 912 123 456' : (k.min === k.max ? k.min + ' ' + cyfr(k.min) : 'od ' + k.min + ' do ' + k.max + ' cyfr') + ', np. ' + k.przyklad; }
+  function emailBlad(v) {
+    v = String(v || '').trim();
+    if (/\s/.test(v)) return 'Adres e-mail nie może zawierać spacji.';
+    var at = (v.match(/@/g) || []).length;
+    if (!at) return 'W adresie e-mail brakuje znaku @ (np. jan.kowalski@gmail.com).';
+    if (at > 1) return 'Adres e-mail może zawierać tylko jeden znak @.';
+    var cz = v.split('@'), lok = cz[0], dom = cz[1];
+    if (!lok) return 'Przed znakiem @ brakuje nazwy skrzynki (np. jan.kowalski@…).';
+    if (!dom) return 'Po znaku @ brakuje domeny (np. …@gmail.com).';
+    if (/[^\x21-\x7e]/.test(v)) return 'Adres e-mail nie może zawierać polskich liter ani innych znaków specjalnych.';
+    if (v.length > 254 || lok.length > 64) return 'Adres e-mail jest za długi.';
+    if (!/^[A-Za-z0-9!#$%&'*+\/=?^_`{|}~.-]+$/.test(lok) || /^\.|\.$|\.\./.test(lok)) return 'Część przed znakiem @ zawiera niedozwolone znaki lub kropki w złym miejscu.';
+    if (dom.indexOf('.') < 0) return 'Domena po znaku @ musi zawierać kropkę (np. gmail.com, wp.pl).';
+    var et = dom.split('.');
+    if (et.some(function (x) { return !/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/.test(x); })) return 'Domena po znaku @ jest niepoprawna (np. gmail.com, wp.pl).';
+    if (!/^[A-Za-z]{2,24}$/.test(et[et.length - 1])) return 'Końcówka domeny jest niepoprawna (np. .pl, .com).';
+    return '';
+  }
+  /* podpowiedź przy literówce w popularnej domenie: „gmial.com” → „gmail.com” (tylko podpowiedź, nie błąd) */
+  var DOMENY = ['gmail.com', 'wp.pl', 'o2.pl', 'onet.pl', 'op.pl', 'interia.pl', 'poczta.onet.pl', 'gazeta.pl', 'tlen.pl', 'vp.pl', 'yahoo.com', 'outlook.com', 'hotmail.com', 'live.com', 'icloud.com', 'protonmail.com', 'gmx.de', 'web.de', 'seznam.cz'];
+  function lev(a, b) {
+    var m = [], i, j; for (i = 0; i <= b.length; i++) m[i] = [i];
+    for (j = 0; j <= a.length; j++) m[0][j] = j;
+    for (i = 1; i <= b.length; i++) for (j = 1; j <= a.length; j++) m[i][j] = Math.min(m[i - 1][j - 1] + (b.charAt(i - 1) === a.charAt(j - 1) ? 0 : 1), m[i][j - 1] + 1, m[i - 1][j] + 1);
+    return m[b.length][a.length];
+  }
+  function emailPodpowiedz(v) {
+    v = String(v || '').trim(); if (emailBlad(v)) return '';
+    var cz = v.split('@'), dom = cz[1].toLowerCase(); if (DOMENY.indexOf(dom) >= 0) return '';
+    var naj = DOMENY.map(function (x) { return [x, lev(dom, x)]; }).sort(function (a, b) { return a[1] - b[1]; })[0];
+    return naj && naj[1] <= 2 && naj[1] > 0 ? cz[0] + '@' + naj[0] : '';
+  }
+  /* Sprawdzenie jednej wartości według definicji pola z panelu. Zwraca '' albo komunikat. */
+  function walidujPole(p, v, dzisISO, kat) {
+    v = String(v == null ? '' : v).trim();
+    if (!v) return p.wym ? (p.typ === 'tak' ? 'Proszę zaznaczyć to pole.' : p.typ === 'wybor' ? 'Proszę wybrać jedną z opcji.' : 'Proszę uzupełnić to pole.') : '';
+    if (p.typ === 'email') return emailBlad(v);
+    if (p.typ === 'telefon') { var r = telefon('PL', v); return r.ok ? '' : r.blad; }
+    if (p.typ === 'data') {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(v) || isNaN(Date.parse(v + 'T00:00:00Z'))) return 'Proszę wybrać poprawną datę.';
+      if (dzisISO && v < dzisISO) return 'Ta data już minęła — proszę wybrać dzisiejszą lub późniejszą.';
+      if (dzisISO && +v.slice(0, 4) > +dzisISO.slice(0, 4) + 3) return 'Proszę wybrać datę w ciągu najbliższych 3 lat.';
+      return '';
+    }
+    if (p.typ === 'liczba' && !/^-?\d+([.,]\d+)?$/.test(v)) return 'Proszę wpisać liczbę.';
+    if (p.id === 'imie') {
+      if (v.length < 2) return 'Proszę wpisać co najmniej 2 litery.';
+      if (!/^[A-Za-zÀ-ɏͰ-ϿЀ-ӿ][A-Za-zÀ-ɏͰ-ϿЀ-ӿ\s'’.-]*$/.test(v)) return 'Imię może zawierać tylko litery, spacje, myślnik i apostrof.';
+    }
+    if (p.typ === 'obszar' && p.wym && v.length < 10) return 'Wiadomość jest bardzo krótka — proszę napisać choć kilka słów (min. 10 znaków).';
+    if (v.length > (p.typ === 'obszar' ? 4000 : 300)) return 'Tekst jest za długi.';
+    return '';
+  }
+  A.form = { KRAJE: KRAJE, KRAJ_INNY: KRAJ_INNY, kraj: kraj, telefon: telefon, opisDlugosci: opisDlugosci, emailBlad: emailBlad, emailPodpowiedz: emailPodpowiedz, walidujPole: walidujPole };
+
   var TYPY_POL = { tekst: 'text', email: 'email', telefon: 'tel', data: 'date', liczba: 'number' };
   var AUTO = { imie: 'name', email: 'email', telefon: 'tel' };
   function poleFormularza(p, ctx, kat) {
@@ -467,8 +591,19 @@
       ctl = '<select id="' + id + '"' + wsp + '><option value="">' + esc(ui(ctx, 'f_wybierz')) + '</option>' + op.map(function (o) { return '<option>' + esc(o) + '</option>'; }).join('') + '</select>';
     } else if (p.typ === 'tak') {
       return '<div class="pole pole-zgoda pole--pelne" data-f="pole:' + esc(p.id) + '"><input type="checkbox" id="' + id + '"' + wsp + ' value="tak"><label for="' + id + '">' + esc(et) + (p.wym ? ' <span class="wym">(' + esc(ui(ctx, 'f_wym')) + ')</span>' : '') + '</label><p class="blad" id="' + id + '-b" hidden></p></div>';
-    } else ctl = '<input id="' + id + '" type="' + (TYPY_POL[p.typ] || 'text') + '"' + wsp + (AUTO[p.id] ? ' autocomplete="' + AUTO[p.id] + '"' : '') + ' maxlength="300">';
-    return '<div class="pole' + (pelne ? ' pole--pelne' : '') + '" data-f="pole:' + esc(p.id) + '">' + lab + ctl + '<p class="blad" id="' + id + '-b" hidden></p></div>';
+    } else if (p.typ === 'telefon') {
+      /* numer kierunkowy: natywna lista (wygodna na telefonie), na wierzchu widać tylko „PL +48” */
+      var k0 = KRAJE[0];
+      ctl = '<div class="tel"><div class="tel-kier"><span class="tel-kod" aria-hidden="true">' + k0.iso + ' +' + k0.kod + '</span>' +
+        '<select id="' + id + '-kraj" class="tel-kraj" data-kraj-dla="' + id + '" aria-label="' + esc(ui(ctx, 'f_kraj')) + '">' +
+        KRAJE.concat([KRAJ_INNY]).map(function (k) { return '<option value="' + k.iso + '"' + (k === k0 ? ' selected' : '') + '>' + esc(k.nazwa) + (k.kod ? ' (+' + k.kod + ')' : '') + '</option>'; }).join('') + '</select></div>' +
+        '<input id="' + id + '" type="tel" inputmode="tel" autocomplete="tel-national"' + wsp.replace(' placeholder="' + esc(ph) + '"', '') + ' placeholder="' + esc(k0.przyklad) + '" maxlength="24" aria-describedby="' + id + '-p"></div>' +
+        '<p class="pole-pod" id="' + id + '-p">' + esc(opisDlugosci('PL')) + '</p>';
+    } else if (p.typ === 'email') {
+      ctl = '<input id="' + id + '" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false"' + wsp + ' maxlength="254">' +
+        '<p class="pole-pod podpow" id="' + id + '-h" hidden></p>';
+    } else ctl = '<input id="' + id + '" type="' + (TYPY_POL[p.typ] || 'text') + '"' + wsp + (AUTO[p.id] ? ' autocomplete="' + AUTO[p.id] + '"' : '') + (p.typ === 'data' ? ' min="' + esc(ctx.today) + '"' : '') + ' maxlength="300">';
+    return '<div class="pole' + (pelne ? ' pole--pelne' : '') + '" data-f="pole:' + esc(p.id) + '">' + lab + ctl + '<p class="blad" id="' + id + '-b" role="alert" hidden></p></div>';
   }
   A.poleFormularza = poleFormularza;
 

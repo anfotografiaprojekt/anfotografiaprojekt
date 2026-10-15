@@ -138,21 +138,18 @@
       wariant: 'os',
       opowiesc: {
         zdjecie: img('historia-poczatki-pasja-od-dziecka', 2000, 1333, 'Pierwszy aparat — początek fotograficznej pasji Anny Niedobitek', [800, 1200]),
-        tresc: { pl: 'Moja przygoda z fotografią rozpoczęła się już w dzieciństwie, kiedy odkryłam, jak wiele można opowiedzieć za pomocą zdjęć. Z czasem pasja przerodziła się w *sposób na życie*.' },
-        wiecej: { pl: 'Moja przygoda z fotografią rozpoczęła się już w dzieciństwie, kiedy odkryłam, jak wiele można opowiedzieć za pomocą zdjęć.\n\nZ czasem pasja przerodziła się w sposób na życie i w 2021 roku rozpoczęłam prowadzenie własnej działalności fotograficznej.\n\nDziś realizuję sesje w promieniu ok. 100 km od Zgorzelca — m.in. w Görlitz, Bolesławcu i Legnicy — a reportaże ślubne na terenie całego Dolnego Śląska, także we Wrocławiu.' },
-        wyrLiczba: { pl: '2021' },
-        wyrOpis: { pl: 'od tego roku prowadzę własną działalność fotograficzną' }
+        tresc: { pl: 'Moja przygoda z fotografią rozpoczęła się już w dzieciństwie, kiedy odkryłam, jak wiele można opowiedzieć za pomocą zdjęć.\n\nZ czasem pasja przerodziła się w *sposób na życie* i w 2021 roku rozpoczęłam prowadzenie własnej działalności fotograficznej.\n\nDziś realizuję sesje w promieniu ok. 100 km od Zgorzelca — m.in. w Görlitz, Bolesławcu i Legnicy — a reportaże ślubne na terenie całego Dolnego Śląska, także we Wrocławiu.' }
       },
       rozdzialy: [
         { id: 'h1', rok: { pl: 'Dzieciństwo' }, tytul: { pl: 'Pierwsze kadry' },
           tresc: { pl: 'Moja przygoda z fotografią rozpoczęła się już w dzieciństwie, kiedy odkryłam, jak wiele można opowiedzieć za pomocą zdjęć.' },
-          tlo: img('historia-poczatki-pasja-od-dziecka', 2000, 1333, 'Pierwszy aparat — początek fotograficznej pasji', [800, 1200]), ciemno: 50, tekst: 'jasny' },
+          tlo: img('historia-poczatki-pasja-od-dziecka', 2000, 1333, 'Pierwszy aparat — początek fotograficznej pasji', [800, 1200]), krotki: true },
         { id: 'h2', rok: { pl: '2021' }, tytul: { pl: 'Własna działalność fotograficzna' },
           tresc: { pl: 'Z czasem pasja przerodziła się w sposób na życie i w 2021 roku rozpoczęłam prowadzenie własnej działalności fotograficznej.' },
-          tlo: img('historia-2021-wlasna-dzialalnosc', 2000, 1333, 'Jedna z pierwszych realizacji Anny Niedobitek', [800, 1200]), ciemno: 50, tekst: 'jasny' },
+          tlo: img('historia-2021-wlasna-dzialalnosc', 2000, 1333, 'Jedna z pierwszych realizacji Anny Niedobitek', [800, 1200]), krotki: true },
         { id: 'h3', rok: { pl: 'Dziś' }, tytul: { pl: 'Zgorzelec, Görlitz i cały Dolny Śląsk' },
           tresc: { pl: 'Sesje realizuję w promieniu ok. 100 km od Zgorzelca — m.in. w Görlitz, Bolesławcu i Legnicy, a reportaże ślubne na terenie całego Dolnego Śląska, także we Wrocławiu.' },
-          tlo: img('historia-dzis-dolny-slask', 2000, 1333, 'Sesja zdjęciowa w plenerze na Dolnym Śląsku', [800, 1200]), ciemno: 50, tekst: 'jasny' }
+          tlo: img('historia-dzis-dolny-slask', 2000, 1333, 'Sesja zdjęciowa w plenerze na Dolnym Śląsku', [800, 1200]), krotki: true }
       ]
     },
 

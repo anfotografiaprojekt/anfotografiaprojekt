@@ -17,7 +17,7 @@
   /* ================= STAN PANELU ================= */
   var P = {
     stan: Rn.clone(site.state), demo: !!site.demo, zalogowany: false, otwarty: false,
-    strona: 'pulpit', szkic: null, szkicStrona: null, filtr: 'wszystkie', wiadomosci: null, root: null, wrocDo: null
+    strona: 'pulpit', szkic: null, szkicStrona: null, filtr: 'wszystkie', root: null, wrocDo: null
   };
   function dzis() { return Rn.dzis(); }
   function plusDni(iso, n) { var p = iso.split('-'), d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2] + n)); return d.toISOString().slice(0, 10); }
@@ -149,7 +149,7 @@
     { n: 'Treści czasowe', s: ['aktualnosci'] },
     { n: 'Wizerunek', s: ['start', 'oMnie', 'historia', 'kadra'] },
     { n: 'Galeria', s: ['portfolio', 'instagram'] },
-    { n: 'Kontakt i dane', s: ['kontakt', 'wiadomosci'] },
+    { n: 'Kontakt i dane', s: ['kontakt', 'powiadomienia'] },
     { n: 'Ustawienia', s: ['wyglad', 'seo', 'jezyki', 'haslo', 'kopia'] }
   ];
   var STRONY = {
@@ -163,7 +163,7 @@
     portfolio: { n: 'Portfolio', ik: '▦', opis: 'Galeria zdjęć i wideo w mozaice: każde zdjęcie w swojej orientacji (pion lub poziom), a strony mieszczą się na jednym ekranie.', sek: 'portfolio' },
     instagram: { n: 'Instagram', ik: '◉', opis: 'Najnowsze zdjęcia z Instagrama — automatycznie albo wybrane ręcznie.', sek: 'instagram' },
     kontakt: { n: 'Kontakt i stopka', ik: '✆', opis: 'Messenger, profile, obszar działania, dane działalności (NIP) i hasło w stopce.', sek: 'kontakt' },
-    wiadomosci: { n: 'Wiadomości', ik: '✉', opis: 'Wiadomości wysłane przez formularz kontaktowy na stronie.' },
+    powiadomienia: { n: 'Wiadomości e-mail', ik: '✉', opis: 'Na jaki adres e-mail przychodzą wiadomości z formularza kontaktowego. Wiadomości nie są przechowywane na stronie — trafiają prosto do Twojej skrzynki.' },
     wyglad: { n: 'Wygląd i efekty', ik: '✦', opis: 'Motyw kolorystyczny (3 wyraźnie różne style), kropki nawigacji i animacje.' },
     seo: { n: 'SEO (Google)', ik: '⌕', opis: 'Tytuł i opis strony widoczne w wynikach wyszukiwania Google.' },
     jezyki: { n: 'Wersje językowe', ik: '⚑', opis: 'Włączanie i wyłączanie wersji językowych strony.' },
@@ -181,6 +181,12 @@
     /* motywy z poprzedniej wersji (szałwia, grafit) → Kremowy beż */
     if (s.ustawienia && !A.MOTYWY.some(function (x) { return x.id === s.ustawienia.motyw; })) s.ustawienia.motyw = 'bez';
     if (s.historia && s.historia.wariant !== 'opowiesc') s.historia.wariant = 'os';
+    var op = s.historia && s.historia.opowiesc;
+    if (op && op.wiecej) {
+      ['pl', 'en'].forEach(function (l) { if (Rn.plain(t(op.wiecej, l)).length > Rn.plain(t(op.tresc, l)).length) { op.tresc = op.tresc || {}; op.tresc[l] = op.wiecej[l]; } });
+    }
+    if (op) { delete op.wiecej; delete op.wyrLiczba; delete op.wyrOpis; }
+    (s.historia && s.historia.rozdzialy || []).forEach(function (r) { if (r.krotki == null) r.krotki = true; delete r.ciemno; delete r.tekst; delete r.kolor; });
     return s;
   }
 
@@ -231,8 +237,7 @@
       aktualnosci: { n: (s.aktualnosci.lista || []).length, akt: akt },
       historia: { n: (s.historia.rozdzialy || []).length },
       kadra: { n: (s.kadra.lista || []).length },
-      portfolio: { n: (s.portfolio.elementy || []).length },
-      wiadomosci: P.wiadomosci ? { n: P.wiadomosci.filter(function (w) { return !w.przeczytana; }).length, nowe: true } : null
+      portfolio: { n: (s.portfolio.elementy || []).length }
     };
   }
   function rysujMenu() {
@@ -716,7 +721,7 @@
       { idz: 'portfolio', l: zdj, n: 'Zdjęcia i filmy w portfolio', d: wszZdj > zdj ? (wszZdj - zdj) + ' ukryte' : 'wszystkie widoczne' },
       { idz: 'kadra', l: Rn.widoczne(s.kadra.lista).length, n: 'Osoby w „Kto fotografuje”', d: (s.kadra.lista || []).length + ' w panelu' },
       { idz: 'historia', l: Rn.widoczne(s.historia.rozdzialy).length, n: 'Etapy osi czasu', d: s.historia.wariant === 'opowiesc' ? 'układ: opowieść' : 'układ: oś czasu' },
-      { idz: 'wiadomosci', l: P.wiadomosci ? P.wiadomosci.filter(function (w) { return !w.przeczytana; }).length : '–', n: 'Nowe wiadomości', d: 'z formularza kontaktowego', kl: 'wiad' },
+      { idz: 'powiadomienia', l: '✉', n: 'Formularz → e-mail', d: 'gdzie przychodzą wiadomości' },
       { idz: 'sekcje', l: widSek + '/8', n: 'Widoczne sekcje', d: 'pokaż / ukryj sekcje' }
     ];
     kont.innerHTML =
@@ -725,7 +730,7 @@
       '<button type="button" class="cmsp-btn cmsp-btn--obrys" data-akcja="szybko" data-cel="portfolio">+ Zdjęcie do portfolio</button>' +
       '<button type="button" class="cmsp-btn cmsp-btn--obrys" data-idz="start">Pierwszy ekran</button></div></section>' +
       '<div class="cmsp-kafle">' + kafle.map(function (k) {
-        return '<button type="button" class="cmsp-kafel' + (k.kl ? ' cmsp-kafel--' + k.kl : '') + '" data-idz="' + k.idz + '"><span class="cmsp-kafel-l"' + (k.kl === 'wiad' ? ' data-licznik-wiad' : '') + '>' + k.l + '</span><span class="cmsp-kafel-n">' + esc(k.n) + '</span><small>' + esc(k.d) + '</small></button>';
+        return '<button type="button" class="cmsp-kafel' + (k.kl ? ' cmsp-kafel--' + k.kl : '') + '" data-idz="' + k.idz + '"><span class="cmsp-kafel-l"' + '' + '>' + k.l + '</span><span class="cmsp-kafel-n">' + esc(k.n) + '</span><small>' + esc(k.d) + '</small></button>';
       }).join('') + '</div>' +
       '<section class="cmsp-karta"><h2>Harmonogram aktualności</h2><p class="cmsp-pomoc">30 dni wstecz i 90 dni naprzód. Pionowa linia to dzisiaj.</p>' + gantt(lista, today) + '</section>' +
       '<section class="cmsp-karta"><h2>Najbliższe 45 dni</h2>' + najblizsze(lista, today) + '</section>' +
@@ -735,10 +740,6 @@
           '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--obrys" data-idz="' + x.k + '">Edytuj tę sekcję</button></div>';
       }).join('') + '</div></section>';
     skalujMini(kont);
-    if (!P.demo && P.wiadomosci == null) pobierzWiadomosci().then(function () {
-      var l = kont.querySelector('[data-licznik-wiad]'); if (l && P.wiadomosci) l.textContent = P.wiadomosci.filter(function (w) { return !w.przeczytana; }).length;
-      odswiezLiczniki();
-    });
   };
   function gantt(lista, today) {
     var od = plusDni(today, -30), dni = 120;
@@ -886,35 +887,37 @@
       var pola = [
         { naglowek: 'Układ sekcji', opis: 'Wybierz, jak ma wyglądać Historia. Można przełączać w dowolnej chwili — treści obu układów są zapamiętywane osobno.' },
         { k: 'historia.wariant', typ: 'radio', et: 'Układ', przerysuj: true, f: 'historia', opcje: [
-          { v: 'os', n: 'Oś czasu — etapy obok siebie, przewijane w poziomie (palcem, myszą lub strzałkami)' },
-          { v: 'opowiesc', n: 'Opowieść — jedno duże zdjęcie i tekst historii z wyróżnionym rokiem' }] }
+          { v: 'os', n: 'Oś czasu — etapy (rok lub data, krótki opis, opis wydarzenia) przewijane w poziomie' },
+          { v: 'opowiesc', n: 'Opowieść — jedno duże zdjęcie i historia obok' }] }
       ].concat(polaNaglowka('historia'));
       if (op) pola = pola.concat([
-        { naglowek: 'Opowieść', opis: 'Na ekranie widać krótki tekst; pełna historia otwiera się w oknie „Czytaj całą historię”.' },
-        { k: 'historia.opowiesc.zdjecie', typ: 'zdjecie', et: 'Główne zdjęcie (najlepiej pionowe lub kwadratowe)', f: 'historia.opowiesc.zdjecie' },
-        { k: 'historia.opowiesc.tresc', typ: 'obszar', i18n: true, et: 'Krótki tekst na ekranie (2–3 zdania)', wiersze: 3, f: 'historia.opowiesc.tresc', pomoc: 'Formatowanie: *kursywa*, **pogrubienie**.' },
-        { k: 'historia.opowiesc.wyrLiczba', typ: 'tekst', i18n: true, et: 'Wyróżnienie — liczba lub rok (np. 2021)', max: 12, szer: 'pol', f: 'historia.opowiesc.wyrLiczba' },
-        { k: 'historia.opowiesc.wyrOpis', typ: 'tekst', i18n: true, et: 'Wyróżnienie — podpis', max: 80, szer: 'pol', f: 'historia.opowiesc.wyrLiczba' },
-        { k: 'historia.opowiesc.wiecej', typ: 'obszar', i18n: true, et: 'Pełna historia w oknie „Czytaj całą historię” (puste = bez przycisku)', wiersze: 8, f: 'historia.opowiesc.wiecej', pomoc: 'Pusta linia = nowy akapit.' }
+        { naglowek: 'Opowieść' },
+        { k: 'historia.opowiesc.zdjecie', typ: 'zdjecie', et: 'Duże zdjęcie (najlepiej pionowe lub kwadratowe)', f: 'historia.opowiesc.zdjecie' },
+        { k: 'historia.opowiesc.tresc', typ: 'obszar', i18n: true, et: 'Treść historii', wiersze: 10, f: 'historia.opowiesc.tresc',
+          pomoc: 'Pusta linia = nowy akapit, *kursywa*, **pogrubienie**. Jeśli tekst nie zmieści się na ekranie, strona sama go skróci i doda przycisk „Czytaj całą historię”.' }
       ]);
       return pola.concat(polaTla('historia', s));
     });
     lista(kont, {
       id: 'rozdzialy', k: 'historia', sciezka: 'historia.rozdzialy', etykieta: 'Etapy osi czasu', nazwa: 'etap', prefiks: 'h',
-      opis: 'Używane w układzie „Oś czasu”: rok lub etap, tytuł, krótki tekst i zdjęcie. Kolejność na liście = kolejność na osi. Tylko prawdziwe fakty.',
-      tytul: function (x) { return t(x.rok, 'pl') + ' — ' + t(x.tytul, 'pl'); }, podsum: function (x) { return Rn.skrot(t(x.tresc, 'pl'), 80); },
+      opis: 'Używane w układzie „Oś czasu”. Kolejność na liście = kolejność na osi (od lewej). Przy większej liczbie etapów oś przewija się w poziomie.',
+      tytul: function (x) { return (t(x.rok, 'pl') || '—') + (t(x.tytul, 'pl') ? ' — ' + t(x.tytul, 'pl') : ''); }, podsum: function (x) { return Rn.skrot(t(x.tresc, 'pl'), 80); },
       zdj: function (x) { return x.tlo; },
-      nowy: function () { return { id: uid('h'), rok: { pl: '' }, tytul: { pl: '' }, tresc: { pl: '' }, tlo: null }; },
+      nowy: function () { return { id: uid('h'), rok: { pl: '' }, tytul: { pl: '' }, krotki: true, tresc: { pl: '' }, tlo: null }; },
       pola: function (x) {
         var f = 'historia:' + x.id;
         return [
-          { k: 'rok', typ: 'tekst', i18n: true, et: 'Rok lub etap (np. 2021, Dziś)', max: 20, szer: 'pol', f: f + ':rok' },
-          { k: 'tytul', typ: 'tekst', i18n: true, et: 'Tytuł etapu', wym: true, max: 80, f: f + ':tytul' },
-          { k: 'tresc', typ: 'obszar', i18n: true, et: 'Krótki tekst (dłuższy niż ok. 170 znaków otworzy się w oknie „Czytaj więcej”)', wiersze: 4, f: f + ':tresc' },
-          { k: 'tlo', typ: 'zdjecie', et: 'Zdjęcie na karcie (poziome, opcjonalnie)', f: f + ':tlo' }
+          { k: 'rok', typ: 'tekst', i18n: true, et: 'Rok lub data (np. 2021, maj 2021, 12.06.2021, Dziś)', wym: true, max: 24, szer: 'pol', f: f + ':rok' },
+          { k: 'krotki', typ: 'tak', et: 'Pokaż krótki opis', przerysuj: true, f: f + ':tytul' },
+          { k: 'tytul', typ: 'tekst', i18n: true, et: 'Krótki opis (np. Własna działalność fotograficzna)', max: 80, f: f + ':tytul', gdy: function (o) { return o.krotki !== false; } },
+          { k: 'tresc', typ: 'obszar', i18n: true, et: 'Co się wtedy wydarzyło', wiersze: 5, f: f + ':tresc', pomoc: 'Dłuższy tekst (ponad ok. 220 znaków) na osi jest skracany — całość otwiera się w okienku „Czytaj więcej”.' },
+          { k: 'tlo', typ: 'zdjecie', et: 'Zdjęcie na karcie (opcjonalnie, poziome)', f: f + ':tlo' }
         ];
       },
-      waliduj: function (x) { return t(x.tytul, 'pl').trim() || t(x.rok, 'pl').trim() || t(x.tresc, 'pl').trim() ? '' : 'Etap jest pusty — wpisz rok, tytuł albo tekst.'; },
+      waliduj: function (x) {
+        if (!t(x.rok, 'pl').trim()) return 'Proszę wpisać rok lub datę.';
+        return t(x.tresc, 'pl').trim() || (x.krotki !== false && t(x.tytul, 'pl').trim()) ? '' : 'Proszę wpisać, co się wtedy wydarzyło.';
+      },
       poZmianie: function () { odswiezMini('historia', P.szkic || P.stan); }
     });
   };
@@ -1087,46 +1090,60 @@
     });
   }
 
-  /* ---------- Wiadomości ---------- */
-  function pobierzWiadomosci() {
-    if (P.demo) { P.wiadomosci = []; return Promise.resolve(); }
-    return api('GET', '/wiadomosci').then(function (r) { if (r._ok) P.wiadomosci = r.wiadomosci || []; else if (r._status === 401) P.wiadomosci = null; }).catch(function () { });
-  }
-  RYSUJ.wiadomosci = function (kont) {
+  /* ---------- Wiadomości e-mail (formularz → prywatna skrzynka) ---------- */
+  RYSUJ.powiadomienia = function (kont) {
+    if (P.demo) { kont.innerHTML = '<section class="cmsp-karta"><p class="cmsp-pusto">Tryb demonstracyjny — wysyłka wiadomości e-mail działa po wdrożeniu strony na serwer.</p></section>'; return; }
     kont.innerHTML = '<section class="cmsp-karta"><p class="cmsp-pusto">Wczytywanie…</p></section>';
-    pobierzWiadomosci().then(function () {
-      odswiezLiczniki();
-      var w = P.wiadomosci || [];
-      if (P.demo) { kont.innerHTML = '<section class="cmsp-karta"><p class="cmsp-pusto">Tryb demonstracyjny — wiadomości z formularza pojawią się tutaj po wdrożeniu strony na serwer.</p></section>'; return; }
-      kont.innerHTML = '<section class="cmsp-karta"><h2>Skrzynka <span class="cmsp-licz">' + w.length + '</span></h2><p class="cmsp-pomoc">Wiadomości są przechowywane 12 miesięcy (zgodnie z polityką prywatności), potem usuwają się same.</p>' +
-        (w.length ? '<ul class="cmsp-wiad">' + w.map(function (m) {
-          var d = new Date(m.czas);
-          return '<li class="' + (m.przeczytana ? '' : 'cmsp-wiad--nowa') + '" data-wid="' + esc(m.id) + '"><div class="cmsp-wiad-g"><strong>' + esc(m.imie) + '</strong>' + (m.przeczytana ? '' : '<span class="cmsp-plak cmsp-plak--ziel">Nowa</span>') +
-            '<time>' + d.toLocaleDateString('pl-PL') + ' ' + d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) + '</time></div>' +
-            (m.pola ? '<dl class="cmsp-wiad-pola">' + m.pola.map(function (x) {
-              var w = esc(x.wartosc).replace(/\n/g, '<br>');
-              if (x.id === 'email') w = '<a href="mailto:' + esc(x.wartosc) + '">' + w + '</a>';
-              if (/^[+\d][\d\s-]{6,}$/.test(x.wartosc) && x.id !== 'email') w = '<a href="tel:' + esc(x.wartosc.replace(/\s/g, '')) + '">' + w + '</a>';
-              return '<dt>' + esc(x.etykieta) + '</dt><dd>' + w + '</dd>';
-            }).join('') + '</dl>'
-              : '<p class="cmsp-wiad-meta"><a href="mailto:' + esc(m.email) + '">' + esc(m.email) + '</a>' + (m.telefon ? ' · ' + esc(m.telefon) : '') + (m.rodzaj ? ' · ' + esc(m.rodzaj) : '') + (m.termin ? ' · termin: ' + esc(m.termin) : '') + '</p>' +
-                '<p class="cmsp-wiad-t">' + esc(m.wiadomosc || '').replace(/\n/g, '<br>') + '</p>') +
-            '<div class="cmsp-wiersz-akcje">' + (m.przeczytana ? '' : '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--jasny" data-akcja="wiad-czyt">Oznacz jako przeczytaną</button>') +
-            (m.email ? '<a class="cmsp-btn cmsp-btn--maly cmsp-btn--obrys" href="mailto:' + esc(m.email) + '?subject=' + encodeURIComponent('Re: wiadomość ze strony') + '">Odpowiedz e-mailem</a>' : '') +
-            '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--usun" data-akcja="wiad-usun">Usuń</button></div></li>';
-        }).join('') + '</ul>' : '<p class="cmsp-pusto">Brak wiadomości.</p>') + '</section>';
+    api('GET', '/powiadomienia').then(function (d) {
+      if (!d._ok) { kont.innerHTML = '<section class="cmsp-karta"><p class="cmsp-pusto">' + esc(d.blad || 'Nie udało się wczytać ustawień.') + '</p></section>'; return; }
+      var stan = d.klucz && d.email ? ['ziel', 'Formularz wysyła wiadomości na ' + d.email] : !d.klucz ? ['czer', 'Wysyłka nie jest jeszcze skonfigurowana — brak klucza RESEND_API_KEY (instrukcja niżej).'] : ['czer', 'Wpisz adres, na który mają przychodzić wiadomości.'];
+      kont.innerHTML =
+        '<section class="cmsp-karta cmsp-waska"><h2>Gdzie przychodzą wiadomości</h2>' +
+        '<p class="cmsp-status cmsp-status--' + stan[0] + '" role="status">' + esc(stan[1]) + '</p>' +
+        '<form id="cmsp-f-mail" novalidate><div class="cmsp-pole"><label class="cmsp-et" for="cmsp-mail">Twój adres e-mail (prywatny)</label>' +
+        '<input id="cmsp-mail" type="email" autocomplete="email" value="' + esc(d.email || '') + '" required aria-describedby="cmsp-mail-p">' +
+        '<p class="cmsp-pomoc" id="cmsp-mail-p">Ten adres nie jest widoczny na stronie ani w jej kodzie — zna go tylko serwer. Odpowiadasz klientowi zwykłym „Odpowiedz” w poczcie.</p></div>' +
+        '<p class="cmsp-blad-modal" role="alert" hidden></p>' +
+        '<div class="cmsp-rzad-przyc"><button type="submit" class="cmsp-btn cmsp-btn--glowny">Zapisz adres</button>' +
+        '<button type="button" class="cmsp-btn cmsp-btn--obrys" data-akcja="mail-test"' + (d.klucz && d.email ? '' : ' disabled') + '>Wyślij wiadomość testową</button></div></form></section>' +
+        '<section class="cmsp-karta"><h2>Jak to działa</h2><ol class="cmsp-kroki">' +
+        '<li>Klient wypełnia formularz — strona sprawdza dane (e-mail ze znakiem @, numer telefonu z właściwą liczbą cyfr dla wybranego kraju, data w przyszłości).</li>' +
+        '<li>Serwer sprawdza je jeszcze raz i wysyła e-mail przez usługę <strong>Resend</strong> na adres powyżej. Na stronie nic nie jest zapisywane.</li>' +
+        '<li>W skrzynce klikasz „Odpowiedz” — odpowiedź trafia na adres klienta.</li></ol>' +
+        '<h3 class="cmsp-podtytul">Konfiguracja (jednorazowo)</h3><ol class="cmsp-kroki">' +
+        '<li>Załóż bezpłatne konto na resend.com <strong>na ten sam adres e-mail</strong>, który wpisujesz powyżej (bez własnej domeny Resend dostarcza wiadomości tylko na adres właściciela konta).</li>' +
+        '<li>W Resend: <em>API Keys → Create API Key</em> (uprawnienie „Sending access”) i skopiuj klucz.</li>' +
+        '<li>W Cloudflare: projekt strony → <em>Settings → Variables and Secrets → Add</em>: nazwa <code>RESEND_API_KEY</code>, typ <em>Secret</em>, wartość = klucz. Zapisz i wdroż stronę ponownie (Deployments → Retry deployment).</li>' +
+        '<li>Wróć tutaj i kliknij „Wyślij wiadomość testową”.</li>' +
+        '<li>Po zakupie domeny: dodaj ją w Resend (Domains), wpisz rekordy DNS w Cloudflare, a potem zmienną <code>MAIL_OD</code> np. <code>Formularz &lt;formularz@twojadomena.pl&gt;</code> — wtedy można wysyłać na dowolny adres i poczta rzadziej trafia do spamu.</li></ol>' +
+        '<p class="cmsp-pomoc">Nadawca teraz: ' + esc(d.nadawca) + (d.wlasnaDomena ? '' : ' (adres testowy Resend)') + '.</p></section>' +
+        (d.stare ? '<section class="cmsp-karta cmsp-karta--ryzyko"><h2>Stare wiadomości na serwerze</h2><p class="cmsp-pomoc">Poprzednia wersja strony zapisywała wiadomości na serwerze — jest ich ' + d.stare + '. Nie są już nigdzie wyświetlane; możesz je trwale usunąć (zgodnie z polityką prywatności i tak usunęłyby się same po 12 miesiącach).</p>' +
+          '<button type="button" class="cmsp-btn cmsp-btn--usun" data-akcja="mail-stare">Usuń stare wiadomości (' + d.stare + ')</button></section>' : '');
+      var f = kont.querySelector('#cmsp-f-mail'), bl = f.querySelector('.cmsp-blad-modal'), inp = f.querySelector('#cmsp-mail');
+      f.onsubmit = function (e) {
+        e.preventDefault(); bl.hidden = true;
+        var v = inp.value.trim(), msg = A.form.emailBlad(v);
+        if (!v) msg = 'Proszę wpisać adres e-mail.';
+        if (msg) { bl.textContent = msg; bl.hidden = false; inp.focus(); return; }
+        api('POST', '/powiadomienia', { email: v }).then(function (r) {
+          if (r._ok) { toast('Zapisano. Wiadomości z formularza będą przychodzić na ' + v + '.'); RYSUJ.powiadomienia(kont); }
+          else { bl.textContent = r.blad || 'Nie udało się zapisać.'; bl.hidden = false; }
+        });
+      };
     });
   };
-  function akcjaWiadomosci(btn, akcja) {
-    var li = btn.closest('[data-wid]'), id = li.getAttribute('data-wid');
-    if (akcja === 'wiad-usun' && !btn.classList.contains('cmsp-pewno')) {
-      btn.classList.add('cmsp-pewno'); btn.textContent = 'Na pewno?';
-      setTimeout(function () { if (btn.isConnected) { btn.classList.remove('cmsp-pewno'); btn.textContent = 'Usuń'; } }, 3500); return;
+  function akcjaPowiadomien(btn, akcja) {
+    var kont = P.root.querySelector('#cmsp-strona');
+    if (akcja === 'mail-stare') {
+      if (!btn.classList.contains('cmsp-pewno')) { btn.classList.add('cmsp-pewno'); btn.textContent = 'Na pewno? Kliknij jeszcze raz'; return; }
+      api('DELETE', '/powiadomienia').then(function (r) { toast(r._ok ? 'Usunięto stare wiadomości (' + r.usunieto + ').' : (r.blad || 'Nie udało się.'), r._ok ? '' : 'blad'); RYSUJ.powiadomienia(kont); });
+      return;
     }
-    api(akcja === 'wiad-usun' ? 'DELETE' : 'PATCH', '/wiadomosci?id=' + encodeURIComponent(id), akcja === 'wiad-usun' ? undefined : { przeczytana: true }).then(function (r) {
-      if (!r._ok) { toast(r.blad || 'Nie udało się.', 'blad'); return; }
-      toast(akcja === 'wiad-usun' ? 'Usunięto wiadomość.' : 'Oznaczono jako przeczytaną.');
-      P.wiadomosci = null; RYSUJ.wiadomosci(P.root.querySelector('#cmsp-strona'));
+    btn.disabled = true; btn.textContent = 'Wysyłanie…';
+    api('POST', '/powiadomienia', { test: 1 }).then(function (r) {
+      btn.disabled = false; btn.textContent = 'Wyślij wiadomość testową';
+      if (r._ok) toast('Wysłano wiadomość testową — sprawdź skrzynkę (także folder Spam).');
+      else { var bl = kont.querySelector('.cmsp-blad-modal'); if (bl) { bl.textContent = r.blad || 'Nie udało się wysłać.'; bl.hidden = false; } toast('Nie udało się wysłać wiadomości testowej.', 'blad'); }
     });
   }
 
@@ -1295,7 +1312,7 @@
         P.stan.ustawienia.jezyki.push({ kod: kod, nazwa: nazwa, wl: false });
         zastosuj({ toast: 'Dodano język (wyłączony). Uzupełnij tłumaczenia i włącz go.' }); idz('jezyki');
         break;
-      case 'wiad-czyt': case 'wiad-usun': akcjaWiadomosci(b, a); break;
+      case 'mail-test': case 'mail-stare': akcjaPowiadomien(b, a); break;
       case 'kop-schowek':
         var ta = P.root.querySelector('#cmsp-eksport');
         (navigator.clipboard ? navigator.clipboard.writeText(ta.value) : Promise.reject()).then(function () { toast('Skopiowano do schowka.'); }, function () { ta.select(); doc.execCommand('copy'); toast('Skopiowano do schowka.'); });

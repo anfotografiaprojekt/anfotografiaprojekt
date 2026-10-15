@@ -295,6 +295,25 @@
     doc.querySelectorAll('main > section.sek:not([hidden]):not(.sek-hero):not(.sek--portfolio)').forEach(function (s) {
       var inn = s.querySelector(':scope > .sek-in'); if (inn) cele.push({ el: s, inn: inn, glowa: null });
     });
+    /* Historia — opowieść: najpierw skracamy tekst (z przyciskiem „Czytaj całą historię”), dopiero potem ewentualny zoom */
+    doc.querySelectorAll('.sek--opowiesc .op-tresc').forEach(function (tr) {
+      var sek = tr.closest('.sek'), inn = sek.querySelector('.sek-in'), btn = sek.querySelector('.op-wiecej');
+      inn.style.zoom = ''; tr.style.maxHeight = ''; tr.classList.remove('op-tresc--ucieta'); if (btn) btn.hidden = true;
+      if (!dostepne) return;
+      var cs = getComputedStyle(sek), pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+      var tekst = sek.querySelector('.op-tekst'), foto = sek.querySelector('.op-foto');
+      var obok = foto && tekst && Math.abs(foto.getBoundingClientRect().top - tekst.getBoundingClientRect().top) < 40;
+      /* na komputerze tekst stoi obok zdjęcia — liczy się wysokość kolumny tekstu, na telefonie całość */
+      var wys = obok ? tekst.getBoundingClientRect().height : inn.getBoundingClientRect().height;
+      var nadmiar = wys + pad - dostepne;
+      if (nadmiar <= 0) return;
+      if (btn) btn.hidden = false;
+      var bh = btn ? btn.getBoundingClientRect().height + 12 : 0;
+      var h = tr.getBoundingClientRect().height - nadmiar - bh - 4;
+      var lh = parseFloat(getComputedStyle(tr).lineHeight) || 24;
+      h = Math.max(lh * 3, Math.floor(h / lh) * lh);
+      tr.style.maxHeight = h + 'px'; tr.classList.add('op-tresc--ucieta');
+    });
     cele.forEach(function (c) {
       if (!c.inn) return;
       c.inn.style.zoom = '';
@@ -317,6 +336,13 @@
     var box = os.closest('.historia-os'), ster = box && box.querySelector('.os-ster');
     var max = os.scrollWidth - os.clientWidth, da = max > 4;
     os.classList.toggle('da-sie', da);
+    os.classList.toggle('os--start', os.scrollLeft <= 2);
+    os.classList.toggle('os--koniec', os.scrollLeft >= max - 2);
+    var pp = box && box.querySelector('.os-postep');
+    if (pp) {
+      pp.hidden = !da;
+      if (da) { var w = os.clientWidth / os.scrollWidth, sp = pp.firstChild; sp.style.width = (w * 100) + '%'; sp.style.transform = 'translateX(' + ((os.scrollLeft / max) * (1 / w - 1) * 100) + '%)'; }
+    }
     if (!ster) return;
     ster.hidden = !da;
     var b = ster.querySelectorAll('.os-btn');
@@ -460,26 +486,35 @@
 
   /* ---------- formularz kontaktowy ---------- */
   var t0 = Date.now();
-  var KOM = {
-    wym: 'Proszę uzupełnić to pole.', email: 'Proszę podać poprawny adres e-mail, np. jan@poczta.pl.',
-    tel: 'Numer telefonu może zawierać tylko cyfry, spacje, myślniki i znak +.', krotko: 'Proszę wpisać co najmniej 2 znaki.',
-    zgoda: 'Do wysłania wiadomości potrzebna jest zgoda.', zaznacz: 'Proszę zaznaczyć to pole.'
-  };
+  var KOM = { zgoda: 'Do wysłania wiadomości potrzebna jest zgoda.' };
   function blad(pole, msg) {
     var b = doc.getElementById(pole.id + '-b');
     pole.setAttribute('aria-invalid', msg ? 'true' : 'false');
-    if (msg) pole.setAttribute('aria-describedby', pole.id + '-b'); else pole.removeAttribute('aria-describedby');
+    var opis = (pole.getAttribute('aria-describedby') || '').split(' ').filter(function (x) { return x && x !== pole.id + '-b'; });
+    if (msg) opis.push(pole.id + '-b');
+    if (opis.length) pole.setAttribute('aria-describedby', opis.join(' ')); else pole.removeAttribute('aria-describedby');
     if (b) { b.textContent = msg || ''; b.hidden = !msg; }
     return !msg;
   }
-  /* walidacja pól zdefiniowanych w panelu (typ z atrybutu data-typ) */
+  function definicjaPola(el) {
+    var p = (site.state.kontakt.pola || []).filter(function (x) { return x.id === el.name; })[0];
+    return p || { id: el.name, typ: el.dataset.typ, wym: el.required };
+  }
+  function krajTel(el) { var s = doc.getElementById(el.id + '-kraj'); return s ? s.value : 'PL'; }
+  /* wartość pola gotowa do wysłania (telefon: „+48 600 123 456”) */
+  function wartoscPola(el) {
+    if (el.type === 'checkbox') return el.checked ? 'tak' : '';
+    if (el.dataset.typ === 'telefon') { var r = A.form.telefon(krajTel(el), el.value); return r.ok ? r.wartosc : el.value.trim(); }
+    return el.value.trim();
+  }
+  /* walidacja pól zdefiniowanych w panelu — ta sama funkcja działa na serwerze */
   function bladPola(el) {
-    var typ = el.dataset.typ, v = el.type === 'checkbox' ? (el.checked ? 'tak' : '') : el.value.trim();
-    if (!v) return el.required ? (typ === 'tak' ? KOM.zaznacz : KOM.wym) : '';
-    if (typ === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return KOM.email;
-    if (typ === 'telefon' && !/^[+\d][\d\s-]{6,}$/.test(v)) return KOM.tel;
-    if (el.name === 'imie' && v.length < 2) return KOM.krotko;
-    return '';
+    if (el.dataset.typ === 'telefon') {
+      var r = A.form.telefon(krajTel(el), el.value);
+      if (r.pusty) return el.required ? 'Proszę podać numer telefonu.' : '';
+      return r.ok ? '' : r.blad;
+    }
+    return A.form.walidujPole(definicjaPola(el), wartoscPola(el), Rn.dzis());
   }
   function waliduj(f) {
     var ok = [];
@@ -487,8 +522,39 @@
     ok.push(blad(f.elements.zgoda, f.elements.zgoda.checked ? '' : KOM.zgoda));
     return ok.every(Boolean);
   }
+  /* telefon: zmiana kraju → podpowiedź o liczbie cyfr; wpisany „+49…” sam przełącza kraj */
+  function ustawKraj(sel) {
+    var el = doc.getElementById(sel.dataset.krajDla), k = A.form.kraj(sel.value);
+    var kod = sel.parentNode.querySelector('.tel-kod'); if (kod) kod.textContent = k.iso === 'XX' ? '+ …' : k.iso + ' +' + k.kod;
+    var pod = doc.getElementById(el.id + '-p'); if (pod) pod.textContent = A.form.opisDlugosci(k.iso);
+    el.placeholder = k.przyklad;
+  }
+  function telWpis(el) {
+    var czyste = el.value.replace(/[^\d\s\-().+\/]/g, '');
+    if (czyste !== el.value) el.value = czyste;
+    var v = el.value.replace(/\s/g, '');
+    if (/^(\+|00)\d{1,4}/.test(v)) {
+      var r = A.form.telefon('PL', el.value), sel = doc.getElementById(el.id + '-kraj');
+      if (r.iso && sel && sel.value !== r.iso && A.form.KRAJE.some(function (k) { return k.iso === r.iso; })) { sel.value = r.iso; ustawKraj(sel); }
+    }
+  }
+  function telFormatuj(el) {
+    var r = A.form.telefon(krajTel(el), el.value);
+    if (r.ok && !r.pusty) {
+      var sel = doc.getElementById(el.id + '-kraj');
+      if (sel && r.iso !== 'XX') { if (sel.value !== r.iso) { sel.value = r.iso; ustawKraj(sel); } el.value = r.krajowy; }
+      else el.value = r.wartosc;
+    }
+  }
+  function emailPodpowiedz(el) {
+    var h = doc.getElementById(el.id + '-h'); if (!h) return;
+    var p = A.form.emailPodpowiedz(el.value);
+    h.hidden = !p;
+    h.innerHTML = p ? 'Czy chodziło o <button type="button" class="podpow-btn" data-popraw="' + el.id + '" data-w="' + Rn.esc(p) + '">' + Rn.esc(p) + '</button>?' : '';
+  }
   function wyslij(f) {
     var st = f.querySelector('.form-status'), btn = f.querySelector('[type=submit]');
+    if (btn.disabled) return;
     st.className = 'form-status'; st.textContent = '';
     if (!waliduj(f)) {
       var pierwszy = f.querySelector('[aria-invalid="true"]'); if (pierwszy) pierwszy.focus();
@@ -496,15 +562,18 @@
       return;
     }
     var pola = {};
-    f.querySelectorAll('[data-typ]').forEach(function (el) { pola[el.name] = el.type === 'checkbox' ? (el.checked ? 'tak' : '') : el.value.trim(); });
+    f.querySelectorAll('[data-typ]').forEach(function (el) { pola[el.name] = wartoscPola(el); });
     var dane = { pola: pola, zgoda: f.elements.zgoda.checked, www: f.elements.www.value, t: Date.now() - t0 };
     if (site.demo) { st.className = 'form-status err'; st.textContent = 'Tryb demonstracyjny — formularz zadziała po wdrożeniu strony na serwer. Proszę napisać przez Messengera.'; return; }
     btn.disabled = true; btn.setAttribute('aria-busy', 'true'); st.textContent = 'Wysyłanie…';
     fetch(API + '/kontakt', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-ANF': '1' }, body: JSON.stringify(dane) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, j: j }; }); })
       .then(function (r) {
-        if (r.ok) { f.reset(); st.className = 'form-status ok'; st.textContent = 'Dziękuję za wiadomość! Odpowiem najszybciej, jak to możliwe.'; }
-        else { st.className = 'form-status err'; st.textContent = (r.j && r.j.blad) || 'Nie udało się wysłać wiadomości. Proszę spróbować ponownie lub napisać przez Messengera.'; }
+        if (r.ok) { f.reset(); f.querySelectorAll('.tel-kraj').forEach(ustawKraj); f.querySelectorAll('.podpow').forEach(function (h) { h.hidden = true; }); st.className = 'form-status ok'; st.textContent = 'Dziękuję za wiadomość! Odpowiem najszybciej, jak to możliwe.'; }
+        else {
+          st.className = 'form-status err'; st.textContent = (r.j && r.j.blad) || 'Nie udało się wysłać wiadomości. Proszę spróbować ponownie lub napisać przez Messengera.';
+          if (r.j && r.j.bledy) Object.keys(r.j.bledy).forEach(function (k) { var el = f.elements[k]; if (el && el.id) blad(el, r.j.bledy[k]); });
+        }
       })
       .catch(function () { st.className = 'form-status err'; st.textContent = 'Brak połączenia. Proszę spróbować ponownie lub napisać przez Messengera.'; })
       .then(function () { btn.disabled = false; btn.removeAttribute('aria-busy'); });
@@ -563,6 +632,7 @@
       return;
     }
     if (t.matches('[data-wiecej]')) { otworzOkno(t); return; }
+    if (t.matches('[data-popraw]')) { var pe = doc.getElementById(t.dataset.popraw); pe.value = t.dataset.w; t.parentNode.hidden = true; blad(pe, bladPola(pe)); pe.focus(); return; }
     if (t.matches('[data-zamknij]')) { t.closest('dialog').close(); return; }
     if (t.matches('.filtr')) { filtruj(t); return; }
     if (t.matches('.os-btn')) { osPrzewin(t); return; }
@@ -582,7 +652,21 @@
   });
   doc.addEventListener('submit', function (e) { if (e.target.id === 'formularz') { e.preventDefault(); wyslij(e.target); } });
   doc.addEventListener('input', function (e) {
-    var f = e.target.form; if (f && f.id === 'formularz' && e.target.getAttribute('aria-invalid') === 'true') waliduj(f);
+    var el = e.target, f = el.form; if (!f || f.id !== 'formularz') return;
+    if (el.dataset.typ === 'telefon') telWpis(el);
+    if (el.dataset.typ && el.getAttribute('aria-invalid') === 'true') blad(el, bladPola(el));
+    if (el.name === 'zgoda' && el.getAttribute('aria-invalid') === 'true') blad(el, el.checked ? '' : KOM.zgoda);
+  });
+  doc.addEventListener('change', function (e) {
+    var el = e.target;
+    if (el.matches && el.matches('.tel-kraj')) { ustawKraj(el); var t = doc.getElementById(el.dataset.krajDla); if (t.value.trim()) blad(t, bladPola(t)); }
+  });
+  /* po wyjściu z pola: sprawdzenie (tylko gdy coś wpisano) i ładne sformatowanie */
+  doc.addEventListener('focusout', function (e) {
+    var el = e.target, f = el.form; if (!f || f.id !== 'formularz' || !el.dataset || !el.dataset.typ || el.type === 'checkbox') return;
+    if (el.dataset.typ === 'email') { el.value = el.value.trim(); emailPodpowiedz(el); }
+    if (el.dataset.typ === 'telefon') telFormatuj(el);
+    if (el.value.trim()) blad(el, bladPola(el));
   });
   var tRes, szerPoprz = window.innerWidth, wysPoprz = window.innerHeight;
   window.addEventListener('resize', function () {
@@ -592,14 +676,14 @@
       /* na telefonie pasek adresu zmienia wysokość okna przy przewijaniu — ignorujemy małe zmiany */
       if (window.innerWidth === szerPoprz && Math.abs(window.innerHeight - wysPoprz) < 90) return;
       szerPoprz = window.innerWidth; wysPoprz = window.innerHeight;
-      ulozMozaike(); dopasuj(); initOs();
+      ulozMozaike(); initOs(); dopasuj();
     }, 160);
   }, { passive: true });
-  if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(function () { dopasuj(); ulozMozaike(); initOs(); });
+  if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(function () { initOs(); dopasuj(); ulozMozaike(); });
 
   function initDynamiczne() {
     ustawPasek(); initNaglowek(); initKropkiIMenu(); initAnimacje(); initPasek(); initWideo(); initInstagram();
-    moz.strona = 0; ulozMozaike(); dopasuj(); initOs();
+    moz.strona = 0; ulozMozaike(); initOs(); dopasuj();
   }
 
   /* ---------- start ---------- */
