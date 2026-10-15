@@ -25,7 +25,7 @@
     return o;
   };
   var tlo = function (typ, obraz, ciemno, tekst, kolor) {
-    return { typ: typ, obraz: obraz || null, wideo: '', plakat: null, kolor: kolor || '#F2EBE3', ciemno: ciemno, tekst: tekst };
+    return { typ: typ, obraz: obraz || null, wideo: '', plakat: null, kolor: kolor || 'motyw:tlo2', kolorWlasny: '#FAF7F2', ciemno: ciemno, tekst: tekst };
   };
 
   var DANE = {
@@ -37,7 +37,9 @@
         { kod: 'pl', nazwa: 'Polski', wl: true, staly: true }
       ],
       kropki: true,      // kropki nawigacji z boku
-      animacje: true     // animacje wejścia sekcji i przejścia slidera
+      animacje: true,    // animacje wejścia sekcji
+      motyw: 'bez',      // kolorystyka: bez (Kremowy beż) | szalwia (Szałwia i len) | grafit (Grafit i złoto)
+      kolejnosc: ['oMnie', 'historia', 'aktualnosci', 'kadra', 'portfolio', 'instagram', 'kontakt']  // kolejność sekcji w menu i na stronie
     },
 
     seo: {
@@ -56,38 +58,38 @@
         widoczna: true, menu: { pl: 'O mnie' },
         nadtytul: { pl: 'O mnie' },
         naglowek: { pl: 'Fotograf z pasją — Zgorzelec i Dolny Śląsk' },
-        tlo: tlo('kolor', img('o-mnie-praca-w-plenerze', 2000, 1333, 'Anna Niedobitek podczas sesji zdjęciowej w plenerze', [800, 1200]), 0, 'ciemny', '#F2EBE3')
+        tlo: tlo('kolor', img('o-mnie-praca-w-plenerze', 2000, 1333, 'Anna Niedobitek podczas sesji zdjęciowej w plenerze', [800, 1200]), 0, 'ciemny', 'motyw:tlo2')
       },
       historia: {
         widoczna: true, menu: { pl: 'Historia' },
         nadtytul: { pl: 'Moja historia' },
         naglowek: { pl: 'Od dziecięcej pasji do własnej pracowni' },
-        tlo: tlo('kolor', null, 0, 'ciemny', '#FAF7F2')
+        tlo: tlo('kolor', null, 0, 'ciemny', 'motyw:jasne')
       },
       aktualnosci: {
         widoczna: true, menu: { pl: 'Aktualności' },
         nadtytul: { pl: 'Aktualności' },
         naglowek: { pl: 'Co słychać w pracowni' },
-        tlo: tlo('kolor', img('aktualnosci-tlo', 2000, 1333, '', [800, 1200]), 0, 'ciemny', '#FAF7F2')
+        tlo: tlo('kolor', img('aktualnosci-tlo', 2000, 1333, '', [800, 1200]), 0, 'ciemny', 'motyw:jasne')
       },
       kadra: {
         widoczna: true, menu: { pl: 'Kto fotografuje' },
         nadtytul: { pl: 'Kto fotografuje' },
         naglowek: { pl: 'Osoby, które stoją za aparatem' },
         wstep: { pl: 'Na co dzień pracuję samodzielnie. Przy większych reportażach ślubnych współpracuję z drugim fotografem, aby zapewnić pełniejszą dokumentację wydarzenia.' },
-        tlo: tlo('kolor', img('kto-fotografuje-tlo', 2000, 1333, '', [800, 1200]), 0, 'ciemny', '#F2EBE3')
+        tlo: tlo('kolor', img('kto-fotografuje-tlo', 2000, 1333, '', [800, 1200]), 0, 'ciemny', 'motyw:tlo2')
       },
       portfolio: {
         widoczna: true, menu: { pl: 'Portfolio' },
         nadtytul: { pl: 'Galeria zdjęć i wideo' },
         naglowek: { pl: 'Portfolio — sesje i reportaże z Dolnego Śląska' },
-        tlo: tlo('kolor', null, 0, 'jasny', '#2B2622')
+        tlo: tlo('kolor', null, 0, 'jasny', 'motyw:ciemne')
       },
       instagram: {
         widoczna: true, menu: { pl: 'Instagram' },
         nadtytul: { pl: 'Instagram' },
         naglowek: { pl: 'Najnowsze kadry z Instagrama' },
-        tlo: tlo('kolor', img('instagram-tlo', 2000, 1333, '', [800, 1200]), 0, 'ciemny', '#FAF7F2')
+        tlo: tlo('kolor', img('instagram-tlo', 2000, 1333, '', [800, 1200]), 0, 'ciemny', 'motyw:jasne')
       },
       kontakt: {
         widoczna: true, staly: true, menu: { pl: 'Kontakt' },
@@ -224,6 +226,17 @@
       regon: '',
       krs: '',            // jednoosobowa działalność — zwykle brak KRS (wpis w CEIDG)
       formularz: true,
+      /* Pola formularza kontaktowego (panel → Kontakt → Pola formularza).
+       * typ: tekst | email | telefon | data | obszar (dłuższy tekst) | wybor (lista) | tak (pole do zaznaczenia)
+       * szer: pol (pół szerokości) | pelna; staly: pola, których nie można usunąć (potrzebne do odpowiedzi) */
+      pola: [
+        { id: 'imie', typ: 'tekst', etykieta: { pl: 'Imię i nazwisko' }, wym: true, szer: 'pol', staly: true },
+        { id: 'email', typ: 'email', etykieta: { pl: 'Adres e-mail' }, wym: true, szer: 'pol', staly: true },
+        { id: 'telefon', typ: 'telefon', etykieta: { pl: 'Telefon' }, wym: false, szer: 'pol' },
+        { id: 'termin', typ: 'tekst', etykieta: { pl: 'Planowany termin' }, wym: false, szer: 'pol' },
+        { id: 'rodzaj', typ: 'wybor', etykieta: { pl: 'Czego dotyczy wiadomość?' }, wym: false, szer: 'pelna', zrodlo: 'kategorie', opcje: { pl: '' } },
+        { id: 'wiadomosc', typ: 'obszar', etykieta: { pl: 'Wiadomość' }, wym: true, szer: 'pelna' }
+      ],
       zachetaFormularza: { pl: 'Proszę opisać, jakiej sesji lub uroczystości dotyczy wiadomość. Odpowiem najszybciej, jak to możliwe.' }
     },
 

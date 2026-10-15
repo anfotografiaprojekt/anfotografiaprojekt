@@ -59,6 +59,9 @@ function zbuduj(plik, { prefix = '', fontPrefix = '' } = {}) {
     hreflang: out.hreflang,
     jsonld: out.jsonld,
     znacznik: escAttr(out.znacznik),
+    sekcje: out.sekcje,
+    motyw: out.motyw,
+    motywTlo: out.motywTlo,
   };
   for (const k of ['start', 'oMnie', 'historia', 'aktualnosci', 'kadra', 'portfolio', 'instagram', 'kontakt', 'kropki', 'jezyki', 'pasek']) mapa[k] = out[k];
   mapa.nav = prefix ? zPrefiksem(out.nav, prefix).replace('data-ssr="nav"', `data-ssr="nav" data-prefix="${prefix}"`) : out.nav;

@@ -171,10 +171,20 @@
     kopia: { n: 'Kopia zapasowa', ik: '⟲', opis: 'Eksport i import treści, kopie automatyczne na serwerze, przywracanie treści początkowych.' }
   };
 
+  var STARE = { '#f2ebe3': 'motyw:tlo2', '#faf7f2': 'motyw:jasne', '#2b2622': 'motyw:ciemne' };
+  function normalizuj(s) {
+    Object.keys(s.sekcje || {}).forEach(function (k) {
+      var tl = s.sekcje[k].tlo; if (!tl || !tl.kolor || /^motyw:|^wlasny$/.test(tl.kolor)) return;
+      var m = STARE[String(tl.kolor).toLowerCase()];
+      if (m) tl.kolor = m; else { tl.kolorWlasny = tl.kolor; tl.kolor = 'wlasny'; }
+    });
+    return s;
+  }
+
   /* ================= PANEL: SZKIELET ================= */
   function otworzPanel() {
     if (P.otwarty) return;
-    P.stan = Rn.clone(site.state);
+    P.stan = normalizuj(Rn.clone(site.state));
     P.otwarty = true;
     var el = doc.createElement('div');
     el.className = 'cmsp'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Panel administratora');
@@ -262,7 +272,7 @@
   function htmlSekcji(k, stan) {
     var ctx = Rn.ctx(stan, { lang: 'pl' });
     var h = A.R[k](stan, ctx);
-    if (k === 'kontakt') h += A.R.stopka(stan, ctx);
+    if (k === 'kontakt') h = h.replace('<dialog class="okno okno-form"', '<div class="okno okno-form cmsp-form-podglad"').replace('</dialog>', '</div>') + A.R.stopka(stan, ctx);
     if (/^<section[^>]*hidden><\/section>$/.test(h)) {
       h = '<div class="cmsp-mini-pusta">Ta sekcja jest teraz ukryta na stronie' + (k === 'aktualnosci' ? ' (brak aktywnych wpisów lub sekcja wyłączona)' : '') + '.</div>';
     }
@@ -271,7 +281,7 @@
   }
   function mini(k, stan, opcje) {
     opcje = opcje || {};
-    return '<div class="cmsp-mini' + (opcje.male ? ' cmsp-mini--male' : '') + '" data-mini="' + k + '"><div class="cmsp-mini-in" inert aria-hidden="true">' + htmlSekcji(k, stan) + '</div></div>';
+    return '<div class="cmsp-mini' + (opcje.male ? ' cmsp-mini--male' : '') + '" data-mini="' + k + '"><div class="cmsp-mini-in" data-motyw="' + esc((stan.ustawienia && stan.ustawienia.motyw) || 'bez') + '" inert aria-hidden="true">' + htmlSekcji(k, stan) + '</div></div>';
   }
   function skalujMini(kont) {
     (kont || P.root).querySelectorAll('.cmsp-mini').forEach(function (m) {
@@ -282,6 +292,7 @@
   function odswiezMini(k, stan) {
     P.root.querySelectorAll('.cmsp-mini[data-mini="' + k + '"]').forEach(function (m) {
       m.firstChild.innerHTML = htmlSekcji(k, stan);
+      m.firstChild.setAttribute('data-motyw', (stan.ustawienia && stan.ustawienia.motyw) || 'bez');
       skalujMini(m.parentNode);
       if (P.aktywnePole) zapal(P.aktywnePole);
     });
@@ -345,6 +356,12 @@
       return h;
     }
     switch (d.typ) {
+      case 'motyw':
+        return '<fieldset class="cmsp-pole cmsp-motywy"><legend class="cmsp-sr">' + esc(d.et) + '</legend>' + A.MOTYWY.map(function (m) {
+          return '<label class="cmsp-motyw"><input type="radio" name="' + id + '" data-pole="' + esc(d.k) + '" value="' + m.id + '"' + ((v || 'bez') === m.id ? ' checked' : '') + '>' +
+            '<span class="cmsp-motyw-k"><span class="cmsp-motyw-paski">' + m.kolory.map(function (c) { return '<i style="background:' + c + '"></i>'; }).join('') + '</span>' +
+            '<strong>' + esc(m.nazwa) + '</strong><small>' + esc(m.opis) + '</small></span></label>';
+        }).join('') + '</fieldset>';
       case 'zdjecie': return poleZdjecia(d, obj, id, hl);
       case 'tak':
         return '<div class="cmsp-pole cmsp-pole--tak' + szer + '"' + hl + '><label class="cmsp-przel"><input type="checkbox" id="' + id + '" data-pole="' + esc(d.k) + '"' + (v ? ' checked' : '') + opisane + '><span class="cmsp-przel-s" aria-hidden="true"></span><span>' + esc(d.et) + '</span></label>' + pomoc(d, id) + '</div>';
@@ -529,7 +546,10 @@
       pola.push({ k: p + '.plakat', typ: 'zdjecie', et: 'Plakat wideo (pierwsza klatka)', bezAlt: true });
     }
     if (tl.typ !== 'kolor') pola.push({ k: p + '.ciemno', typ: 'suwak', et: 'Przyciemnienie / rozjaśnienie zdjęcia', min: 0, max: 85, krok: 5, f: f });
-    pola.push({ k: p + '.kolor', typ: 'kolor', et: tl.typ === 'kolor' ? 'Kolor tła' : 'Kolor tła (widoczny, zanim wczyta się zdjęcie)', f: f });
+    pola.push({ k: p + '.kolor', typ: 'radio', et: tl.typ === 'kolor' ? 'Kolor tła' : 'Kolor tła (widoczny, zanim wczyta się zdjęcie)', f: f, przerysuj: true,
+      opcje: [{ v: 'motyw:jasne', n: 'Jasny (z motywu)' }, { v: 'motyw:tlo2', n: 'Drugi jasny (z motywu)' }, { v: 'motyw:ciemne', n: 'Ciemny (z motywu)' }, { v: 'wlasny', n: 'Własny kolor' }],
+      pomoc: 'Kolory „z motywu” zmieniają się automatycznie po wybraniu innej kolorystyki strony.' });
+    if (tl.kolor === 'wlasny') pola.push({ k: p + '.kolorWlasny', typ: 'kolor', et: 'Własny kolor tła', f: f });
     pola.push({ k: p + '.tekst', typ: 'radio', et: 'Kolor tekstu', opcje: [{ v: 'jasny', n: 'Jasny (na ciemnym tle)' }, { v: 'ciemny', n: 'Ciemny (na jasnym tle)' }], f: f, przerysuj: true });
     return pola;
   }
@@ -539,7 +559,7 @@
       { naglowek: 'Nagłówek sekcji' },
       { k: p + '.menu', typ: 'tekst', i18n: true, et: 'Nazwa w menu i przy kropkach nawigacji', max: 30, szer: 'pol' },
       { k: p + '.nadtytul', typ: 'tekst', i18n: true, et: 'Nadtytuł (mały napis nad nagłówkiem)', max: 60, f: p + '.nadtytul', szer: 'pol' },
-      { k: p + '.naglowek', typ: 'tekst', i18n: true, et: 'Nagłówek sekcji (H2 — warto wpleść miasto lub rodzaj sesji)', wym: true, max: 120, f: p + '.naglowek' }
+      { k: p + '.naglowek', typ: 'tekst', i18n: true, et: 'Nagłówek sekcji (H2 — warto wpleść miasto lub rodzaj sesji)', pomoc: 'Puste pole = nagłówek znika ze strony, a treść przesuwa się w górę. Dla Google warto go jednak mieć.', max: 120, f: p + '.naglowek' }
     ];
     if (zWstepem) a.push({ k: p + '.wstep', typ: 'obszar', i18n: true, et: 'Wprowadzenie pod nagłówkiem', wiersze: 3, f: p + '.wstep' });
     return a;
@@ -580,10 +600,10 @@
         '<div class="cmsp-wiersz-t"><strong>' + esc(cfg.tytul(x) || '(bez tytułu)') + '</strong><small>' + esc(cfg.podsum ? cfg.podsum(x) : '') + '</small></div>' +
         '<span class="cmsp-plak cmsp-plak--' + plak[1] + '">' + plak[0] + '</span>' +
         '<div class="cmsp-wiersz-akcje">' +
-        (cfg.bezUkrywania ? '' : '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--jasny" data-akcja="ukryj">' + (cfg.czasowe ? (ukr ? 'Wznów' : 'Wstrzymaj') : (ukr ? 'Pokaż' : 'Ukryj')) + '</button>') +
+        (cfg.bezUkrywania || (cfg.staly && cfg.staly(x)) ? '' : '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--jasny" data-akcja="ukryj">' + (cfg.czasowe ? (ukr ? 'Wznów' : 'Wstrzymaj') : (ukr ? 'Pokaż' : 'Ukryj')) + '</button>') +
         '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--jasny" data-akcja="duplikuj">Duplikuj</button>' +
         '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--obrys" data-akcja="edytuj">Edytuj</button>' +
-        '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--usun" data-akcja="usun">Usuń</button></div></li>';
+        (cfg.staly && cfg.staly(x) ? '<span class="cmsp-plak cmsp-plak--szar" title="To pole jest potrzebne do odpowiedzi na wiadomość">Pole stałe</span>' : '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--usun" data-akcja="usun">Usuń</button>') + '</div></li>';
     }).join('');
     el.innerHTML = '<div class="cmsp-lista-g"><div><h2>' + esc(cfg.etykieta) + ' <span class="cmsp-licz">' + lis.length + '</span></h2>' + (cfg.opis ? '<p class="cmsp-pomoc">' + esc(cfg.opis) + '</p>' : '') + '</div>' +
       '<button type="button" class="cmsp-btn cmsp-btn--glowny" data-akcja="dodaj">+ Dodaj ' + esc(cfg.nazwa) + '</button></div>' + filtrHtml +
@@ -611,7 +631,7 @@
       return;
     }
     if (akcja === 'duplikuj') {
-      var kop = Rn.clone(lis[i]); kop.id = uid(cfg.prefiks);
+      var kop = Rn.clone(lis[i]); kop.id = uid(cfg.prefiks); delete kop.staly;
       ['tytul', 'imie', 'podpis', 'nazwa'].forEach(function (k) { if (kop[k] && kop[k].pl) kop[k].pl += ' (kopia)'; });
       if (cfg.czasowe) kop.wstrzymana = true; else kop.ukryta = true;
       lis.splice(i + 1, 0, kop); setP(P.stan, cfg.sciezka, lis);
@@ -631,7 +651,7 @@
     function stanZElementem() {
       var s = Rn.clone(P.stan), l = getP(s, cfg.sciezka) || [];
       var podg = Rn.clone(item); delete podg.ukryta; if (cfg.czasowe) { podg.wstrzymana = false; if (podg.od > dzis()) podg.od = dzis(); podg.do = ''; }
-      if (nowy) l.unshift(podg); else l[i] = podg;
+      if (nowy) { if (cfg.naKoniec) l.push(podg); else l.unshift(podg); } else l[i] = podg;
       setP(s, cfg.sciezka, l); if (cfg.przygotujPodglad) cfg.przygotujPodglad(s);
       return s;
     }
@@ -641,7 +661,7 @@
       '<div class="cmsp-modal-g"><h2 id="cmsp-modal-t">' + (nowy ? 'Dodaj ' : 'Edytuj ') + esc(cfg.nazwa) + '</h2><button type="button" class="cmsp-x" data-m="anuluj" aria-label="Zamknij okno">×</button></div>' +
       '<div class="cmsp-modal-c"><div class="cmsp-modal-forma"><p class="cmsp-blad-modal" role="alert" hidden></p><div class="cmsp-modal-pola"></div></div>' +
       '<details class="cmsp-modal-podglad" open><summary>Podgląd na żywo — sekcja „' + esc(NAZWY_SEK[cfg.k]) + '”</summary>' + (cfg.czasowe ? '<p class="cmsp-pomoc">W podglądzie wpis jest pokazany tak, jakby był aktywny.</p>' : '') + mini(cfg.k, stanZElementem()) + '</details></div>' +
-      '<div class="cmsp-modal-d">' + (nowy ? '' : '<button type="button" class="cmsp-btn cmsp-btn--usun" data-m="usun">Usuń</button>') +
+      '<div class="cmsp-modal-d">' + (nowy || (cfg.staly && cfg.staly(item)) ? '' : '<button type="button" class="cmsp-btn cmsp-btn--usun" data-m="usun">Usuń</button>') +
       '<span class="cmsp-odstep"></span><button type="button" class="cmsp-btn cmsp-btn--jasny" data-m="anuluj">Anuluj</button>' +
       '<button type="button" class="cmsp-btn cmsp-btn--glowny" data-m="zapisz">' + (nowy ? 'Dodaj' : 'Zapisz zmiany') + '</button></div></div>';
     P.root.appendChild(tlo);
@@ -665,7 +685,7 @@
         var bl = cfg.waliduj ? cfg.waliduj(item) : '';
         var be = tlo.querySelector('.cmsp-blad-modal');
         if (bl) { be.textContent = bl; be.hidden = false; be.scrollIntoView({ block: 'nearest' }); return; }
-        if (nowy) lis.unshift(item); else lis[i] = item;
+        if (nowy) { if (cfg.naKoniec) lis.push(item); else lis.unshift(item); } else lis[i] = item;
         setP(P.stan, cfg.sciezka, lis); synchronizujSzkic(cfg);
         zamknij();
         if (cfg.czasowe && nowy) P.filtr = 'wszystkie';
@@ -750,10 +770,13 @@
   /* ---------- Sekcje strony ---------- */
   RYSUJ.sekcje = function (kont) {
     var s = P.stan, today = dzis();
-    kont.innerHTML = '<section class="cmsp-karta"><ul class="cmsp-sekcje">' + A.SEKCJE.map(function (x) {
+    var ord = A.kolejnosc(s), ruchome = ord.length - 1;
+    kont.innerHTML = '<section class="cmsp-karta"><p class="cmsp-pomoc">Strzałkami ▲▼ zmienisz kolejność sekcji w menu strony i na samej stronie. Pierwszy ekran jest zawsze na początku.</p><ul class="cmsp-sekcje">' + ord.map(function (x, i) {
       var sek = s.sekcje[x.k], wid = Rn.sekWidoczna(s, x.k, today);
+      var kol = x.k === 'start' ? '<div class="cmsp-kolej cmsp-kolej--pusta" aria-hidden="true"></div>'
+        : '<div class="cmsp-kolej"><button type="button" data-akcja="sek-gora" data-k="' + x.k + '" aria-label="Przesuń wyżej: ' + esc(NAZWY_SEK[x.k]) + '"' + (i <= 1 ? ' disabled' : '') + '>▲</button><button type="button" data-akcja="sek-dol" data-k="' + x.k + '" aria-label="Przesuń niżej: ' + esc(NAZWY_SEK[x.k]) + '"' + (i >= ruchome ? ' disabled' : '') + '>▼</button></div>';
       var uw = sek.widoczna && !wid ? ' (włączona, ale pusta — brak widocznych elementów)' : '';
-      return '<li class="cmsp-sek-w"><div class="cmsp-sek-w-g">' + mini(x.k, s, { male: true }) +
+      return '<li class="cmsp-sek-w"><div class="cmsp-sek-w-g">' + kol + mini(x.k, s, { male: true }) +
         '<div class="cmsp-sek-w-t"><strong>' + esc(NAZWY_SEK[x.k]) + '</strong><span class="cmsp-plak cmsp-plak--' + (wid ? 'ziel' : 'szar') + '">' + (wid ? 'Widoczna' : 'Ukryta') + uw + '</span>' +
         (sek.staly ? '<small>Sekcja stała — zawsze widoczna.</small>' : '<label class="cmsp-przel"><input type="checkbox" data-akcja="sek-wid" data-k="' + x.k + '"' + (sek.widoczna ? ' checked' : '') + '><span class="cmsp-przel-s" aria-hidden="true"></span><span>Pokazuj na stronie</span></label>') + '</div>' +
         '<div class="cmsp-sek-w-a"><button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--obrys" data-idz="' + x.k + '">Edytuj tę sekcję</button>' +
@@ -833,7 +856,7 @@
         { k: 'oMnie.tresc', typ: 'obszar', i18n: true, et: 'Pełny tekst w oknie „Czytaj więcej o mnie”', wiersze: 10, f: 'oMnie.tresc', pomoc: 'Formatowanie: *kursywa*, **pogrubienie**, pusta linia = nowy akapit.' },
         { k: 'oMnie.zdjecie', typ: 'zdjecie', et: 'Zdjęcie portretowe (pion, ok. 4:5)', f: 'oMnie.zdjecie' }
       ]).concat(polaTla('oMnie', s));
-    }, { waliduj: function (s) { return t(s.sekcje.oMnie.naglowek, 'pl').trim() ? '' : 'Nagłówek sekcji nie może być pusty.'; } });
+    });
     lista(kont, {
       id: 'wartosci', k: 'oMnie', sciezka: 'oMnie.wartosci', etykieta: 'Wartości', nazwa: 'wartość', prefiks: 'w',
       opis: 'Krótkie hasła z opisem — pokazują, czym kieruje się pracownia.',
@@ -873,7 +896,7 @@
           { k: 'tekst', typ: 'radio', et: 'Kolor tekstu', opcje: [{ v: 'jasny', n: 'Jasny' }, { v: 'ciemny', n: 'Ciemny' }], f: f }
         ];
       },
-      waliduj: function (x) { return t(x.tytul, 'pl').trim() ? '' : 'Proszę wpisać tytuł rozdziału.'; },
+      waliduj: function (x) { return t(x.tytul, 'pl').trim() || t(x.rok, 'pl').trim() || t(x.tresc, 'pl').trim() ? '' : 'Rozdział jest pusty — wpisz rok, tytuł albo tekst.'; },
       poZmianie: function () { odswiezMini('historia', P.szkic || P.stan); }
     });
   };
@@ -1004,7 +1027,47 @@
         return '';
       }
     });
+    listaPolFormularza(kont);
   };
+
+  var TYPY_POLA = [{ v: 'tekst', n: 'Krótki tekst' }, { v: 'obszar', n: 'Dłuższy tekst (wiadomość)' }, { v: 'email', n: 'Adres e-mail' }, { v: 'telefon', n: 'Telefon' },
+    { v: 'data', n: 'Data' }, { v: 'wybor', n: 'Lista wyboru' }, { v: 'tak', n: 'Pole do zaznaczenia (tak/nie)' }];
+  function listaPolFormularza(kont) {
+    lista(kont, {
+      id: 'polaform', k: 'kontakt', sciezka: 'kontakt.pola', etykieta: 'Pola formularza', nazwa: 'pole', prefiks: 'p', naKoniec: true,
+      opis: 'Pola w oknie „Formularz kontaktowy”. Kolejność na liście = kolejność w formularzu. Zgoda na przetwarzanie danych (RODO) jest dodawana zawsze, na końcu.',
+      staly: function (x) { return !!x.staly; },
+      tytul: function (x) { return t(x.etykieta, 'pl') || '(bez nazwy)'; },
+      podsum: function (x) { var ty = TYPY_POLA.filter(function (q) { return q.v === x.typ; })[0]; return (ty ? ty.n : x.typ) + (x.wym ? ' · wymagane' : ' · opcjonalne') + (x.szer === 'pelna' || x.typ === 'obszar' ? ' · cała szerokość' : ' · pół szerokości'); },
+      nowy: function () { return { id: '', typ: 'tekst', etykieta: { pl: '' }, wym: false, szer: 'pol', podpowiedz: { pl: '' }, zrodlo: 'wlasne', opcje: { pl: '' }, ukryta: false }; },
+      pola: function (x) {
+        var f = 'pole:' + (x.id || 'nowe');
+        var a = [{ k: 'etykieta', typ: 'tekst', i18n: true, et: 'Nazwa pola (widoczna nad polem)', wym: true, max: 80, f: f }];
+        if (x.staly) a.push({ naglowek: 'Pole stałe', opis: 'Imię i e-mail są potrzebne, żeby można było odpowiedzieć na wiadomość — można zmienić ich nazwę i szerokość, ale nie typ ani usunąć.' });
+        else a.push({ k: 'typ', typ: 'wybor', et: 'Rodzaj pola', opcje: TYPY_POLA, przerysuj: true, f: f });
+        if (x.typ === 'wybor') {
+          a.push({ k: 'zrodlo', typ: 'radio', et: 'Opcje do wyboru', opcje: [{ v: 'kategorie', n: 'Rodzaje sesji z portfolio (+ „Inne”)' }, { v: 'wlasne', n: 'Własna lista' }], przerysuj: true, f: f });
+          if (x.zrodlo !== 'kategorie') a.push({ k: 'opcje', typ: 'obszar', i18n: true, et: 'Własne opcje — każda w osobnej linii', wiersze: 5, wym: true, f: f });
+        }
+        if (x.typ !== 'tak' && x.typ !== 'wybor') a.push({ k: 'podpowiedz', typ: 'tekst', i18n: true, et: 'Podpowiedź w pustym polu (opcjonalnie)', max: 80, f: f });
+        if (!x.staly || x.id === 'imie') a.push({ k: 'wym', typ: 'tak', et: 'Pole wymagane', f: f });
+        if (x.typ !== 'obszar' && x.typ !== 'tak') a.push({ k: 'szer', typ: 'radio', et: 'Szerokość (na komputerze)', opcje: [{ v: 'pol', n: 'Pół szerokości' }, { v: 'pelna', n: 'Cała szerokość' }], f: f });
+        return a;
+      },
+      waliduj: function (x) {
+        if (!t(x.etykieta, 'pl').trim()) return 'Proszę wpisać nazwę pola.';
+        if (x.typ === 'wybor' && x.zrodlo !== 'kategorie' && !String(t(x.opcje, 'pl')).trim()) return 'Proszę wpisać przynajmniej jedną opcję listy.';
+        if (!x.id) {
+          var baza = String(t(x.etykieta, 'pl')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'pole';
+          var id = baza, n = 2, ist = (P.stan.kontakt.pola || []).map(function (p) { return p.id; });
+          while (ist.indexOf(id) >= 0 || id === 'zgoda' || id === 'www') id = baza + '-' + (n++);
+          x.id = id;
+        }
+        return '';
+      },
+      poZmianie: function () { odswiezMini('kontakt', P.szkic || P.stan); }
+    });
+  }
 
   /* ---------- Wiadomości ---------- */
   function pobierzWiadomosci() {
@@ -1022,11 +1085,16 @@
           var d = new Date(m.czas);
           return '<li class="' + (m.przeczytana ? '' : 'cmsp-wiad--nowa') + '" data-wid="' + esc(m.id) + '"><div class="cmsp-wiad-g"><strong>' + esc(m.imie) + '</strong>' + (m.przeczytana ? '' : '<span class="cmsp-plak cmsp-plak--ziel">Nowa</span>') +
             '<time>' + d.toLocaleDateString('pl-PL') + ' ' + d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) + '</time></div>' +
-            '<p class="cmsp-wiad-meta"><a href="mailto:' + esc(m.email) + '?subject=' + encodeURIComponent('Re: wiadomość ze strony — ' + (m.rodzaj || 'sesja')) + '">' + esc(m.email) + '</a>' + (m.telefon ? ' · <a href="tel:' + esc(m.telefon.replace(/\s/g, '')) + '">' + esc(m.telefon) + '</a>' : '') +
-            (m.rodzaj ? ' · ' + esc(m.rodzaj) : '') + (m.termin ? ' · termin: ' + esc(m.termin) : '') + '</p>' +
-            '<p class="cmsp-wiad-t">' + esc(m.wiadomosc).replace(/\n/g, '<br>') + '</p>' +
+            (m.pola ? '<dl class="cmsp-wiad-pola">' + m.pola.map(function (x) {
+              var w = esc(x.wartosc).replace(/\n/g, '<br>');
+              if (x.id === 'email') w = '<a href="mailto:' + esc(x.wartosc) + '">' + w + '</a>';
+              if (/^[+\d][\d\s-]{6,}$/.test(x.wartosc) && x.id !== 'email') w = '<a href="tel:' + esc(x.wartosc.replace(/\s/g, '')) + '">' + w + '</a>';
+              return '<dt>' + esc(x.etykieta) + '</dt><dd>' + w + '</dd>';
+            }).join('') + '</dl>'
+              : '<p class="cmsp-wiad-meta"><a href="mailto:' + esc(m.email) + '">' + esc(m.email) + '</a>' + (m.telefon ? ' · ' + esc(m.telefon) : '') + (m.rodzaj ? ' · ' + esc(m.rodzaj) : '') + (m.termin ? ' · termin: ' + esc(m.termin) : '') + '</p>' +
+                '<p class="cmsp-wiad-t">' + esc(m.wiadomosc || '').replace(/\n/g, '<br>') + '</p>') +
             '<div class="cmsp-wiersz-akcje">' + (m.przeczytana ? '' : '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--jasny" data-akcja="wiad-czyt">Oznacz jako przeczytaną</button>') +
-            '<a class="cmsp-btn cmsp-btn--maly cmsp-btn--obrys" href="mailto:' + esc(m.email) + '">Odpowiedz e-mailem</a>' +
+            (m.email ? '<a class="cmsp-btn cmsp-btn--maly cmsp-btn--obrys" href="mailto:' + esc(m.email) + '?subject=' + encodeURIComponent('Re: wiadomość ze strony') + '">Odpowiedz e-mailem</a>' : '') +
             '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--usun" data-akcja="wiad-usun">Usuń</button></div></li>';
         }).join('') + '</ul>' : '<p class="cmsp-pusto">Brak wiadomości.</p>') + '</section>';
     });
@@ -1048,6 +1116,8 @@
   RYSUJ.wyglad = function (kont) {
     edytorStrony(kont, 'start', function () {
       return [
+        { naglowek: 'Kolorystyka strony', opis: 'Wybierz motyw — podgląd zmienia się od razu, a na stronie po kliknięciu „Zapisz”.' },
+        { k: 'ustawienia.motyw', typ: 'motyw', et: 'Motyw kolorystyczny' },
         { naglowek: 'Układ pełnoekranowy' },
         { k: 'ustawienia.kropki', typ: 'tak', et: 'Kropki nawigacji z boku ekranu (komputer)', pomoc: 'Na telefonie kropki są zawsze ukryte — działa menu „hamburger”.' },
         { k: 'ustawienia.animacje', typ: 'tak', et: 'Animacje (płynne pojawianie się treści, delikatne zbliżenie zdjęcia na pierwszym ekranie)', pomoc: 'Osoby z włączonym w systemie ustawieniem „ogranicz ruch” zawsze widzą stronę bez animacji.' },
@@ -1182,9 +1252,17 @@
         if (F.onZmiana) F.onZmiana(kk, null, false, 'change');
         break;
       case 'sek-rozwin': rozwinSekcje(b); break;
+      case 'sek-gora': case 'sek-dol':
+        var kk2 = b.getAttribute('data-k'), lst = A.kolejnosc(P.stan).map(function (x) { return x.k; }).filter(function (k) { return k !== 'start'; });
+        var ii = lst.indexOf(kk2), jj = ii + (a === 'sek-gora' ? -1 : 1);
+        if (ii < 0 || jj < 0 || jj >= lst.length) return;
+        lst.splice(jj, 0, lst.splice(ii, 1)[0]);
+        P.stan.ustawienia.kolejnosc = lst;
+        zastosuj({ toast: 'Zmieniono kolejność sekcji w menu i na stronie.' }); idz('sekcje', { bezFokusu: true });
+        var nb = P.root.querySelector('[data-akcja="' + a + '"][data-k="' + kk2 + '"]'); if (nb && !nb.disabled) nb.focus();
+        break;
       case 'sek-zapisz':
         var kz = b.getAttribute('data-k'), Fz = FORMY['sek-' + kz];
-        if (!t(Fz.obj.sekcje[kz].naglowek, 'pl').trim()) { toast('Nagłówek sekcji nie może być pusty.', 'blad'); return; }
         ['menu', 'nadtytul', 'naglowek', 'wstep'].forEach(function (p) { if (Fz.obj.sekcje[kz][p] !== undefined) P.stan.sekcje[kz][p] = Rn.clone(Fz.obj.sekcje[kz][p]); });
         zastosuj({ toast: 'Zapisano zmiany.' }); idz('sekcje', { bezFokusu: true });
         break;

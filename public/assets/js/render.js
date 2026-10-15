@@ -52,7 +52,7 @@
       f_wybierz: 'Proszę wybrać…', f_inne: 'Inne', f_termin: 'Planowany termin (opcjonalnie)', f_wiad: 'Wiadomość',
       f_zgoda: 'Wyrażam zgodę na przetwarzanie moich danych w celu odpowiedzi na wiadomość. Szczegóły w',
       f_wyslij: 'Wyślij wiadomość', f_wym: 'pole wymagane', f_hp: 'Nie wypełniaj tego pola',
-      sekcje: 'Sekcje strony', skip: 'Przejdź do treści', wartosci: 'Wartości', formOtworz: 'Napisz wiadomość', strona: 'Strona', formPod: 'Wiadomość prosto ze strony'
+      sekcje: 'Sekcje strony', skip: 'Przejdź do treści', wartosci: 'Wartości', formOtworz: 'Napisz wiadomość', strona: 'Strona', formPod: 'Wiadomość prosto ze strony', f_opc: 'opcjonalnie'
     },
     en: {
       menu: 'Menu', zamknij: 'Close', czytaj: 'Read more', czytajOMnie: 'Read more about me',
@@ -72,7 +72,7 @@
       f_wybierz: 'Please choose…', f_inne: 'Other', f_termin: 'Planned date (optional)', f_wiad: 'Message',
       f_zgoda: 'I agree to the processing of my data in order to reply to my message. Details in the',
       f_wyslij: 'Send message', f_wym: 'required', f_hp: 'Leave this field empty',
-      sekcje: 'Page sections', skip: 'Skip to content', wartosci: 'Values', formOtworz: 'Write a message', strona: 'Page', formPod: 'Send a message from this page'
+      sekcje: 'Page sections', skip: 'Skip to content', wartosci: 'Values', formOtworz: 'Write a message', strona: 'Page', formPod: 'Send a message from this page', f_opc: 'optional'
     }
   };
   A.UI = UI;
@@ -177,11 +177,31 @@
     a.push('onerror="this.classList.add(\'img-blad\')"');
     return a.join(' ') + '>';
   }
+  /* Motywy kolorystyczne (przełączane w panelu → Wygląd i efekty) */
+  var MOTYWY = [
+    { id: 'bez', nazwa: 'Kremowy beż', opis: 'Ciepła kość słoniowa, mokka i karmel — miękko, rodzinnie.', tlo: '#FAF7F2', kolory: ['#FAF7F2', '#F2EBE3', '#7A5240', '#B88A6E', '#2B2622'] },
+    { id: 'szalwia', nazwa: 'Szałwia i len', opis: 'Naturalna zieleń szałwii i lniane tła — spokojnie, plenerowo.', tlo: '#F5F4EF', kolory: ['#F5F4EF', '#E6E9E0', '#4A5D4C', '#9DAF94', '#232822'] },
+    { id: 'grafit', nazwa: 'Grafit i złoto', opis: 'Chłodna biel, grafit i matowe złoto — elegancko, ślubnie.', tlo: '#F7F6F3', kolory: ['#F7F6F3', '#ECE9E3', '#2F2D2A', '#B4955A', '#1E1D1B'] }
+  ];
+  A.MOTYWY = MOTYWY;
+  function motyw(s) { var m = (s.ustawienia && s.ustawienia.motyw) || 'bez'; return MOTYWY.some(function (x) { return x.id === m; }) ? m : 'bez'; }
+  /* Kolor tła sekcji: tokeny motywu (zmieniają się razem z motywem) albo własny kolor.
+   * Dawne zapisy w HEX z pierwszej wersji strony są mapowane na tokeny. */
+  var STARE_KOLORY = { '#f2ebe3': 'var(--bg2)', '#faf7f2': 'var(--bg)', '#2b2622': 'var(--ciemne)' };
+  function kolorTla(k, wlasny) {
+    k = String(k || '');
+    if (!k || k === 'motyw:jasne') return 'var(--bg)';
+    if (k === 'motyw:tlo2') return 'var(--bg2)';
+    if (k === 'motyw:ciemne') return 'var(--ciemne)';
+    if (k === 'wlasny') k = String(wlasny || '');
+    if (STARE_KOLORY[k.toLowerCase()]) return STARE_KOLORY[k.toLowerCase()];
+    return /^#[0-9a-f]{3,8}$/i.test(k) ? k : 'var(--bg)';
+  }
+  A.kolorTla = kolorTla;
   function ovStyle(tlo) {
     var c = Math.max(0, Math.min(90, +tlo.ciemno || 0)) / 100;
     var rgb = tlo.tekst === 'ciemny' ? '250,247,242' : '28,22,18';
-    var st = '--sek-kolor:' + esc(tlo.kolor || '#FAF7F2') + ';--sek-ov:rgba(' + rgb + ',' + c.toFixed(2) + ')';
-    return st;
+    return '--sek-kolor:' + kolorTla(tlo.kolor, tlo.kolorWlasny) + ';--sek-ov:rgba(' + rgb + ',' + c.toFixed(2) + ')';
   }
   function tloHtml(tlo, ctx, op) {
     op = op || {};
@@ -203,12 +223,14 @@
   function otworzSekcje(k, s, ctx, extra, attrs) {
     var sek = s.sekcje[k], tlo = sek.tlo || {};
     var cls = 'sek sek--' + k + ' t-' + (tlo.tekst === 'jasny' ? 'jasny' : 'ciemny') + (tlo.typ !== 'kolor' ? ' sek--foto' : '') + (extra ? ' ' + extra : '');
-    return '<section id="' + idSekcji(k) + '" class="' + cls + '" data-ssr="' + k + '" data-sekcja="' + k + '" style="' + ovStyle(tlo) + '"' + (attrs || '') + '>';
+    attrs = attrs || '';
+    if (k !== 'start' && !t(sek.naglowek, ctx.lang)) attrs = attrs.replace(/aria-labelledby="[^"]*"/, 'aria-label="' + esc(t(sek.menu, ctx.lang) || k) + '"');
+    return '<section id="' + idSekcji(k) + '" class="' + cls + '" data-ssr="' + k + '" data-sekcja="' + k + '" style="' + ovStyle(tlo) + '"' + attrs + '>';
   }
   function naglowek(k, s, ctx, idH) {
     var sek = s.sekcje[k], h = '';
     if (t(sek.nadtytul, ctx.lang)) h += '<p class="nadtytul" data-f="sekcje.' + k + '.nadtytul">' + inline(t(sek.nadtytul, ctx.lang)) + '</p>';
-    h += '<h2 id="' + idH + '" data-f="sekcje.' + k + '.naglowek">' + inline(t(sek.naglowek, ctx.lang)) + '</h2>';
+    if (t(sek.naglowek, ctx.lang)) h += '<h2 id="' + idH + '" data-f="sekcje.' + k + '.naglowek">' + inline(t(sek.naglowek, ctx.lang)) + '</h2>';
     if (t(sek.wstep, ctx.lang)) h += '<div class="sek-wstep" data-f="sekcje.' + k + '.wstep">' + fmt(t(sek.wstep, ctx.lang)) + '</div>';
     return h;
   }
@@ -226,10 +248,10 @@
       tloHtml(s.sekcje.start.tlo, ctx, { priority: true, f: 'sekcje.start.tlo' }) +
       '<div class="sek-in hero-in">' +
       '<h1 id="h1" class="hero-h1"><span class="hero-nazwa" data-f="start.nazwa">' + esc(t(d.nazwa, L)) + '</span>' +
-      '<span class="sr"> — </span><span class="hero-rola" data-f="start.rola">' + esc(t(d.rola, L)) + '</span></h1>' +
-      '<p class="hero-motto" data-f="start.motto">' + esc(t(d.motto, L)) + '</p>' +
+      (t(d.rola, L) ? '<span class="sr"> — </span><span class="hero-rola" data-f="start.rola">' + esc(t(d.rola, L)) + '</span>' : '') + '</h1>' +
+      (t(d.motto, L) ? '<p class="hero-motto" data-f="start.motto">' + esc(t(d.motto, L)) + '</p>' : '') +
       (t(d.wstep, L) ? '<p class="hero-wstep" data-f="start.wstep">' + inline(t(d.wstep, L)) + '</p>' : '') +
-      '<a class="btn btn--glowny" href="#' + cel + '" data-f="start.przycisk">' + esc(t(d.przycisk, L)) + '</a>' +
+      (t(d.przycisk, L) ? '<a class="btn btn--glowny" href="#' + cel + '" data-f="start.przycisk">' + esc(t(d.przycisk, L)) + '</a>' : '') +
       '</div>' +
       '<a class="hero-dalej" href="#' + ctx.nastepna + '" aria-label="' + esc(ui(ctx, 'przewin')) + '"><span aria-hidden="true"></span></a>' +
       '</section>';
@@ -249,10 +271,10 @@
     var obs = widoczne(d.obszary).map(function (o) { return '<li>' + esc(t(o.nazwa, L)) + '</li>'; }).join('');
     return otworzSekcje('oMnie', s, ctx, '', ' aria-labelledby="h-o-mnie"') +
       tloHtml(sek.tlo, ctx) +
-      '<div class="sek-in omnie">' +
-      '<figure class="omnie-foto">' + imgTag(d.zdjecie, { lang: L, sizes: '(min-width: 900px) 34vw, 36vw', f: 'oMnie.zdjecie' }) + '</figure>' +
+      '<div class="sek-in omnie' + (d.zdjecie && d.zdjecie.src ? '' : ' omnie--bez-foto') + '">' +
+      (d.zdjecie && d.zdjecie.src ? '<figure class="omnie-foto">' + imgTag(d.zdjecie, { lang: L, sizes: '(min-width: 900px) 34vw, 36vw', f: 'oMnie.zdjecie' }) + '</figure>' : '') +
       '<div class="omnie-tekst">' + naglowek('oMnie', s, ctx, 'h-o-mnie') +
-      '<div class="lead" data-f="oMnie.lead">' + fmt(t(d.lead, L)) + '</div>' +
+      (t(d.lead, L) ? '<div class="lead" data-f="oMnie.lead">' + fmt(t(d.lead, L)) + '</div>' : '') +
       (obs ? '<div class="obszary" data-f="oMnie.obszary"><p class="obszary-tyt">' + esc(ui(ctx, 'fotografuje')) + '</p><ul>' + obs + '</ul></div>' : '') +
       (t(d.tresc, L) || warPopup ? czytajWiecej('omnie-wiecej', ui(ctx, 'czytajOMnie'), t(sek.menu, L)) : '') +
       (war ? '<ul class="wartosci">' + war + '</ul>' : '') +
@@ -265,13 +287,13 @@
     if (!sekWidoczna(s, 'historia', ctx.today)) return pusta('historia');
     var L = ctx.lang;
     var rozdz = widoczne(s.historia.rozdzialy).map(function (r, i) {
-      var tl = { typ: r.tlo && r.tlo.src ? 'zdjecie' : 'kolor', obraz: r.tlo, kolor: r.kolor || '#2B2622', ciemno: r.ciemno == null ? 50 : r.ciemno, tekst: r.tekst || 'jasny' };
+      var tl = { typ: r.tlo && r.tlo.src ? 'zdjecie' : 'kolor', obraz: r.tlo, kolor: r.kolor || 'motyw:ciemne', ciemno: r.ciemno == null ? 50 : r.ciemno, tekst: r.tekst || 'jasny' };
       return '<li class="rozdzial t-' + (tl.tekst === 'ciemny' ? 'ciemny' : 'jasny') + (tl.typ === 'zdjecie' ? ' sek--foto' : '') + '" style="' + ovStyle(tl) + '" data-f="historia:' + esc(r.id) + '">' +
         tloHtml(tl, ctx, { f: 'historia:' + r.id + ':tlo' }) +
-        (i === 0 ? '<div class="rozdzial-glowa">' + naglowek('historia', s, ctx, 'h-historia') + '</div>' : '') +
-        '<div class="rozdzial-in"><p class="rok" data-f="historia:' + esc(r.id) + ':rok">' + esc(t(r.rok, L)) + '</p>' +
-        '<h3 data-f="historia:' + esc(r.id) + ':tytul">' + esc(t(r.tytul, L)) + '</h3>' +
-        '<div class="rozdzial-tekst" data-f="historia:' + esc(r.id) + ':tresc">' + fmt(t(r.tresc, L)) + '</div>' +
+        (i === 0 && (t(s.sekcje.historia.nadtytul, L) || t(s.sekcje.historia.naglowek, L)) ? '<div class="rozdzial-glowa">' + naglowek('historia', s, ctx, 'h-historia') + '</div>' : '') +
+        '<div class="rozdzial-in">' + (t(r.rok, L) ? '<p class="rok" data-f="historia:' + esc(r.id) + ':rok">' + esc(t(r.rok, L)) + '</p>' : '') +
+        (t(r.tytul, L) ? '<h3 data-f="historia:' + esc(r.id) + ':tytul">' + esc(t(r.tytul, L)) + '</h3>' : '') +
+        (t(r.tresc, L) ? '<div class="rozdzial-tekst" data-f="historia:' + esc(r.id) + ':tresc">' + fmt(t(r.tresc, L)) + '</div>' : '') +
         '<p class="rozdzial-nr" aria-hidden="true">' + String(i + 1).padStart(2, '0') + '</p></div></li>';
     }).join('');
     return otworzSekcje('historia', s, ctx, '', ' aria-labelledby="h-historia"') +
@@ -290,7 +312,7 @@
         '<h3 data-f="aktualnosci:' + esc(w.id) + ':tytul">' + esc(t(w.tytul, L)) + '</h3>' +
         (dl ? '<p class="wpis-skrot" data-f="aktualnosci:' + esc(w.id) + ':tresc">' + esc(skrot(tr, 130)) + '</p>' + czytajWiecej(id + '-tresc', ui(ctx, 'czytajWpis'), t(w.tytul, L)) +
           '<div class="rm" id="' + id + '-tresc">' + fmt(tr) + '</div>'
-          : '<div class="wpis-tresc" data-f="aktualnosci:' + esc(w.id) + ':tresc">' + fmt(tr) + '</div>') +
+          : (tr ? '<div class="wpis-tresc" data-f="aktualnosci:' + esc(w.id) + ':tresc">' + fmt(tr) + '</div>' : '')) +
         '</div></article>';
     }).join('');
     return otworzSekcje('aktualnosci', s, ctx, '', ' aria-labelledby="h-aktualnosci"') +
@@ -305,11 +327,11 @@
     var os = lista.map(function (o) {
       var id = 'osoba-' + esc(o.id), op = t(o.opis, L), dl = plain(op).length > 170;
       return '<li class="osoba" data-f="kadra:' + esc(o.id) + '">' +
-        '<figure class="osoba-foto">' + imgTag(o.zdjecie, { lang: L, sizes: '(min-width: 900px) 28vw, 34vw', f: 'kadra:' + o.id + ':zdjecie' }) + '</figure>' +
+        (o.zdjecie && o.zdjecie.src ? '<figure class="osoba-foto">' + imgTag(o.zdjecie, { lang: L, sizes: '(min-width: 900px) 28vw, 34vw', f: 'kadra:' + o.id + ':zdjecie' }) + '</figure>' : '') +
         '<div class="osoba-tekst"><h3 data-f="kadra:' + esc(o.id) + ':imie">' + esc(t(o.imie, L)) + '</h3>' +
-        '<p class="osoba-rola" data-f="kadra:' + esc(o.id) + ':rola">' + esc(t(o.rola, L)) + '</p>' +
+        (t(o.rola, L) ? '<p class="osoba-rola" data-f="kadra:' + esc(o.id) + ':rola">' + esc(t(o.rola, L)) + '</p>' : '') +
         (dl ? '<p data-f="kadra:' + esc(o.id) + ':opis">' + esc(skrot(op, 170)) + '</p>' + czytajWiecej(id + '-opis', ui(ctx, 'czytajOsoba') + ' ' + t(o.imie, L), t(o.imie, L)) + '<div class="rm" id="' + id + '-opis">' + fmt(op) + '</div>'
-          : '<div data-f="kadra:' + esc(o.id) + ':opis">' + fmt(op) + '</div>') +
+          : (op ? '<div data-f="kadra:' + esc(o.id) + ':opis">' + fmt(op) + '</div>' : '')) +
         '</div></li>';
     }).join('');
     return otworzSekcje('kadra', s, ctx, '', ' aria-labelledby="h-kadra"') +
@@ -353,7 +375,7 @@
       tloHtml(s.sekcje.portfolio.tlo, ctx) +
       '<div class="sek-in port">' +
       '<div class="port-glowa"><div class="port-tyt">' + naglowek('portfolio', s, ctx, 'h-portfolio') + '</div>' + filtry + '</div>' +
-      '<div class="mozaika-okno" role="region" aria-labelledby="h-portfolio"><div class="mozaika">' + kafle + '</div></div>' +
+      '<div class="mozaika-okno" role="region" aria-label="' + esc(t(s.sekcje.portfolio.menu, L) || 'Portfolio') + '"><div class="mozaika">' + kafle + '</div></div>' +
       '<div class="mozaika-ster" hidden><button type="button" class="moz-btn" data-kier="-1" aria-label="' + esc(ui(ctx, 'poprzednie')) + '"><span aria-hidden="true">←</span></button>' +
       '<span class="moz-licznik" aria-live="polite"></span>' +
       '<button type="button" class="moz-btn" data-kier="1" aria-label="' + esc(ui(ctx, 'nastepne')) + '"><span aria-hidden="true">→</span></button></div>' +
@@ -399,6 +421,27 @@
       : '<a class="kanal-a" href="' + esc(o.href) + '"' + (o.zew ? ' target="_blank" rel="noopener' + (o.me ? ' me' : '') + '"' : '') + (o.f ? ' data-f="' + o.f + '"' : '') + '>' + w + '</a>') + '</li>';
   }
 
+  /* Pole formularza zdefiniowane w panelu (Kontakt → Pola formularza) */
+  var TYPY_POL = { tekst: 'text', email: 'email', telefon: 'tel', data: 'date', liczba: 'number' };
+  var AUTO = { imie: 'name', email: 'email', telefon: 'tel' };
+  function poleFormularza(p, ctx, kat) {
+    var L = ctx.lang, id = 'f-' + esc(p.id), et = t(p.etykieta, L) || p.id, ph = t(p.podpowiedz, L);
+    var lab = '<label for="' + id + '">' + esc(et) + ' <span class="wym">(' + esc(ui(ctx, p.wym ? 'f_wym' : 'f_opc')) + ')</span></label>';
+    var wsp = ' name="' + esc(p.id) + '" data-typ="' + esc(p.typ) + '"' + (p.wym ? ' required' : '') + (ph ? ' placeholder="' + esc(ph) + '"' : '');
+    var pelne = p.szer === 'pelna' || p.typ === 'obszar' || p.typ === 'tak';
+    var ctl;
+    if (p.typ === 'obszar') ctl = '<textarea id="' + id + '"' + wsp + ' rows="4" maxlength="4000"></textarea>';
+    else if (p.typ === 'wybor') {
+      var op = p.zrodlo === 'kategorie' ? (kat || []).map(function (c) { return t(c.nazwa, L); }).concat([ui(ctx, 'f_inne')])
+        : String(t(p.opcje, L) || '').split(/\n+/).map(function (x) { return x.trim(); }).filter(Boolean);
+      ctl = '<select id="' + id + '"' + wsp + '><option value="">' + esc(ui(ctx, 'f_wybierz')) + '</option>' + op.map(function (o) { return '<option>' + esc(o) + '</option>'; }).join('') + '</select>';
+    } else if (p.typ === 'tak') {
+      return '<div class="pole pole-zgoda pole--pelne" data-f="pole:' + esc(p.id) + '"><input type="checkbox" id="' + id + '"' + wsp + ' value="tak"><label for="' + id + '">' + esc(et) + (p.wym ? ' <span class="wym">(' + esc(ui(ctx, 'f_wym')) + ')</span>' : '') + '</label><p class="blad" id="' + id + '-b" hidden></p></div>';
+    } else ctl = '<input id="' + id + '" type="' + (TYPY_POL[p.typ] || 'text') + '"' + wsp + (AUTO[p.id] ? ' autocomplete="' + AUTO[p.id] + '"' : '') + ' maxlength="300">';
+    return '<div class="pole' + (pelne ? ' pole--pelne' : '') + '" data-f="pole:' + esc(p.id) + '">' + lab + ctl + '<p class="blad" id="' + id + '-b" hidden></p></div>';
+  }
+  A.poleFormularza = poleFormularza;
+
   R.kontakt = function (s, ctx) {
     var L = ctx.lang, k = s.kontakt, kat = s.portfolio.kategorie || [], h = igHandle(k.instagram);
     var tel = String(k.telefon || '').replace(/\D/g, '').replace(/^48(?=\d{9}$)/, '');
@@ -408,29 +451,23 @@
     if (k.telefonWidoczny && k.telefon) kan += kanal({ ik: 'telefon', et: ui(ctx, 'zadzwon'), pod: k.telefon, href: 'tel:+48' + tel, f: 'kontakt.telefon' });
     if (k.emailWidoczny && k.email) kan += kanal({ ik: 'email', et: 'E-mail', pod: k.email, href: 'mailto:' + k.email, f: 'kontakt.email' });
     if (k.formularz) kan += kanal({ ik: 'formularz', et: ui(ctx, 'formularz'), pod: ui(ctx, 'formPod'), przycisk: 'form-otworz' });
-    var opcje = kat.map(function (c) { return '<option value="' + esc(t(c.nazwa, 'pl')) + '">' + esc(t(c.nazwa, L)) + '</option>'; }).join('');
+    var polaHtml = widoczne(k.pola).map(function (p) { return poleFormularza(p, ctx, kat); }).join('');
     var form = k.formularz ? '<dialog class="okno okno-form" id="kontakt-form" aria-labelledby="h-formularz">' +
       '<div class="okno-glowa"><h3 id="h-formularz">' + esc(ui(ctx, 'formularz')) + '</h3><button type="button" class="zamknij" data-zamknij aria-label="' + esc(ui(ctx, 'zamknij')) + '">×</button></div>' +
-      '<div class="okno-tresc"><p class="form-zacheta" data-f="kontakt.zachetaFormularza">' + inline(t(k.zachetaFormularza, L)) + '</p>' +
-      '<form id="formularz" novalidate aria-labelledby="h-formularz">' +
-      '<div class="pole"><label for="f-imie">' + esc(ui(ctx, 'f_imie')) + ' <span class="wym">(' + esc(ui(ctx, 'f_wym')) + ')</span></label><input id="f-imie" type="text" name="imie" autocomplete="name" required maxlength="120"><p class="blad" id="f-imie-b" hidden></p></div>' +
-      '<div class="pole"><label for="f-email">' + esc(ui(ctx, 'f_email')) + ' <span class="wym">(' + esc(ui(ctx, 'f_wym')) + ')</span></label><input id="f-email" name="email" type="email" autocomplete="email" required maxlength="160"><p class="blad" id="f-email-b" hidden></p></div>' +
-      '<div class="pole"><label for="f-tel">' + esc(ui(ctx, 'f_tel')) + '</label><input id="f-tel" name="telefon" type="tel" autocomplete="tel" maxlength="40"><p class="blad" id="f-tel-b" hidden></p></div>' +
-      '<div class="pole"><label for="f-termin">' + esc(ui(ctx, 'f_termin')) + '</label><input id="f-termin" type="text" name="termin" maxlength="80"></div>' +
-      '<div class="pole pole--pelne"><label for="f-rodzaj">' + esc(ui(ctx, 'f_rodzaj')) + '</label><select id="f-rodzaj" name="rodzaj"><option value="">' + esc(ui(ctx, 'f_wybierz')) + '</option>' + opcje + '<option value="Inne">' + esc(ui(ctx, 'f_inne')) + '</option></select></div>' +
-      '<div class="pole pole--pelne"><label for="f-wiad">' + esc(ui(ctx, 'f_wiad')) + ' <span class="wym">(' + esc(ui(ctx, 'f_wym')) + ')</span></label><textarea id="f-wiad" name="wiadomosc" rows="4" required maxlength="4000"></textarea><p class="blad" id="f-wiad-b" hidden></p></div>' +
+      '<div class="okno-tresc">' + (t(k.zachetaFormularza, L) ? '<p class="form-zacheta" data-f="kontakt.zachetaFormularza">' + inline(t(k.zachetaFormularza, L)) + '</p>' : '') +
+      '<form id="formularz" novalidate aria-labelledby="h-formularz">' + polaHtml +
       '<div class="pole pole-hp" aria-hidden="true"><label for="f-www">' + esc(ui(ctx, 'f_hp')) + '</label><input id="f-www" type="text" name="www" tabindex="-1" autocomplete="off"></div>' +
       '<div class="pole pole-zgoda pole--pelne"><input type="checkbox" id="f-zgoda" name="zgoda" required><label for="f-zgoda">' + esc(ui(ctx, 'f_zgoda')) + ' <a href="polityka-prywatnosci.html' + linkJezyka(L) + '">' + esc(ui(ctx, 'polityka').toLowerCase()) + '</a>.</label><p class="blad" id="f-zgoda-b" hidden></p></div>' +
       '<button type="submit" class="btn btn--glowny btn--pelny">' + esc(ui(ctx, 'f_wyslij')) + '</button>' +
       '<div class="form-status" role="status" aria-live="polite"></div>' +
       '</form></div></dialog>' : '';
+    var obszar = (t(k.obszar, L) ? '<p data-f="kontakt.obszar">' + inline(t(k.obszar, L)) + '</p>' : '') +
+      (k.miasta ? '<p class="miasta" data-f="kontakt.miasta">' + esc(k.miasta) + '</p>' : '');
     return otworzSekcje('kontakt', s, ctx, '', ' aria-labelledby="h-kontakt"') +
       tloHtml(s.sekcje.kontakt.tlo, ctx) +
       '<div class="sek-in kontakt"><div class="kontakt-info">' + naglowek('kontakt', s, ctx, 'h-kontakt') +
       '<ul class="kanaly">' + kan + '</ul></div>' +
-      '<div class="kontakt-obszar"><h3>' + esc(ui(ctx, 'obszar')) + '</h3>' +
-      '<p data-f="kontakt.obszar">' + inline(t(k.obszar, L)) + '</p>' +
-      '<p class="miasta" data-f="kontakt.miasta">' + esc(k.miasta) + '</p>' +
+      '<div class="kontakt-obszar">' + (obszar ? '<h3>' + esc(ui(ctx, 'obszar')) + '</h3>' + obszar : '') +
       '<p class="linki-male"><button type="button" class="link-mapa" data-mapa="' + esc(k.mapa || 'Zgorzelec') + '" aria-haspopup="dialog">' + esc(ui(ctx, 'mapa')) + '</button></p>' +
       '<p class="linki-male"><a href="' + esc(bezpiecznyUrl(k.profilGoogle) || mapsUrl(k)) + '" target="_blank" rel="noopener" data-f="kontakt.profilGoogle">' + esc(bezpiecznyUrl(k.profilGoogle) ? ui(ctx, 'profil') : ui(ctx, 'otworzMapy')) + '</a>' +
       (bezpiecznyUrl(k.opinieGoogle) ? '<span aria-hidden="true">·</span><a href="' + esc(bezpiecznyUrl(k.opinieGoogle)) + '" target="_blank" rel="noopener" data-f="kontakt.opinieGoogle">' + esc(ui(ctx, 'opinie')) + '</a>' : '') + '</p>' +
@@ -438,8 +475,16 @@
   };
 
   /* ---------- Elementy wspólne ---------- */
+  /* Kolejność sekcji (panel → Sekcje strony): pierwszy ekran zawsze na początku */
+  function kolejnosc(s) {
+    var mapa = {}; SEKCJE.forEach(function (x) { mapa[x.k] = x; });
+    var ord = ((s.ustawienia && s.ustawienia.kolejnosc) || []).filter(function (k, i, a) { return mapa[k] && k !== 'start' && a.indexOf(k) === i; });
+    SEKCJE.forEach(function (x) { if (x.k !== 'start' && ord.indexOf(x.k) < 0) ord.push(x.k); });
+    return [mapa.start].concat(ord.map(function (k) { return mapa[k]; }));
+  }
+  A.kolejnosc = kolejnosc;
   function menuPozycje(s, ctx) {
-    return SEKCJE.filter(function (x) { return x.k !== 'start' && sekWidoczna(s, x.k, ctx.today); });
+    return kolejnosc(s).filter(function (x) { return x.k !== 'start' && sekWidoczna(s, x.k, ctx.today); });
   }
   R.nav = function (s, ctx) {
     return '<ul class="menu-lista" id="menu-lista" data-ssr="nav">' + menuPozycje(s, ctx).map(function (x) {
@@ -480,7 +525,7 @@
       (k.emailWidoczny && k.email ? '<li><a href="mailto:' + esc(k.email) + '">' + esc(k.email) + '</a></li>' : '');
     return '<footer class="stopka" data-ssr="stopka"><div class="stopka-in">' +
       '<div class="stopka-marka"><p class="marka-tekst"><span>' + esc(t(s.start.nazwa, L)) + '</span> <em>Fotografia</em></p>' +
-      '<p class="stopka-haslo" data-f="stopka.haslo">' + esc(t(s.stopka.haslo, L)) + '</p>' +
+      (t(s.stopka.haslo, L) ? '<p class="stopka-haslo" data-f="stopka.haslo">' + esc(t(s.stopka.haslo, L)) + '</p>' : '') +
       '<p class="stopka-obszar">' + esc(t(s.start.rola, L)) + '<br>' + esc(k.miasta) + '</p></div>' +
       '<nav class="stopka-nav" aria-label="' + esc(ui(ctx, 'sekcje')) + '"><ul>' + menuPozycje(s, ctx).map(function (x) {
         return '<li><a href="#' + x.id + '">' + esc(t(s.sekcje[x.k].menu, L)) + '</a></li>';
@@ -542,7 +587,7 @@
     var lang = op.lang || 'pl';
     if (!jezykiWl(s).some(function (j) { return j.kod === lang; })) lang = 'pl';
     var ctx = { lang: lang, today: today };
-    var nast = SEKCJE.filter(function (x) { return x.k !== 'start' && sekWidoczna(s, x.k, today); })[0];
+    var nast = kolejnosc(s).filter(function (x) { return x.k !== 'start' && sekWidoczna(s, x.k, today); })[0];
     ctx.nastepna = nast ? nast.id : 'kontakt';
     return ctx;
   }
@@ -563,6 +608,9 @@
     wszystko: function (s, op) {
       var ctx = ctxDla(s, op), out = {};
       SEKCJE.forEach(function (x) { out[x.k] = R[x.k](s, ctx); });
+      out.sekcje = kolejnosc(s).map(function (x) { return out[x.k]; }).join('\n');
+      out.motyw = motyw(s);
+      out.motywTlo = MOTYWY.filter(function (m) { return m.id === out.motyw; })[0].tlo;
       ['nav', 'kropki', 'jezyki', 'pasek', 'stopka'].forEach(function (k) { out[k] = R[k](s, ctx); });
       out.jsonld = R.jsonld(s, ctx);
       out.hreflang = R.hreflang(s);

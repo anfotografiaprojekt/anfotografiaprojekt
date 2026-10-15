@@ -31,6 +31,8 @@ export async function onRequest(context) {
       element(el) {
         const k = el.getAttribute('data-ssr');
         if (k === 'title') { el.setInnerContent(out.title); return; }
+        if (k === 'sekcje') { el.setInnerContent(out.sekcje, { html: true }); return; }
+        if (k === 'theme') { el.setAttribute('content', out.motywTlo); return; }
         if (k === 'description' || k === 'og-description' || k === 'tw-description') { el.setAttribute('content', out.description); return; }
         if (k === 'og-title' || k === 'tw-title') { el.setAttribute('content', out.title); return; }
         if (k === 'jsonld') { el.setInnerContent(out.jsonld, { html: true }); return; }
@@ -51,7 +53,7 @@ export async function onRequest(context) {
     };
     let rw = new HTMLRewriter()
       .on('[data-ssr]', zamien)
-      .on('html', { element(el) { el.setAttribute('lang', out.ctx.lang); } })
+      .on('html', { element(el) { el.setAttribute('lang', out.ctx.lang); el.setAttribute('data-motyw', out.motyw); } })
       .on('meta[name="anf-ssr"]', { element(el) { el.setAttribute('content', out.znacznik); } });
     if (glowna) {
       const stanJson = JSON.stringify(stan).replace(/</g, '\\u003c');

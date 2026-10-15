@@ -319,3 +319,29 @@ html.cmsp-otwarty,html.cmsp-otwarty body{overflow:hidden}
   .cmsp-g-w,.cmsp-g-skala{grid-template-columns:90px 1fr}
 }
 @media (prefers-reduced-motion:reduce){.cmsp *,.cmsp-tlo-modal *{animation:none!important;transition:none!important}}
+
+/* motywy kolorystyczne */
+.cmsp-motywy{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;border:0;padding:0;margin:0 0 14px}
+.cmsp-motyw{position:relative;cursor:pointer}
+.cmsp-motyw input{position:absolute;opacity:0;width:1px;height:1px}
+.cmsp-motyw-k{display:flex;flex-direction:column;gap:4px;height:100%;padding:12px;border:2px solid var(--c-lin);border-radius:10px;background:#fff;transition:border-color .2s,box-shadow .2s}
+.cmsp-motyw input:checked+.cmsp-motyw-k{border-color:var(--c-gl);box-shadow:0 0 0 3px rgba(122,82,64,.15)}
+.cmsp-motyw input:focus-visible+.cmsp-motyw-k{outline:2px solid var(--c-gl);outline-offset:2px}
+.cmsp-motyw-paski{display:flex;height:42px;border-radius:6px;overflow:hidden;margin-bottom:6px;border:1px solid rgba(0,0,0,.06)}
+.cmsp-motyw-paski i{flex:1}
+.cmsp-motyw-k strong{font-family:Cormorant,Georgia,serif;font-size:1.25rem;font-weight:500}
+.cmsp-motyw-k small{color:var(--c-t2);font-size:.82rem}
+.cmsp-motyw input:checked+.cmsp-motyw-k strong::after{content:" ✓";color:var(--c-gl)}
+/* kolejność sekcji */
+.cmsp-sek-w-g{grid-template-columns:auto 200px 1fr auto}
+.cmsp-kolej--pusta{width:32px}
+@media (max-width:899px){.cmsp-sek-w-g{grid-template-columns:auto 1fr}.cmsp-sek-w-g .cmsp-mini{grid-column:2}.cmsp-sek-w-t,.cmsp-sek-w-a{grid-column:1 / -1}}
+/* wiadomości z dowolnymi polami */
+.cmsp-wiad-pola{display:grid;grid-template-columns:minmax(120px,auto) 1fr;gap:4px 14px;margin:8px 0 10px;background:var(--c-bg);padding:10px 12px;border-radius:6px;font-size:.92rem}
+.cmsp-wiad-pola dt{color:var(--c-t2);font-weight:500}
+.cmsp-wiad-pola dd{margin:0;overflow-wrap:anywhere}
+.cmsp-wiad-pola a{color:var(--c-gl)}
+/* podgląd formularza w panelu */
+.cmsp-mini-in .cmsp-form-podglad{display:block;position:relative;max-width:660px;margin:30px auto 50px;background:var(--bg);color:var(--tekst);border-radius:4px;box-shadow:0 20px 50px -20px rgba(0,0,0,.4)}
+.cmsp-mini-in .cmsp-form-podglad form{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.cmsp-mini-in .cmsp-form-podglad .pole--pelne,.cmsp-mini-in .cmsp-form-podglad form > button,.cmsp-mini-in .cmsp-form-podglad .form-status{grid-column:1 / -1}

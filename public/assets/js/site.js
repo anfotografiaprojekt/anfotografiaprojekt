@@ -8,7 +8,7 @@
   var A = window.ANF, Rn = A.render, doc = document, html = doc.documentElement;
   var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var API = '/api';
-  var KLUCZE = ['start', 'oMnie', 'historia', 'aktualnosci', 'kadra', 'portfolio', 'instagram', 'kontakt', 'nav', 'kropki', 'jezyki', 'pasek', 'stopka'];
+  var KLUCZE = ['nav', 'kropki', 'jezyki', 'pasek', 'stopka'];
   var site = A.site = { api: API, demo: location.protocol === 'file:' };
 
   /* ---------- skrót danych (czy treść w HTML jest aktualna?) ---------- */
@@ -43,7 +43,11 @@
     site.state = s;
     site.lang = wybierzJezyk(s);
     var out = Rn.wszystko(s, { lang: site.lang });
+    var main = doc.querySelector('main[data-ssr="sekcje"]');
+    if (main) main.innerHTML = out.sekcje; else ['start', 'oMnie', 'historia', 'aktualnosci', 'kadra', 'portfolio', 'instagram', 'kontakt'].forEach(function (k) { zamien(k, out[k]); });
     KLUCZE.forEach(function (k) { zamien(k, out[k]); });
+    html.setAttribute('data-motyw', out.motyw);
+    ustawMeta('meta[name="theme-color"]', out.motywTlo);
     doc.title = out.title;
     ustawMeta('meta[name="description"]', out.description);
     ustawMeta('meta[property="og:title"]', out.title); ustawMeta('meta[name="twitter:title"]', out.title);
@@ -405,9 +409,9 @@
   /* ---------- formularz kontaktowy ---------- */
   var t0 = Date.now();
   var KOM = {
-    imie: 'Proszę podać imię i nazwisko.', email: 'Proszę podać poprawny adres e-mail, np. jan@poczta.pl.',
-    tel: 'Numer telefonu może zawierać tylko cyfry, spacje, myślniki i znak +.',
-    wiad: 'Proszę wpisać wiadomość (co najmniej 10 znaków).', zgoda: 'Do wysłania wiadomości potrzebna jest zgoda.'
+    wym: 'Proszę uzupełnić to pole.', email: 'Proszę podać poprawny adres e-mail, np. jan@poczta.pl.',
+    tel: 'Numer telefonu może zawierać tylko cyfry, spacje, myślniki i znak +.', krotko: 'Proszę wpisać co najmniej 2 znaki.',
+    zgoda: 'Do wysłania wiadomości potrzebna jest zgoda.', zaznacz: 'Proszę zaznaczyć to pole.'
   };
   function blad(pole, msg) {
     var b = doc.getElementById(pole.id + '-b');
@@ -416,13 +420,19 @@
     if (b) { b.textContent = msg || ''; b.hidden = !msg; }
     return !msg;
   }
+  /* walidacja pól zdefiniowanych w panelu (typ z atrybutu data-typ) */
+  function bladPola(el) {
+    var typ = el.dataset.typ, v = el.type === 'checkbox' ? (el.checked ? 'tak' : '') : el.value.trim();
+    if (!v) return el.required ? (typ === 'tak' ? KOM.zaznacz : KOM.wym) : '';
+    if (typ === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return KOM.email;
+    if (typ === 'telefon' && !/^[+\d][\d\s-]{6,}$/.test(v)) return KOM.tel;
+    if (el.name === 'imie' && v.length < 2) return KOM.krotko;
+    return '';
+  }
   function waliduj(f) {
-    var ok = [], el = f.elements;
-    ok.push(blad(el.imie, el.imie.value.trim().length < 2 ? KOM.imie : ''));
-    ok.push(blad(el.email, /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(el.email.value.trim()) ? '' : KOM.email));
-    ok.push(blad(el.telefon, !el.telefon.value.trim() || /^[+\d][\d\s-]{6,}$/.test(el.telefon.value.trim()) ? '' : KOM.tel));
-    ok.push(blad(el.wiadomosc, el.wiadomosc.value.trim().length < 10 ? KOM.wiad : ''));
-    ok.push(blad(el.zgoda, el.zgoda.checked ? '' : KOM.zgoda));
+    var ok = [];
+    f.querySelectorAll('[data-typ]').forEach(function (el) { ok.push(blad(el, bladPola(el))); });
+    ok.push(blad(f.elements.zgoda, f.elements.zgoda.checked ? '' : KOM.zgoda));
     return ok.every(Boolean);
   }
   function wyslij(f) {
@@ -433,10 +443,9 @@
       st.className = 'form-status err'; st.textContent = 'Proszę poprawić zaznaczone pola.';
       return;
     }
-    var el = f.elements, dane = {
-      imie: el.imie.value.trim(), email: el.email.value.trim(), telefon: el.telefon.value.trim(), termin: el.termin.value.trim(),
-      rodzaj: el.rodzaj.value, wiadomosc: el.wiadomosc.value.trim(), zgoda: el.zgoda.checked, www: el.www.value, t: Date.now() - t0
-    };
+    var pola = {};
+    f.querySelectorAll('[data-typ]').forEach(function (el) { pola[el.name] = el.type === 'checkbox' ? (el.checked ? 'tak' : '') : el.value.trim(); });
+    var dane = { pola: pola, zgoda: f.elements.zgoda.checked, www: f.elements.www.value, t: Date.now() - t0 };
     if (site.demo) { st.className = 'form-status err'; st.textContent = 'Tryb demonstracyjny — formularz zadziała po wdrożeniu strony na serwer. Proszę napisać przez Messengera.'; return; }
     btn.disabled = true; btn.setAttribute('aria-busy', 'true'); st.textContent = 'Wysyłanie…';
     fetch(API + '/kontakt', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-ANF': '1' }, body: JSON.stringify(dane) })
