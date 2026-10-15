@@ -375,21 +375,17 @@
     oknoWroc = btn; okno.showModal(); okno.querySelector('.zamknij').focus();
   }
 
-  /* ---------- formularz w oknie (telefon, niskie ekrany) ---------- */
+  /* ---------- formularz kontaktowy w osobnym oknie ---------- */
   var formWroc = null;
-  function formularzOkno(otworz, btn) {
-    var f = doc.getElementById('kontakt-form'); if (!f) return;
-    var przyc = doc.querySelector('.form-otworz');
-    f.classList.toggle('otwarty', otworz);
-    html.classList.toggle('form-otwarty', otworz);
-    if (otworz) {
-      formWroc = btn || przyc; f.setAttribute('role', 'dialog'); f.setAttribute('aria-modal', 'true'); f.setAttribute('aria-labelledby', 'h-formularz');
-      var p = f.querySelector('input:not([type=hidden]):not([tabindex="-1"])'); if (p) p.focus();
-    } else {
-      f.removeAttribute('role'); f.removeAttribute('aria-modal'); f.removeAttribute('aria-labelledby');
-      if (formWroc) formWroc.focus();
+  function otworzFormularz(btn) {
+    var d = doc.getElementById('kontakt-form'); if (!d || !d.showModal) return;
+    formWroc = btn; d.showModal();
+    var p = d.querySelector('#f-imie'); if (p) p.focus();
+    if (!d._nasluch) {
+      d._nasluch = true;
+      d.addEventListener('close', function () { if (formWroc) formWroc.focus(); });
+      d.addEventListener('click', function (e) { if (e.target === d) d.close(); });
     }
-    if (przyc) przyc.setAttribute('aria-expanded', String(otworz));
   }
 
   /* ---------- wideo w portfolio ---------- */
@@ -512,21 +508,14 @@
     if (t.matches('.slajd-pow')) { lbOtworz(t.closest('.kafel')); return; }
     if (t.matches('.slajd-wideo')) { odtworzWideo(t); return; }
     if (t.matches('.link-mapa')) { pokazMape(t); return; }
-    if (t.matches('.form-otworz')) { formularzOkno(true, t); return; }
-    if (t.matches('.form-zamknij')) { formularzOkno(false); return; }
+    if (t.matches('.form-otworz')) { otworzFormularz(t); return; }
     if (t.matches('.burger')) { menuOtworz(t.getAttribute('aria-expanded') !== 'true'); return; }
     if (t.matches('#klodka') || t.matches('[data-panel]')) { e.preventDefault(); otworzPanel(t); return; }
     if (t.matches('[data-jezyk]')) { try { localStorage.setItem('anf-lang', t.dataset.jezyk); } catch (er) { } return; }
     if (t.closest('.menu-lista') && t.matches('a')) menuOtworz(false);
   });
   doc.addEventListener('keydown', function (e) {
-    var f = doc.querySelector('.kontakt-form.otwarty');
-    if (e.key === 'Escape') { menuOtworz(false); if (f) formularzOkno(false); }
-    if (f && e.key === 'Tab') {
-      var el = [].slice.call(f.querySelectorAll('button, input:not([tabindex="-1"]), select, textarea, a[href]')).filter(function (x) { return x.offsetParent !== null; });
-      if (el.length && e.shiftKey && doc.activeElement === el[0]) { e.preventDefault(); el[el.length - 1].focus(); }
-      else if (el.length && !e.shiftKey && doc.activeElement === el[el.length - 1]) { e.preventDefault(); el[0].focus(); }
-    }
+    if (e.key === 'Escape') menuOtworz(false);
     if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && e.target.closest && e.target.closest('#portfolio .mozaika-okno, #portfolio .mozaika-ster')) { e.preventDefault(); stronaMoz(e.key === 'ArrowRight' ? 1 : -1); }
   });
   doc.addEventListener('submit', function (e) { if (e.target.id === 'formularz') { e.preventDefault(); wyslij(e.target); } });

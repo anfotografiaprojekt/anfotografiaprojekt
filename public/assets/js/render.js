@@ -52,7 +52,7 @@
       f_wybierz: 'Proszę wybrać…', f_inne: 'Inne', f_termin: 'Planowany termin (opcjonalnie)', f_wiad: 'Wiadomość',
       f_zgoda: 'Wyrażam zgodę na przetwarzanie moich danych w celu odpowiedzi na wiadomość. Szczegóły w',
       f_wyslij: 'Wyślij wiadomość', f_wym: 'pole wymagane', f_hp: 'Nie wypełniaj tego pola',
-      sekcje: 'Sekcje strony', skip: 'Przejdź do treści', wartosci: 'Wartości', formOtworz: 'Napisz wiadomość', strona: 'Strona'
+      sekcje: 'Sekcje strony', skip: 'Przejdź do treści', wartosci: 'Wartości', formOtworz: 'Napisz wiadomość', strona: 'Strona', formPod: 'Wiadomość prosto ze strony'
     },
     en: {
       menu: 'Menu', zamknij: 'Close', czytaj: 'Read more', czytajOMnie: 'Read more about me',
@@ -72,7 +72,7 @@
       f_wybierz: 'Please choose…', f_inne: 'Other', f_termin: 'Planned date (optional)', f_wiad: 'Message',
       f_zgoda: 'I agree to the processing of my data in order to reply to my message. Details in the',
       f_wyslij: 'Send message', f_wym: 'required', f_hp: 'Leave this field empty',
-      sekcje: 'Page sections', skip: 'Skip to content', wartosci: 'Values', formOtworz: 'Write a message', strona: 'Page'
+      sekcje: 'Page sections', skip: 'Skip to content', wartosci: 'Values', formOtworz: 'Write a message', strona: 'Page', formPod: 'Send a message from this page'
     }
   };
   A.UI = UI;
@@ -381,38 +381,60 @@
   A.messengerUrl = messengerUrl;
   function mapsUrl(k) { return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(k.mapa || 'Zgorzelec'); }
 
+  /* Ikony kanałów kontaktu — proste, uniwersalne symbole (nie znaki towarowe serwisów) */
+  var IK = {
+    czat: '<path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><circle cx="8" cy="11" r="1.2"/><circle cx="12" cy="11" r="1.2"/><circle cx="16" cy="11" r="1.2"/>',
+    profil: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
+    aparat: '<path d="M3 8a2 2 0 0 1 2-2h2.5l1.5-2h6l1.5 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/>',
+    telefon: '<path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/>',
+    email: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+    formularz: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>'
+  };
+  A.IKONY = IK;
+  function ikona(n) { return '<svg class="kanal-ik-svg" viewBox="0 0 24 24" aria-hidden="true">' + IK[n] + '</svg>'; }
+  function kanal(o) {
+    var w = '<span class="kanal-ik">' + ikona(o.ik) + '</span><span class="kanal-t"><strong>' + esc(o.et) + '</strong>' + (o.pod ? '<small>' + esc(o.pod) + '</small>' : '') + '</span><span class="kanal-str" aria-hidden="true">→</span>';
+    return '<li class="kanal' + (o.glowny ? ' kanal--glowny' : '') + '">' + (o.przycisk
+      ? '<button type="button" class="kanal-a ' + o.przycisk + '" aria-haspopup="dialog"' + (o.f ? ' data-f="' + o.f + '"' : '') + '>' + w + '</button>'
+      : '<a class="kanal-a" href="' + esc(o.href) + '"' + (o.zew ? ' target="_blank" rel="noopener' + (o.me ? ' me' : '') + '"' : '') + (o.f ? ' data-f="' + o.f + '"' : '') + '>' + w + '</a>') + '</li>';
+  }
+
   R.kontakt = function (s, ctx) {
-    var L = ctx.lang, k = s.kontakt, kat = s.portfolio.kategorie || [];
-    var ak = '<li><a class="btn btn--glowny" href="' + esc(messengerUrl(k)) + '" target="_blank" rel="noopener" data-f="kontakt.messenger"><svg class="ik" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2C6.4 2 2 6.1 2 11.4c0 3 1.5 5.6 3.8 7.3V22l3.5-1.9c.9.3 1.8.4 2.7.4 5.6 0 10-4.1 10-9.4S17.6 2 12 2zm1 12.6-2.6-2.7-5 2.7 5.5-5.8 2.6 2.7 4.9-2.7L13 14.6z"/></svg>' + esc(ui(ctx, 'messenger')) + '</a></li>';
-    if (k.facebook) ak += '<li><a class="btn btn--obrys" href="' + esc(bezpiecznyUrl(k.facebook)) + '" target="_blank" rel="noopener me" data-f="kontakt.facebook">' + esc(ui(ctx, 'facebook')) + '</a></li>';
-    if (k.instagram) ak += '<li><a class="btn btn--obrys" href="' + esc(bezpiecznyUrl(k.instagram)) + '" target="_blank" rel="noopener me" data-f="kontakt.instagram">' + esc(ui(ctx, 'instagram')) + '</a></li>';
-    if (k.telefonWidoczny && k.telefon) ak += '<li><a class="btn btn--obrys" href="tel:+48' + esc(String(k.telefon).replace(/\D/g, '').replace(/^48(?=\d{9}$)/, '')) + '" data-f="kontakt.telefon">' + esc(ui(ctx, 'zadzwon')) + ': ' + esc(k.telefon) + '</a></li>';
-    if (k.emailWidoczny && k.email) ak += '<li><a class="btn btn--obrys" href="mailto:' + esc(k.email) + '" data-f="kontakt.email">' + esc(k.email) + '</a></li>';
+    var L = ctx.lang, k = s.kontakt, kat = s.portfolio.kategorie || [], h = igHandle(k.instagram);
+    var tel = String(k.telefon || '').replace(/\D/g, '').replace(/^48(?=\d{9}$)/, '');
+    var kan = kanal({ ik: 'czat', et: ui(ctx, 'messenger'), pod: 'Messenger', href: messengerUrl(k), zew: 1, glowny: 1, f: 'kontakt.messenger' });
+    if (k.facebook) kan += kanal({ ik: 'profil', et: 'Facebook', pod: ui(ctx, 'facebook'), href: bezpiecznyUrl(k.facebook), zew: 1, me: 1, f: 'kontakt.facebook' });
+    if (k.instagram) kan += kanal({ ik: 'aparat', et: 'Instagram', pod: h ? '@' + h : ui(ctx, 'instagram'), href: bezpiecznyUrl(k.instagram), zew: 1, me: 1, f: 'kontakt.instagram' });
+    if (k.telefonWidoczny && k.telefon) kan += kanal({ ik: 'telefon', et: ui(ctx, 'zadzwon'), pod: k.telefon, href: 'tel:+48' + tel, f: 'kontakt.telefon' });
+    if (k.emailWidoczny && k.email) kan += kanal({ ik: 'email', et: 'E-mail', pod: k.email, href: 'mailto:' + k.email, f: 'kontakt.email' });
+    if (k.formularz) kan += kanal({ ik: 'formularz', et: ui(ctx, 'formularz'), pod: ui(ctx, 'formPod'), przycisk: 'form-otworz' });
     var opcje = kat.map(function (c) { return '<option value="' + esc(t(c.nazwa, 'pl')) + '">' + esc(t(c.nazwa, L)) + '</option>'; }).join('');
-    var form = k.formularz ? '<div class="kontakt-form karta" id="kontakt-form"><button type="button" class="zamknij form-zamknij" aria-label="' + esc(ui(ctx, 'zamknij')) + '">×</button><h3 id="h-formularz">' + esc(ui(ctx, 'formularz')) + '</h3>' +
-      '<p class="form-zacheta" data-f="kontakt.zachetaFormularza">' + inline(t(k.zachetaFormularza, L)) + '</p>' +
+    var form = k.formularz ? '<dialog class="okno okno-form" id="kontakt-form" aria-labelledby="h-formularz">' +
+      '<div class="okno-glowa"><h3 id="h-formularz">' + esc(ui(ctx, 'formularz')) + '</h3><button type="button" class="zamknij" data-zamknij aria-label="' + esc(ui(ctx, 'zamknij')) + '">×</button></div>' +
+      '<div class="okno-tresc"><p class="form-zacheta" data-f="kontakt.zachetaFormularza">' + inline(t(k.zachetaFormularza, L)) + '</p>' +
       '<form id="formularz" novalidate aria-labelledby="h-formularz">' +
       '<div class="pole"><label for="f-imie">' + esc(ui(ctx, 'f_imie')) + ' <span class="wym">(' + esc(ui(ctx, 'f_wym')) + ')</span></label><input id="f-imie" type="text" name="imie" autocomplete="name" required maxlength="120"><p class="blad" id="f-imie-b" hidden></p></div>' +
       '<div class="pole"><label for="f-email">' + esc(ui(ctx, 'f_email')) + ' <span class="wym">(' + esc(ui(ctx, 'f_wym')) + ')</span></label><input id="f-email" name="email" type="email" autocomplete="email" required maxlength="160"><p class="blad" id="f-email-b" hidden></p></div>' +
-      '<div class="pole-rzad"><div class="pole"><label for="f-tel">' + esc(ui(ctx, 'f_tel')) + '</label><input id="f-tel" name="telefon" type="tel" autocomplete="tel" maxlength="40"><p class="blad" id="f-tel-b" hidden></p></div>' +
-      '<div class="pole"><label for="f-termin">' + esc(ui(ctx, 'f_termin')) + '</label><input id="f-termin" type="text" name="termin" maxlength="80"></div></div>' +
+      '<div class="pole"><label for="f-tel">' + esc(ui(ctx, 'f_tel')) + '</label><input id="f-tel" name="telefon" type="tel" autocomplete="tel" maxlength="40"><p class="blad" id="f-tel-b" hidden></p></div>' +
+      '<div class="pole"><label for="f-termin">' + esc(ui(ctx, 'f_termin')) + '</label><input id="f-termin" type="text" name="termin" maxlength="80"></div>' +
       '<div class="pole pole--pelne"><label for="f-rodzaj">' + esc(ui(ctx, 'f_rodzaj')) + '</label><select id="f-rodzaj" name="rodzaj"><option value="">' + esc(ui(ctx, 'f_wybierz')) + '</option>' + opcje + '<option value="Inne">' + esc(ui(ctx, 'f_inne')) + '</option></select></div>' +
-      '<div class="pole pole--pelne"><label for="f-wiad">' + esc(ui(ctx, 'f_wiad')) + ' <span class="wym">(' + esc(ui(ctx, 'f_wym')) + ')</span></label><textarea id="f-wiad" name="wiadomosc" rows="3" required maxlength="4000"></textarea><p class="blad" id="f-wiad-b" hidden></p></div>' +
+      '<div class="pole pole--pelne"><label for="f-wiad">' + esc(ui(ctx, 'f_wiad')) + ' <span class="wym">(' + esc(ui(ctx, 'f_wym')) + ')</span></label><textarea id="f-wiad" name="wiadomosc" rows="4" required maxlength="4000"></textarea><p class="blad" id="f-wiad-b" hidden></p></div>' +
       '<div class="pole pole-hp" aria-hidden="true"><label for="f-www">' + esc(ui(ctx, 'f_hp')) + '</label><input id="f-www" type="text" name="www" tabindex="-1" autocomplete="off"></div>' +
       '<div class="pole pole-zgoda pole--pelne"><input type="checkbox" id="f-zgoda" name="zgoda" required><label for="f-zgoda">' + esc(ui(ctx, 'f_zgoda')) + ' <a href="polityka-prywatnosci.html' + linkJezyka(L) + '">' + esc(ui(ctx, 'polityka').toLowerCase()) + '</a>.</label><p class="blad" id="f-zgoda-b" hidden></p></div>' +
       '<button type="submit" class="btn btn--glowny btn--pelny">' + esc(ui(ctx, 'f_wyslij')) + '</button>' +
       '<div class="form-status" role="status" aria-live="polite"></div>' +
-      '</form></div>' : '';
+      '</form></div></dialog>' : '';
     return otworzSekcje('kontakt', s, ctx, '', ' aria-labelledby="h-kontakt"') +
       tloHtml(s.sekcje.kontakt.tlo, ctx) +
-      '<div class="sek-in kontakt' + (form ? '' : ' kontakt--bez') + '"><div class="kontakt-info">' + naglowek('kontakt', s, ctx, 'h-kontakt') +
-      '<ul class="akcje">' + ak + (k.formularz ? '<li class="akcja-form"><button type="button" class="btn btn--obrys form-otworz" aria-controls="kontakt-form" aria-expanded="false">' + esc(ui(ctx, 'formOtworz')) + '</button></li>' : '') + '</ul>' +
-      '<h3>' + esc(ui(ctx, 'obszar')) + '</h3>' +
+      '<div class="sek-in kontakt"><div class="kontakt-info">' + naglowek('kontakt', s, ctx, 'h-kontakt') +
+      '<ul class="kanaly">' + kan + '</ul></div>' +
+      '<div class="kontakt-obszar"><h3>' + esc(ui(ctx, 'obszar')) + '</h3>' +
       '<p data-f="kontakt.obszar">' + inline(t(k.obszar, L)) + '</p>' +
       '<p class="miasta" data-f="kontakt.miasta">' + esc(k.miasta) + '</p>' +
-      '<p class="linki-male"><button type="button" class="link-mapa" data-mapa="' + esc(k.mapa || 'Zgorzelec') + '" aria-haspopup="dialog">' + esc(ui(ctx, 'mapa')) + '</button> · <a href="' + esc(bezpiecznyUrl(k.profilGoogle) || mapsUrl(k)) + '" target="_blank" rel="noopener" data-f="kontakt.profilGoogle">' + esc(bezpiecznyUrl(k.profilGoogle) ? ui(ctx, 'profil') : ui(ctx, 'otworzMapy')) + '</a>' +
-      (bezpiecznyUrl(k.opinieGoogle) ? ' · <a href="' + esc(bezpiecznyUrl(k.opinieGoogle)) + '" target="_blank" rel="noopener" data-f="kontakt.opinieGoogle">' + esc(ui(ctx, 'opinie')) + '</a>' : '') + '</p>' +
-      '</div>' + form + '</div></section>';
+      '<p class="linki-male"><button type="button" class="link-mapa" data-mapa="' + esc(k.mapa || 'Zgorzelec') + '" aria-haspopup="dialog">' + esc(ui(ctx, 'mapa')) + '</button></p>' +
+      '<p class="linki-male"><a href="' + esc(bezpiecznyUrl(k.profilGoogle) || mapsUrl(k)) + '" target="_blank" rel="noopener" data-f="kontakt.profilGoogle">' + esc(bezpiecznyUrl(k.profilGoogle) ? ui(ctx, 'profil') : ui(ctx, 'otworzMapy')) + '</a>' +
+      (bezpiecznyUrl(k.opinieGoogle) ? '<span aria-hidden="true">·</span><a href="' + esc(bezpiecznyUrl(k.opinieGoogle)) + '" target="_blank" rel="noopener" data-f="kontakt.opinieGoogle">' + esc(ui(ctx, 'opinie')) + '</a>' : '') + '</p>' +
+      '</div></div>' + form + '</section>';
   };
 
   /* ---------- Elementy wspólne ---------- */

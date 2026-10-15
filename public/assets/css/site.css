@@ -435,9 +435,6 @@ dialog.lightbox::backdrop{background:rgba(18,14,12,.96)}
 .link-mapa{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;text-underline-offset:.2em;cursor:pointer;min-height:44px}
 .linki-male{display:flex;flex-wrap:wrap;align-items:center;gap:0 6px}
 .linki-male a{display:inline-flex;align-items:center;min-height:44px}
-.form-zamknij{display:none}
-.kontakt-form{padding:clamp(18px,2.6vh,30px) clamp(18px,2vw,30px)}
-.kontakt-form h3{font-size:1.45rem;margin-bottom:.2em}
 .form-zacheta{font-size:.86rem;margin-bottom:.7em}
 #formularz{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
 #formularz .pole-rzad{display:contents}
@@ -447,7 +444,6 @@ dialog.lightbox::backdrop{background:rgba(18,14,12,.96)}
 .pole input,.pole select{min-height:44px;padding:.45em .7em}
 .pole textarea{min-height:76px}
 .okno-mapa iframe{width:100%;height:min(60vh,480px);border:0;display:block}
-.akcja-form{display:none}
 
 @media (min-width:900px){
   .omnie{grid-template-columns:auto minmax(0,1fr);gap:clamp(28px,4vw,72px)}
@@ -464,7 +460,6 @@ dialog.lightbox::backdrop{background:rgba(18,14,12,.96)}
   .kadra--2,.kadra--3{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
   .kadra--2 .osoba,.kadra--3 .osoba{grid-template-columns:auto minmax(0,1fr);align-items:start;gap:16px 22px}
   .kadra--2 .osoba-foto img,.kadra--3 .osoba-foto img{height:calc((var(--wys) - 2 * var(--pad-y)) * .42);width:auto;max-width:14vw}
-  .kontakt{grid-template-columns:minmax(0,1fr) minmax(360px,440px);gap:clamp(24px,4vw,64px);align-items:start}
 }
 @media (max-width:899px){
   :root{--nag:60px;--dolny:calc(64px + env(safe-area-inset-bottom))}
@@ -488,15 +483,6 @@ dialog.lightbox::backdrop{background:rgba(18,14,12,.96)}
   .ig{grid-template-columns:repeat(3,1fr)}
   .klodka{bottom:calc(var(--dolny) + 12px)}
 }
-@media (max-width:899px),(max-height:759px){
-  .kontakt{grid-template-columns:1fr}
-  .akcja-form{display:list-item;list-style:none}
-  .kontakt-form{display:none}
-  .kontakt-form.otwarty{display:block;position:fixed;inset:0;z-index:300;overflow:auto;border-radius:0;max-width:none;padding:calc(18px + env(safe-area-inset-top)) var(--gut) calc(24px + env(safe-area-inset-bottom));box-shadow:none}
-  .kontakt-form.otwarty .form-zamknij{display:block;position:absolute;top:calc(10px + env(safe-area-inset-top));right:10px}
-  .kontakt-form.otwarty h3{padding-right:56px}
-  html.form-otwarty{overflow:hidden}
-}
 /* telefon poziomo / bardzo niskie okna: bez dolnego paska, sekcje mogą rosnąć */
 @media (max-height:500px){
   :root{--dolny:0px}
@@ -519,4 +505,53 @@ dialog.lightbox::backdrop{background:rgba(18,14,12,.96)}
   .wpis-tekst{padding:12px 14px 4px}
   .wpis-foto img{max-height:calc(var(--wys) * .28)}
   .osoba-rola{margin:.2em 0 .5em}
+}
+
+/* ---------- Kontakt: kanały pod sobą + formularz w osobnym oknie ---------- */
+.kontakt{display:grid;gap:clamp(20px,4vw,72px);align-items:start}
+.kanaly{list-style:none;margin:1.1em 0 0;padding:0;display:flex;flex-direction:column;gap:8px;max-width:460px}
+.kanal-a{display:flex;align-items:center;gap:14px;width:100%;min-height:58px;padding:8px 14px 8px 8px;border:1px solid rgba(250,247,242,.45);border-radius:6px;background:rgba(28,22,18,.18);color:inherit;font:inherit;text-align:left;text-decoration:none;cursor:pointer;transition:background .25s,border-color .25s,transform .25s}
+.t-ciemny .kanal-a{border-color:var(--linia);background:rgba(255,255,255,.6)}
+.kanal-a:hover{background:rgba(250,247,242,.16);border-color:var(--jasny);transform:translateX(3px)}
+.t-ciemny .kanal-a:hover{background:#fff;border-color:var(--dekor)}
+.kanal-ik{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--jasny);color:var(--glowny)}
+.t-ciemny .kanal-ik{background:var(--bg2)}
+.kanal-ik-svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.kanal-ik-svg circle[r="1.2"]{fill:currentColor;stroke:none}
+.kanal-t{flex:1;display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.kanal-t strong{font-size:.8rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase}
+.kanal-t small{font-size:.86rem;opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kanal-str{flex:none;opacity:.7;transition:transform .25s}
+.kanal-a:hover .kanal-str{transform:translateX(3px);opacity:1}
+.kanal--glowny .kanal-a{background:var(--jasny);color:var(--tekst);border-color:var(--jasny)}
+.kanal--glowny .kanal-ik{background:var(--glowny);color:var(--jasny)}
+.kanal--glowny .kanal-a:hover{background:#fff}
+.t-ciemny .kanal--glowny .kanal-a{background:var(--glowny);color:var(--jasny);border-color:var(--glowny)}
+.t-ciemny .kanal--glowny .kanal-ik{background:var(--jasny);color:var(--glowny)}
+.kontakt-obszar h3{font-size:1.4rem;margin:0 0 .35em}
+.kontakt-obszar p{margin-bottom:.4em}
+.okno-form{width:min(640px,calc(100vw - 24px))}
+.okno-form .okno-glowa h3{font-size:clamp(1.5rem,1.2rem + 1vw,2rem)}
+.okno-form .okno-tresc{padding-top:14px}
+.okno-form :focus-visible{outline-color:var(--glowny)}
+@media (min-width:900px){
+  .kontakt{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr)}
+  .kontakt-obszar{padding-top:clamp(40px,9vh,110px)}
+}
+@media (max-width:599px){
+  #formularz{grid-template-columns:1fr}
+  dialog.okno-form{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0}
+  .okno-form .okno-glowa{padding-top:calc(12px + env(safe-area-inset-top))}
+}
+@media (max-height:700px){.kanal-a{min-height:50px;padding:5px 12px 5px 6px}.kanal-ik{width:36px;height:36px}}
+.okno-form .btn--glowny{background:var(--glowny);color:var(--jasny)}
+.okno-form .btn--glowny:hover{background:var(--glowny-h)}
+@media (max-height:680px){
+  .kanaly{gap:6px;margin-top:.7em}
+  .kanal-a{min-height:46px;padding:4px 10px 4px 5px;gap:10px}
+  .kanal-ik{width:32px;height:32px}
+  .kanal-ik-svg{width:18px;height:18px}
+  .kontakt{gap:14px}
+  .kontakt-obszar h3{font-size:1.1rem}
+  .kontakt-obszar p,.miasta{font-size:.92rem;margin-bottom:.2em}
 }
