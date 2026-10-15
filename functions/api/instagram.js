@@ -7,15 +7,22 @@ import { json, kv } from '../../lib/serwer.js';
 const GODZINA = 3600 * 1000, TYDZIEN = 7 * 24 * GODZINA;
 
 async function token(env) {
-  const K = kv(env), zap = await K.get('ig:token', 'json');
-  let t = (zap && zap.t) || env.INSTAGRAM_TOKEN || '';
+  const K = kv(env), env_t = env.INSTAGRAM_TOKEN || '';
+  let zap = await K.get('ig:token', 'json');
+  // nowy token wpisany w Cloudflare (np. po wygaśnięciu starego) ma pierwszeństwo przed zapisanym w KV
+  const zrodlo = env_t.slice(-16);
+  if (zap && env_t && zap.zrodlo !== zrodlo) zap = null;
+  let t = (zap && zap.t) || env_t;
   if (!t) return '';
   if (!zap || Date.now() - zap.odswiezono > TYDZIEN) {
+    let ok = false;
     try {
+      // odświeżenie przedłuża ważność o kolejne 60 dni (token musi mieć min. 24 h)
       const r = await fetch('https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=' + encodeURIComponent(t));
-      if (r.ok) { const j = await r.json(); if (j.access_token) t = j.access_token; }
+      if (r.ok) { const j = await r.json(); if (j.access_token) { t = j.access_token; ok = true; } }
     } catch { }
-    await K.put('ig:token', JSON.stringify({ t, odswiezono: Date.now() }));
+    // nieudane odświeżenie (np. token młodszy niż 24 h) — próba ponownie za dobę, nie za tydzień
+    await K.put('ig:token', JSON.stringify({ t, zrodlo, odswiezono: ok ? Date.now() : Date.now() - TYDZIEN + 24 * GODZINA }));
   }
   return t;
 }

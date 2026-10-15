@@ -770,3 +770,53 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 .stopka-autor a:hover{text-decoration:none;opacity:.8}
 .stopka-autor a:hover .logo-sai{transform:translateY(-1px)}
 .logo-sai{transition:transform .25s}
+
+/* =====================================================================
+   INSTAGRAM — zaproszenie do profilu (gdy posty są wyłączone w panelu)
+   ===================================================================== */
+.igz{display:grid;gap:clamp(22px,5vw,88px);align-items:center}
+.igz-tresc{font-family:var(--f-szer);font-size:clamp(1.08rem,.75rem + .6vw + .6vh,1.55rem);line-height:1.45;margin-top:.7em}
+.igz-tresc p{margin-bottom:.4em}
+.igz-punkty{list-style:none;padding:0;margin:.9em 0 1.4em;display:grid;gap:.45em;font-size:.95rem}
+.igz-punkty li{display:flex;gap:.8em;align-items:center}
+.igz-punkty li::before{content:"";flex:none;width:22px;height:1px;background:var(--dekor)}
+.t-jasny .igz-punkty li::before{background:var(--akcent-j)}
+.igz-logo{display:inline-flex;align-items:center;gap:16px;min-height:64px;color:inherit;text-decoration:none}
+.igz-logo-ik{flex:none;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:var(--glowny);color:var(--na-glownym);box-shadow:0 0 0 6px rgba(var(--glowny-rgb),.14),0 14px 30px -14px rgba(var(--glowny-rgb),.9);transition:transform .45s cubic-bezier(.2,.7,.2,1),box-shadow .45s}
+.igz-logo-ik .kanal-ik-svg{width:28px;height:28px}
+.igz-logo:hover .igz-logo-ik,.igz-logo:focus-visible .igz-logo-ik{transform:rotate(-10deg) scale(1.07);box-shadow:0 0 0 10px rgba(var(--glowny-rgb),.12),0 18px 34px -14px rgba(var(--glowny-rgb),.9)}
+.igz-logo-t{display:flex;flex-direction:column;line-height:1.2}
+.igz-handle{font-family:var(--f-szer);font-style:italic;font-size:clamp(1.35rem,1rem + 1.1vw,2.1rem);color:var(--akcent)}
+.t-jasny .igz-handle{color:var(--akcent-j)}
+.igz-logo-pod{font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;font-weight:500;margin-top:.35em;transition:letter-spacing .3s}
+.igz-logo:hover .igz-logo-pod{letter-spacing:.2em}
+/* karta profilu */
+.igk{display:block;width:100%;max-width:min(420px,calc((var(--wys) - 2 * var(--pad-y) - 150px) * 1.45));justify-self:center;padding:16px 16px 12px;background:var(--karta);color:var(--tekst);border:1px solid var(--linia);border-radius:calc(var(--r) * 7);box-shadow:var(--cien);text-decoration:none;transform:rotate(1.6deg);transition:transform .5s cubic-bezier(.2,.7,.2,1),box-shadow .5s}
+.igk:hover,.igk:focus-visible{transform:rotate(0) translateY(-6px)}
+.igk-glowa{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.igk-av{flex:none;width:54px;height:54px;border-radius:50%;padding:3px;background:conic-gradient(from 210deg,var(--glowny),var(--dekor),var(--akcent-j),var(--glowny))}
+.igk-av img,.igk-av .zast{width:100%;height:100%;min-height:0;border-radius:50%;object-fit:cover;border:2px solid var(--karta)}
+.igk-dane{display:flex;flex-direction:column;min-width:0;line-height:1.3}
+.igk-dane strong{font-weight:600;font-size:.98rem}
+.igk-dane small{font-size:.76rem;color:var(--tekst2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.igk-ik{margin-left:auto;flex:none;color:var(--glowny);display:grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--linia)}
+.igk-siatka{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.igk-kafel{display:block;aspect-ratio:1;overflow:hidden;background:var(--bg2)}
+.igk-kafel img,.igk-kafel .zast{width:100%;height:100%;min-height:0;object-fit:cover;transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.igk:hover .igk-kafel img{transform:scale(1.06)}
+.igk-cta{display:block;text-align:center;margin-top:12px;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;font-weight:500;color:var(--glowny)}
+@media (min-width:900px){.igz{grid-template-columns:minmax(0,1fr) minmax(0,.85fr)}.igz--bez-karty{grid-template-columns:minmax(0,760px)}}
+@media (max-width:899px){
+  .igk{max-width:min(330px,calc((var(--wys) - 2 * var(--pad-y)) * .62));transform:none;padding:12px 12px 8px}
+  .igk-glowa{margin-bottom:8px}.igk-av{width:44px;height:44px}
+  .igz-punkty{margin:.6em 0 1em;font-size:.9rem}
+  .igz-logo-ik{width:54px;height:54px}
+}
+@media (max-height:700px){.igz-punkty{display:none}}
+[data-motyw="terakota"] .igz-handle,[data-motyw="terakota"] .igz-tresc{font-family:var(--f-tekst);font-style:normal}
+[data-motyw="terakota"] .igz-handle{font-weight:600}
+[data-motyw="terakota"] .igz-logo-ik{border-radius:0}
+[data-motyw="terakota"] .igk{border:2px solid var(--tekst);transform:none;box-shadow:10px 10px 0 0 var(--akcent-j)}
+[data-motyw="terakota"] .igk-av{border-radius:0}[data-motyw="terakota"] .igk-av img{border-radius:0}
+[data-motyw="noc"] .igk{border-color:rgba(var(--glowny-rgb),.3)}
+.sek--igz{justify-content:center}

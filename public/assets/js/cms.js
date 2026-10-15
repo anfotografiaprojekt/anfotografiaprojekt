@@ -987,12 +987,24 @@
   RYSUJ.instagram = function (kont) {
     var info = '<section class="cmsp-karta cmsp-info" id="cmsp-ig-stan"><p>Sprawdzanie połączenia z Instagramem…</p></section>';
     edytorStrony(kont, 'instagram', function (s) {
-      return polaNaglowka('instagram', true).concat([
-        { naglowek: 'Źródło zdjęć' },
-        { k: 'instagram.tryb', typ: 'radio', et: 'Skąd brać zdjęcia', opcje: [{ v: 'auto', n: 'Automatycznie — najnowsze posty z Instagrama' }, { v: 'reczny', n: 'Ręcznie — wybrane zdjęcia z listy poniżej' }] },
-        { k: 'instagram.liczba', typ: 'liczba', et: 'Liczba zdjęć', min: 3, max: 12, szer: 'tr' },
-        { k: 'kontakt.instagram', typ: 'url', et: 'Adres profilu na Instagramie', szer: 'dw' }
-      ]).concat(polaTla('instagram', s));
+      var posty = s.instagram.posty !== false;
+      var p = [
+        { naglowek: 'Co pokazywać' },
+        { k: 'instagram.posty', typ: 'tak', et: 'Pokazuj posty (zdjęcia) z Instagrama', przerysuj: true, f: 'instagram',
+          pomoc: posty ? 'Wyłącz, jeśli konto nie jest profesjonalne — sekcja zamieni się w zaproszenie do odwiedzenia profilu.' : 'Wyłączone: sekcja zaprasza do odwiedzenia profilu — tekst, lista, okrągły znak z aparatem i karta profilu ze zdjęciami z Twojego portfolio. Kliknięcie w znak lub kartę otwiera Instagram.' },
+        { k: 'kontakt.instagram', typ: 'url', et: 'Adres profilu na Instagramie', f: 'kontakt.instagram' }
+      ];
+      if (posty) p = p.concat([
+        { k: 'instagram.tryb', typ: 'radio', et: 'Skąd brać zdjęcia', opcje: [{ v: 'auto', n: 'Automatycznie — najnowsze posty (wymaga konta profesjonalnego i tokenu)' }, { v: 'reczny', n: 'Ręcznie — wybrane zdjęcia z listy poniżej' }] },
+        { k: 'instagram.liczba', typ: 'liczba', et: 'Liczba zdjęć', min: 3, max: 12, szer: 'tr' }
+      ]);
+      else p = p.concat([
+        { naglowek: 'Zaproszenie do profilu' },
+        { k: 'instagram.zaproszenie.tekst', typ: 'obszar', i18n: true, et: 'Tekst zachęty', wiersze: 3, f: 'instagram.zaproszenie.tekst', pomoc: 'Formatowanie: *kursywa* (kolor akcentu), **pogrubienie**.' },
+        { k: 'instagram.zaproszenie.punkty', typ: 'obszar', i18n: true, et: 'Co znajdziesz na profilu — jeden punkt w linii (puste = bez listy)', wiersze: 3, f: 'instagram.zaproszenie.punkty' },
+        { k: 'instagram.zaproszenie.karta', typ: 'tak', et: 'Karta profilu ze zdjęciami z portfolio (pierwsze 6 widocznych zdjęć z Portfolio)', f: 'instagram.zaproszenie.karta' }
+      ]);
+      return polaNaglowka('instagram', true).concat(p).concat(polaTla('instagram', s));
     }, { przed: info });
     lista(kont, {
       id: 'igr', k: 'instagram', sciezka: 'instagram.reczne', etykieta: 'Zdjęcia wybrane ręcznie', nazwa: 'zdjęcie', prefiks: 'i',
@@ -1005,7 +1017,8 @@
       poZmianie: function () { odswiezMini('instagram', P.szkic || P.stan); }
     });
     var box = kont.querySelector('#cmsp-ig-stan');
-    if (P.demo) { box.innerHTML = '<p><strong>Tryb demonstracyjny</strong> — automatyczne pobieranie zdjęć z Instagrama działa po wdrożeniu na serwer.</p>'; return; }
+    if (P.stan.instagram.posty === false) { box.innerHTML = '<p><span class="cmsp-plak cmsp-plak--szar">Posty wyłączone</span> Sekcja zaprasza do odwiedzenia profilu na Instagramie. Lista „Zdjęcia wybrane ręcznie” poniżej jest używana tylko przy włączonych postach.</p>'; }
+    else if (P.demo) { box.innerHTML = '<p><strong>Tryb demonstracyjny</strong> — automatyczne pobieranie zdjęć z Instagrama działa po wdrożeniu na serwer.</p>'; return; }
     api('GET', '/instagram?status=1').then(function (r) {
       box.innerHTML = r.skonfigurowany
         ? '<p><span class="cmsp-plak cmsp-plak--ziel">Połączono</span> Automatyczne pobieranie działa' + (r.posty ? ' — ostatnio pobrano ' + r.posty + ' postów' : '') + '. Token odnawia się sam.</p>'

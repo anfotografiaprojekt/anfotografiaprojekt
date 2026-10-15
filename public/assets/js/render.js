@@ -40,7 +40,7 @@
       wszystkie: 'Wszystkie', poprzednie: 'Poprzednie zdjęcia', nastepne: 'Następne zdjęcia',
       powieksz: 'Powiększ zdjęcie', odtworz: 'Odtwórz wideo', filtruj: 'Filtruj portfolio według rodzaju sesji',
       slajd: 'slajd', z: 'z', przewin: 'Przewiń do następnej sekcji', pauza: 'Zatrzymaj wideo w tle', wznow: 'Wznów wideo w tle',
-      obserwuj: 'Zobacz profil na Instagramie', igWstep: 'Na Instagramie publikuję najświeższe kadry z sesji i reportaży.',
+      obserwuj: 'Zobacz profil na Instagramie', igZobacz: 'Więcej kadrów na Instagramie', igWstep: 'Na Instagramie publikuję najświeższe kadry z sesji i reportaży.',
       messenger: 'Napisz na Messengerze', facebook: 'Profil na Facebooku', instagram: 'Profil na Instagramie',
       zadzwon: 'Zadzwoń', email: 'Napisz e-mail', opinie: 'Opinie o mojej pracy w Google', profil: 'Profil firmy w Mapach Google',
       obszar: 'Obszar działania', formularz: 'Formularz kontaktowy', mapa: 'Pokaż mapę obszaru działania',
@@ -60,7 +60,7 @@
       wszystkie: 'All', poprzednie: 'Previous photo', nastepne: 'Next photo',
       powieksz: 'Enlarge photo', odtworz: 'Play video', filtruj: 'Filter portfolio by session type',
       slajd: 'slide', z: 'of', przewin: 'Scroll to next section', pauza: 'Pause background video', wznow: 'Resume background video',
-      obserwuj: 'See the Instagram profile', igWstep: 'On Instagram I share the latest frames from sessions and reportages.',
+      obserwuj: 'See the Instagram profile', igZobacz: 'More photos on Instagram', igWstep: 'On Instagram I share the latest frames from sessions and reportages.',
       messenger: 'Message on Messenger', facebook: 'Facebook profile', instagram: 'Instagram profile',
       zadzwon: 'Call', email: 'Send an e-mail', opinie: 'Reviews on Google', profil: 'Business profile on Google Maps',
       obszar: 'Service area', formularz: 'Contact form', mapa: 'Show service area map',
@@ -424,6 +424,7 @@
   R.instagram = function (s, ctx) {
     if (!sekWidoczna(s, 'instagram', ctx.today)) return pusta('instagram');
     var L = ctx.lang, d = s.instagram, k = s.kontakt, h = igHandle(k.instagram);
+    if (d.posty === false) return igZaproszenie(s, ctx);
     var kafle = d.tryb === 'reczny' ? widoczne(d.reczne).slice(0, +d.liczba || 6).map(function (x) {
       return '<li><a href="' + esc(bezpiecznyUrl(x.link) || bezpiecznyUrl(k.instagram)) + '" target="_blank" rel="noopener">' +
         imgTag(x.zdjecie, { lang: L, sizes: '(min-width: 900px) 15vw, 45vw' }) + '<span class="sr">' + esc(t(x.podpis, L) || 'Instagram') + '</span></a></li>';
@@ -436,6 +437,36 @@
       (k.instagram ? '<p class="ig-cta"><a class="btn btn--obrys" href="' + esc(bezpiecznyUrl(k.instagram)) + '" target="_blank" rel="noopener me">' + esc(ui(ctx, 'obserwuj')) + (h ? ' @' + esc(h) : '') + '</a></p>' : '') +
       '</div></section>';
   };
+
+  /* Instagram bez pobierania postów: zaproszenie do odwiedzenia profilu.
+   * Lewa kolumna — tekst, lista „co znajdziesz”, okrągły znak z aparatem + @nazwa (link do profilu).
+   * Prawa — „karta profilu” z portretem i miniaturami zdjęć z portfolio (cała karta jest linkiem). */
+  function igZaproszenie(s, ctx) {
+    var L = ctx.lang, z = s.instagram.zaproszenie || {}, k = s.kontakt, url = bezpiecznyUrl(k.instagram), h = igHandle(k.instagram);
+    var sek = s.sekcje.instagram;
+    if (t(sek.naglowek, 'pl') === 'Najnowsze kadry z Instagrama') {   // dawny domyślny nagłówek nie pasuje do zaproszenia
+      s = Object.assign({}, s, { sekcje: Object.assign({}, s.sekcje, { instagram: Object.assign({}, sek, { naglowek: { pl: 'Zajrzyj za kulisy moich sesji', en: 'Behind the scenes of my sessions' } }) }) });
+    }
+    var nowa = ' target="_blank" rel="noopener me"';
+    var punkty = String(t(z.punkty, L) || '').split(/\n+/).map(function (x) { return x.trim(); }).filter(Boolean);
+    var zdj = widoczne(s.portfolio.elementy || []).filter(function (x) { return x.typ !== 'wideo' && x.zdjecie && x.zdjecie.src; }).slice(0, 6);
+    var av = s.oMnie && s.oMnie.zdjecie;
+    var logo = url ? '<a class="igz-logo" href="' + esc(url) + '"' + nowa + ' data-f="kontakt.instagram">' +
+      '<span class="igz-logo-ik">' + ikona('aparat') + '</span>' +
+      '<span class="igz-logo-t">' + (h ? '<span class="igz-handle">@' + esc(h) + '</span>' : '') + '<span class="igz-logo-pod">' + esc(ui(ctx, 'obserwuj')) + ' <span aria-hidden="true">→</span></span></span></a>' : '';
+    var karta = z.karta !== false && url && zdj.length >= 3 ? '<a class="igk" href="' + esc(url) + '"' + nowa + ' aria-label="' + esc(ui(ctx, 'obserwuj') + (h ? ' @' + h : '')) + '" data-f="instagram.zaproszenie.karta">' +
+      '<span class="igk-glowa">' + (av && av.src ? '<span class="igk-av">' + imgTag(av, { decor: true, sizes: '56px' }) + '</span>' : '') +
+      '<span class="igk-dane"><strong>' + esc(h ? '@' + h : 'Instagram') + '</strong><small>' + esc(t(s.start.rola, L)) + '</small></span>' +
+      '<span class="igk-ik">' + ikona('aparat') + '</span></span>' +
+      '<span class="igk-siatka">' + zdj.slice(0, zdj.length >= 6 ? 6 : 3).map(function (x) { return '<span class="igk-kafel">' + imgTag(x.zdjecie, { decor: true, sizes: '(min-width: 900px) 140px, 30vw' }) + '</span>'; }).join('') + '</span>' +
+      '<span class="igk-cta">' + esc(ui(ctx, 'igZobacz')) + ' <span aria-hidden="true">→</span></span></a>' : '';
+    return otworzSekcje('instagram', s, ctx, 'sek--igz', ' aria-labelledby="h-instagram"') +
+      tloHtml(sek.tlo, ctx) +
+      '<div class="sek-in igz' + (karta ? '' : ' igz--bez-karty') + '"><div class="igz-tekst">' + naglowek('instagram', s, ctx, 'h-instagram') +
+      (t(z.tekst, L) ? '<div class="igz-tresc" data-f="instagram.zaproszenie.tekst">' + fmt(t(z.tekst, L)) + '</div>' : '') +
+      (punkty.length ? '<ul class="igz-punkty" data-f="instagram.zaproszenie.punkty">' + punkty.map(function (x) { return '<li>' + inline(x) + '</li>'; }).join('') + '</ul>' : '') +
+      logo + '</div>' + karta + '</div></section>';
+  }
 
   function messengerUrl(k) { return bezpiecznyUrl(k.messenger) || bezpiecznyUrl(k.facebook); }
   A.messengerUrl = messengerUrl;

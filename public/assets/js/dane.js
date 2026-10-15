@@ -88,7 +88,7 @@
       instagram: {
         widoczna: true, menu: { pl: 'Instagram' },
         nadtytul: { pl: 'Instagram' },
-        naglowek: { pl: 'Najnowsze kadry z Instagrama' },
+        naglowek: { pl: 'Zajrzyj za kulisy moich sesji' },
         tlo: tlo('kolor', img('instagram-tlo', 2000, 1333, '', [800, 1200]), 0, 'ciemny', 'motyw:jasne')
       },
       kontakt: {
@@ -209,9 +209,15 @@
 
     /* Instagram */
     instagram: {
-      tryb: 'auto',     // auto = najnowsze posty przez API serwera (wymaga INSTAGRAM_TOKEN), reczny = kafelki z panelu
+      posty: false,     // false = zaproszenie do profilu (bez pobierania postów); true = zdjęcia z Instagrama
+      tryb: 'auto',     // auto = najnowsze posty przez API serwera (wymaga INSTAGRAM_TOKEN i konta profesjonalnego), reczny = kafelki z panelu
       liczba: 6,
-      reczne: []
+      reczne: [],
+      zaproszenie: {
+        tekst: { pl: 'Na Instagramie pokazuję to, czego nie ma w portfolio: *kulisy sesji*, świeże kadry prosto z reportaży i pierwsze zdjęcia, zanim trafią do galerii.' },
+        punkty: { pl: 'Kulisy sesji i reportaży\nŚwieże kadry, zanim trafią do portfolio\nInspiracje i pomysły na Twoją sesję' },
+        karta: true      // karta profilu z miniaturami zdjęć z portfolio
+      }
     },
 
     /* Kontakt i dane organizacji */
