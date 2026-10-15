@@ -37,7 +37,7 @@
     pl: {
       menu: 'Menu', zamknij: 'Zamknij', czytaj: 'Czytaj więcej', czytajOMnie: 'Czytaj więcej o mnie',
       czytajWpis: 'Czytaj cały wpis', czytajOsoba: 'Więcej o', fotografuje: 'Fotografuję:',
-      wszystkie: 'Wszystkie', poprzednie: 'Poprzednie zdjęcie', nastepne: 'Następne zdjęcie',
+      wszystkie: 'Wszystkie', poprzednie: 'Poprzednie zdjęcia', nastepne: 'Następne zdjęcia',
       powieksz: 'Powiększ zdjęcie', odtworz: 'Odtwórz wideo', filtruj: 'Filtruj portfolio według rodzaju sesji',
       slajd: 'slajd', z: 'z', przewin: 'Przewiń do następnej sekcji', pauza: 'Zatrzymaj wideo w tle', wznow: 'Wznów wideo w tle',
       obserwuj: 'Zobacz profil na Instagramie', igWstep: 'Na Instagramie publikuję najświeższe kadry z sesji i reportaży.',
@@ -52,7 +52,7 @@
       f_wybierz: 'Proszę wybrać…', f_inne: 'Inne', f_termin: 'Planowany termin (opcjonalnie)', f_wiad: 'Wiadomość',
       f_zgoda: 'Wyrażam zgodę na przetwarzanie moich danych w celu odpowiedzi na wiadomość. Szczegóły w',
       f_wyslij: 'Wyślij wiadomość', f_wym: 'pole wymagane', f_hp: 'Nie wypełniaj tego pola',
-      sekcje: 'Sekcje strony', skip: 'Przejdź do treści'
+      sekcje: 'Sekcje strony', skip: 'Przejdź do treści', wartosci: 'Wartości', formOtworz: 'Napisz wiadomość', strona: 'Strona'
     },
     en: {
       menu: 'Menu', zamknij: 'Close', czytaj: 'Read more', czytajOMnie: 'Read more about me',
@@ -72,7 +72,7 @@
       f_wybierz: 'Please choose…', f_inne: 'Other', f_termin: 'Planned date (optional)', f_wiad: 'Message',
       f_zgoda: 'I agree to the processing of my data in order to reply to my message. Details in the',
       f_wyslij: 'Send message', f_wym: 'required', f_hp: 'Leave this field empty',
-      sekcje: 'Page sections', skip: 'Skip to content'
+      sekcje: 'Page sections', skip: 'Skip to content', wartosci: 'Values', formOtworz: 'Write a message', strona: 'Page'
     }
   };
   A.UI = UI;
@@ -238,22 +238,26 @@
   R.oMnie = function (s, ctx) {
     if (!sekWidoczna(s, 'oMnie', ctx.today)) return pusta('oMnie');
     var d = s.oMnie, L = ctx.lang, sek = s.sekcje.oMnie;
-    var war = widoczne(d.wartosci).map(function (w) {
+    var wl = widoczne(d.wartosci);
+    var war = wl.map(function (w) {
       return '<li class="wartosc" data-f="oMnie:' + esc(w.id) + '"><h3 data-f="oMnie:' + esc(w.id) + ':tytul">' + esc(t(w.tytul, L)) + '</h3>' +
         (t(w.opis, L) ? '<p data-f="oMnie:' + esc(w.id) + ':opis">' + inline(t(w.opis, L)) + '</p>' : '') + '</li>';
     }).join('');
+    var warPopup = wl.length ? '<h3>' + esc(ui(ctx, 'wartosci')) + '</h3><ul class="okno-lista">' + wl.map(function (w) {
+      return '<li><strong>' + esc(t(w.tytul, L)) + '</strong>' + (t(w.opis, L) ? ' — ' + inline(t(w.opis, L)) : '') + '</li>';
+    }).join('') + '</ul>' : '';
     var obs = widoczne(d.obszary).map(function (o) { return '<li>' + esc(t(o.nazwa, L)) + '</li>'; }).join('');
     return otworzSekcje('oMnie', s, ctx, '', ' aria-labelledby="h-o-mnie"') +
       tloHtml(sek.tlo, ctx) +
       '<div class="sek-in omnie">' +
-      '<figure class="omnie-foto">' + imgTag(d.zdjecie, { lang: L, sizes: '(min-width: 900px) 40vw, 90vw', f: 'oMnie.zdjecie' }) + '</figure>' +
+      '<figure class="omnie-foto">' + imgTag(d.zdjecie, { lang: L, sizes: '(min-width: 900px) 34vw, 36vw', f: 'oMnie.zdjecie' }) + '</figure>' +
       '<div class="omnie-tekst">' + naglowek('oMnie', s, ctx, 'h-o-mnie') +
       '<div class="lead" data-f="oMnie.lead">' + fmt(t(d.lead, L)) + '</div>' +
       (obs ? '<div class="obszary" data-f="oMnie.obszary"><p class="obszary-tyt">' + esc(ui(ctx, 'fotografuje')) + '</p><ul>' + obs + '</ul></div>' : '') +
-      (t(d.tresc, L) ? czytajWiecej('omnie-wiecej', ui(ctx, 'czytajOMnie'), t(sek.menu, L)) : '') +
+      (t(d.tresc, L) || warPopup ? czytajWiecej('omnie-wiecej', ui(ctx, 'czytajOMnie'), t(sek.menu, L)) : '') +
       (war ? '<ul class="wartosci">' + war + '</ul>' : '') +
       '</div></div>' +
-      '<div class="rm" id="omnie-wiecej" data-f="oMnie.tresc">' + fmt(t(d.tresc, L)) + '</div>' +
+      '<div class="rm" id="omnie-wiecej" data-f="oMnie.tresc">' + fmt(t(d.tresc, L)) + warPopup + '</div>' +
       '</section>';
   };
 
@@ -264,13 +268,13 @@
       var tl = { typ: r.tlo && r.tlo.src ? 'zdjecie' : 'kolor', obraz: r.tlo, kolor: r.kolor || '#2B2622', ciemno: r.ciemno == null ? 50 : r.ciemno, tekst: r.tekst || 'jasny' };
       return '<li class="rozdzial t-' + (tl.tekst === 'ciemny' ? 'ciemny' : 'jasny') + (tl.typ === 'zdjecie' ? ' sek--foto' : '') + '" style="' + ovStyle(tl) + '" data-f="historia:' + esc(r.id) + '">' +
         tloHtml(tl, ctx, { f: 'historia:' + r.id + ':tlo' }) +
+        (i === 0 ? '<div class="rozdzial-glowa">' + naglowek('historia', s, ctx, 'h-historia') + '</div>' : '') +
         '<div class="rozdzial-in"><p class="rok" data-f="historia:' + esc(r.id) + ':rok">' + esc(t(r.rok, L)) + '</p>' +
         '<h3 data-f="historia:' + esc(r.id) + ':tytul">' + esc(t(r.tytul, L)) + '</h3>' +
         '<div class="rozdzial-tekst" data-f="historia:' + esc(r.id) + ':tresc">' + fmt(t(r.tresc, L)) + '</div>' +
         '<p class="rozdzial-nr" aria-hidden="true">' + String(i + 1).padStart(2, '0') + '</p></div></li>';
     }).join('');
     return otworzSekcje('historia', s, ctx, '', ' aria-labelledby="h-historia"') +
-      '<div class="sek-in historia-intro">' + naglowek('historia', s, ctx, 'h-historia') + '</div>' +
       '<ol class="rozdzialy">' + rozdz + '</ol></section>';
   };
 
@@ -279,12 +283,12 @@
     var L = ctx.lang;
     var akt = aktywneWpisy(s, ctx.today).slice(0, 6);
     var wpisy = akt.map(function (w) {
-      var id = 'wpis-' + esc(w.id), tr = t(w.tresc, L), dl = plain(tr).length > 170;
+      var id = 'wpis-' + esc(w.id), tr = t(w.tresc, L), dl = plain(tr).length > 130;
       return '<article class="wpis" id="' + id + '" data-f="aktualnosci:' + esc(w.id) + '">' +
-        (w.zdjecie && w.zdjecie.src ? '<figure class="wpis-foto">' + imgTag(w.zdjecie, { lang: L, sizes: '(min-width: 900px) 30vw, 90vw', f: 'aktualnosci:' + w.id + ':zdjecie' }) + '</figure>' : '') +
+        (w.zdjecie && w.zdjecie.src ? '<figure class="wpis-foto">' + imgTag(w.zdjecie, { lang: L, sizes: '(min-width: 900px) 30vw, 80vw', f: 'aktualnosci:' + w.id + ':zdjecie' }) + '</figure>' : '') +
         '<div class="wpis-tekst"><time datetime="' + esc(w.data || w.od) + '" data-f="aktualnosci:' + esc(w.id) + ':data">' + esc(dataPL(w.data || w.od, L)) + '</time>' +
         '<h3 data-f="aktualnosci:' + esc(w.id) + ':tytul">' + esc(t(w.tytul, L)) + '</h3>' +
-        (dl ? '<p class="wpis-skrot" data-f="aktualnosci:' + esc(w.id) + ':tresc">' + esc(skrot(tr, 170)) + '</p>' + czytajWiecej(id + '-tresc', ui(ctx, 'czytajWpis'), t(w.tytul, L)) +
+        (dl ? '<p class="wpis-skrot" data-f="aktualnosci:' + esc(w.id) + ':tresc">' + esc(skrot(tr, 130)) + '</p>' + czytajWiecej(id + '-tresc', ui(ctx, 'czytajWpis'), t(w.tytul, L)) +
           '<div class="rm" id="' + id + '-tresc">' + fmt(tr) + '</div>'
           : '<div class="wpis-tresc" data-f="aktualnosci:' + esc(w.id) + ':tresc">' + fmt(tr) + '</div>') +
         '</div></article>';
@@ -292,19 +296,19 @@
     return otworzSekcje('aktualnosci', s, ctx, '', ' aria-labelledby="h-aktualnosci"') +
       tloHtml(s.sekcje.aktualnosci.tlo, ctx) +
       '<div class="sek-in">' + naglowek('aktualnosci', s, ctx, 'h-aktualnosci') +
-      '<div class="wpisy wpisy--' + Math.min(akt.length, 3) + '">' + wpisy + '</div></div></section>';
+      '<div class="wpisy wpisy--' + Math.min(akt.length, 3) + '" tabindex="-1">' + wpisy + '</div></div></section>';
   };
 
   R.kadra = function (s, ctx) {
     if (!sekWidoczna(s, 'kadra', ctx.today)) return pusta('kadra');
     var L = ctx.lang, lista = widoczne(s.kadra.lista);
     var os = lista.map(function (o) {
-      var id = 'osoba-' + esc(o.id), op = t(o.opis, L), dl = plain(op).length > 220;
+      var id = 'osoba-' + esc(o.id), op = t(o.opis, L), dl = plain(op).length > 170;
       return '<li class="osoba" data-f="kadra:' + esc(o.id) + '">' +
-        '<figure class="osoba-foto">' + imgTag(o.zdjecie, { lang: L, sizes: '(min-width: 900px) 30vw, 80vw', f: 'kadra:' + o.id + ':zdjecie' }) + '</figure>' +
+        '<figure class="osoba-foto">' + imgTag(o.zdjecie, { lang: L, sizes: '(min-width: 900px) 28vw, 34vw', f: 'kadra:' + o.id + ':zdjecie' }) + '</figure>' +
         '<div class="osoba-tekst"><h3 data-f="kadra:' + esc(o.id) + ':imie">' + esc(t(o.imie, L)) + '</h3>' +
         '<p class="osoba-rola" data-f="kadra:' + esc(o.id) + ':rola">' + esc(t(o.rola, L)) + '</p>' +
-        (dl ? '<p data-f="kadra:' + esc(o.id) + ':opis">' + esc(skrot(op, 220)) + '</p>' + czytajWiecej(id + '-opis', ui(ctx, 'czytajOsoba') + ' ' + t(o.imie, L), t(o.imie, L)) + '<div class="rm" id="' + id + '-opis">' + fmt(op) + '</div>'
+        (dl ? '<p data-f="kadra:' + esc(o.id) + ':opis">' + esc(skrot(op, 170)) + '</p>' + czytajWiecej(id + '-opis', ui(ctx, 'czytajOsoba') + ' ' + t(o.imie, L), t(o.imie, L)) + '<div class="rm" id="' + id + '-opis">' + fmt(op) + '</div>'
           : '<div data-f="kadra:' + esc(o.id) + ':opis">' + fmt(op) + '</div>') +
         '</div></li>';
     }).join('');
@@ -320,34 +324,39 @@
   }
   A.ytId = ytId;
 
+  function proporcja(e) {
+    var z = e.zdjecie;
+    if (z && +z.w > 0 && +z.h > 0) return Math.max(0.4, Math.min(3, (+z.w) / (+z.h)));
+    return e.typ === 'wideo' ? 16 / 9 : 1.5;
+  }
   R.portfolio = function (s, ctx) {
     if (!sekWidoczna(s, 'portfolio', ctx.today)) return pusta('portfolio');
-    var L = ctx.lang, el = widoczne(s.portfolio.elementy), n = el.length;
+    var L = ctx.lang, el = widoczne(s.portfolio.elementy);
     var uzyte = {}; el.forEach(function (e) { uzyte[e.kategoria] = 1; });
     var kat = (s.portfolio.kategorie || []).filter(function (k) { return uzyte[k.id]; });
     var filtry = kat.length > 1 ? '<div class="filtry" role="group" aria-label="' + esc(ui(ctx, 'filtruj')) + '">' +
       '<button type="button" class="filtr" data-kat="*" aria-pressed="true">' + esc(ui(ctx, 'wszystkie')) + '</button>' +
       kat.map(function (k) { return '<button type="button" class="filtr" data-kat="' + esc(k.id) + '" aria-pressed="false">' + esc(t(k.nazwa, L)) + '</button>'; }).join('') + '</div>' : '';
-    var sl = el.map(function (e, i) {
-      var pod = t(e.podpis, L), media;
+    var kafle = el.map(function (e, i) {
+      var pod = t(e.podpis, L), ar = proporcja(e).toFixed(4), media;
       if (e.typ === 'wideo' && e.wideo) {
         media = '<button type="button" class="slajd-wideo" data-wideo="' + esc(bezpiecznyUrl(e.wideo)) + '" aria-label="' + esc(ui(ctx, 'odtworz') + ': ' + pod) + '">' +
-          imgTag(e.zdjecie, { lang: L, sizes: '(min-width: 900px) 80vw, 100vw', decor: true }) + '<span class="play" aria-hidden="true"></span></button>';
+          imgTag(e.zdjecie, { lang: L, sizes: '(min-width: 900px) 40vw, 70vw', decor: true }) + '<span class="play" aria-hidden="true"></span></button>';
       } else {
-        media = '<button type="button" class="slajd-pow" data-idx="' + i + '" aria-label="' + esc(ui(ctx, 'powieksz') + ': ' + (pod || t(e.zdjecie && e.zdjecie.alt, L))) + '">' +
-          imgTag(e.zdjecie, { lang: L, sizes: '(min-width: 900px) 80vw, 100vw', f: 'portfolio:' + e.id + ':zdjecie' }) + '</button>';
+        media = '<button type="button" class="slajd-pow" aria-label="' + esc(ui(ctx, 'powieksz') + ': ' + (pod || t(e.zdjecie && e.zdjecie.alt, L))) + '">' +
+          imgTag(e.zdjecie, { lang: L, sizes: '(min-width: 900px) 40vw, 70vw', f: 'portfolio:' + e.id + ':zdjecie' }) + '</button>';
       }
-      return '<figure class="slajd" data-kat="' + esc(e.kategoria) + '" data-f="portfolio:' + esc(e.id) + '" role="group" aria-roledescription="' + esc(ui(ctx, 'slajd')) + '" aria-label="' + (i + 1) + ' ' + esc(ui(ctx, 'z')) + ' ' + n + '">' +
+      return '<figure class="kafel" data-kat="' + esc(e.kategoria) + '" data-ar="' + ar + '" style="--ar:' + ar + '" data-f="portfolio:' + esc(e.id) + '">' +
         media + (pod ? '<figcaption data-f="portfolio:' + esc(e.id) + ':podpis">' + esc(pod) + '</figcaption>' : '') + '</figure>';
     }).join('');
     return otworzSekcje('portfolio', s, ctx, '', ' aria-labelledby="h-portfolio"') +
       tloHtml(s.sekcje.portfolio.tlo, ctx) +
-      '<div class="sek-in port-glowa"><div class="port-tyt">' + naglowek('portfolio', s, ctx, 'h-portfolio') + '</div>' + filtry + '</div>' +
-      '<div class="slider" role="region" aria-roledescription="karuzela" aria-labelledby="h-portfolio">' +
-      '<div class="slider-tor" tabindex="0">' + sl + '</div>' +
-      '<div class="slider-ster"><button type="button" class="slider-btn" data-kier="-1" aria-label="' + esc(ui(ctx, 'poprzednie')) + '"><span aria-hidden="true">←</span></button>' +
-      '<span class="slider-licznik" aria-live="polite">1 / ' + n + '</span>' +
-      '<button type="button" class="slider-btn" data-kier="1" aria-label="' + esc(ui(ctx, 'nastepne')) + '"><span aria-hidden="true">→</span></button></div>' +
+      '<div class="sek-in port">' +
+      '<div class="port-glowa"><div class="port-tyt">' + naglowek('portfolio', s, ctx, 'h-portfolio') + '</div>' + filtry + '</div>' +
+      '<div class="mozaika-okno" role="region" aria-labelledby="h-portfolio"><div class="mozaika">' + kafle + '</div></div>' +
+      '<div class="mozaika-ster" hidden><button type="button" class="moz-btn" data-kier="-1" aria-label="' + esc(ui(ctx, 'poprzednie')) + '"><span aria-hidden="true">←</span></button>' +
+      '<span class="moz-licznik" aria-live="polite"></span>' +
+      '<button type="button" class="moz-btn" data-kier="1" aria-label="' + esc(ui(ctx, 'nastepne')) + '"><span aria-hidden="true">→</span></button></div>' +
       '</div></section>';
   };
 
@@ -380,29 +389,28 @@
     if (k.telefonWidoczny && k.telefon) ak += '<li><a class="btn btn--obrys" href="tel:+48' + esc(String(k.telefon).replace(/\D/g, '').replace(/^48(?=\d{9}$)/, '')) + '" data-f="kontakt.telefon">' + esc(ui(ctx, 'zadzwon')) + ': ' + esc(k.telefon) + '</a></li>';
     if (k.emailWidoczny && k.email) ak += '<li><a class="btn btn--obrys" href="mailto:' + esc(k.email) + '" data-f="kontakt.email">' + esc(k.email) + '</a></li>';
     var opcje = kat.map(function (c) { return '<option value="' + esc(t(c.nazwa, 'pl')) + '">' + esc(t(c.nazwa, L)) + '</option>'; }).join('');
-    var form = k.formularz ? '<div class="kontakt-form karta"><h3 id="h-formularz">' + esc(ui(ctx, 'formularz')) + '</h3>' +
+    var form = k.formularz ? '<div class="kontakt-form karta" id="kontakt-form"><button type="button" class="zamknij form-zamknij" aria-label="' + esc(ui(ctx, 'zamknij')) + '">×</button><h3 id="h-formularz">' + esc(ui(ctx, 'formularz')) + '</h3>' +
       '<p class="form-zacheta" data-f="kontakt.zachetaFormularza">' + inline(t(k.zachetaFormularza, L)) + '</p>' +
       '<form id="formularz" novalidate aria-labelledby="h-formularz">' +
       '<div class="pole"><label for="f-imie">' + esc(ui(ctx, 'f_imie')) + ' <span class="wym">(' + esc(ui(ctx, 'f_wym')) + ')</span></label><input id="f-imie" type="text" name="imie" autocomplete="name" required maxlength="120"><p class="blad" id="f-imie-b" hidden></p></div>' +
       '<div class="pole"><label for="f-email">' + esc(ui(ctx, 'f_email')) + ' <span class="wym">(' + esc(ui(ctx, 'f_wym')) + ')</span></label><input id="f-email" name="email" type="email" autocomplete="email" required maxlength="160"><p class="blad" id="f-email-b" hidden></p></div>' +
       '<div class="pole-rzad"><div class="pole"><label for="f-tel">' + esc(ui(ctx, 'f_tel')) + '</label><input id="f-tel" name="telefon" type="tel" autocomplete="tel" maxlength="40"><p class="blad" id="f-tel-b" hidden></p></div>' +
       '<div class="pole"><label for="f-termin">' + esc(ui(ctx, 'f_termin')) + '</label><input id="f-termin" type="text" name="termin" maxlength="80"></div></div>' +
-      '<div class="pole"><label for="f-rodzaj">' + esc(ui(ctx, 'f_rodzaj')) + '</label><select id="f-rodzaj" name="rodzaj"><option value="">' + esc(ui(ctx, 'f_wybierz')) + '</option>' + opcje + '<option value="Inne">' + esc(ui(ctx, 'f_inne')) + '</option></select></div>' +
-      '<div class="pole"><label for="f-wiad">' + esc(ui(ctx, 'f_wiad')) + ' <span class="wym">(' + esc(ui(ctx, 'f_wym')) + ')</span></label><textarea id="f-wiad" name="wiadomosc" rows="4" required maxlength="4000"></textarea><p class="blad" id="f-wiad-b" hidden></p></div>' +
+      '<div class="pole pole--pelne"><label for="f-rodzaj">' + esc(ui(ctx, 'f_rodzaj')) + '</label><select id="f-rodzaj" name="rodzaj"><option value="">' + esc(ui(ctx, 'f_wybierz')) + '</option>' + opcje + '<option value="Inne">' + esc(ui(ctx, 'f_inne')) + '</option></select></div>' +
+      '<div class="pole pole--pelne"><label for="f-wiad">' + esc(ui(ctx, 'f_wiad')) + ' <span class="wym">(' + esc(ui(ctx, 'f_wym')) + ')</span></label><textarea id="f-wiad" name="wiadomosc" rows="3" required maxlength="4000"></textarea><p class="blad" id="f-wiad-b" hidden></p></div>' +
       '<div class="pole pole-hp" aria-hidden="true"><label for="f-www">' + esc(ui(ctx, 'f_hp')) + '</label><input id="f-www" type="text" name="www" tabindex="-1" autocomplete="off"></div>' +
-      '<div class="pole pole-zgoda"><input type="checkbox" id="f-zgoda" name="zgoda" required><label for="f-zgoda">' + esc(ui(ctx, 'f_zgoda')) + ' <a href="polityka-prywatnosci.html' + linkJezyka(L) + '">' + esc(ui(ctx, 'polityka').toLowerCase()) + '</a>.</label><p class="blad" id="f-zgoda-b" hidden></p></div>' +
+      '<div class="pole pole-zgoda pole--pelne"><input type="checkbox" id="f-zgoda" name="zgoda" required><label for="f-zgoda">' + esc(ui(ctx, 'f_zgoda')) + ' <a href="polityka-prywatnosci.html' + linkJezyka(L) + '">' + esc(ui(ctx, 'polityka').toLowerCase()) + '</a>.</label><p class="blad" id="f-zgoda-b" hidden></p></div>' +
       '<button type="submit" class="btn btn--glowny btn--pelny">' + esc(ui(ctx, 'f_wyslij')) + '</button>' +
       '<div class="form-status" role="status" aria-live="polite"></div>' +
       '</form></div>' : '';
     return otworzSekcje('kontakt', s, ctx, '', ' aria-labelledby="h-kontakt"') +
       tloHtml(s.sekcje.kontakt.tlo, ctx) +
       '<div class="sek-in kontakt' + (form ? '' : ' kontakt--bez') + '"><div class="kontakt-info">' + naglowek('kontakt', s, ctx, 'h-kontakt') +
-      '<ul class="akcje">' + ak + '</ul>' +
+      '<ul class="akcje">' + ak + (k.formularz ? '<li class="akcja-form"><button type="button" class="btn btn--obrys form-otworz" aria-controls="kontakt-form" aria-expanded="false">' + esc(ui(ctx, 'formOtworz')) + '</button></li>' : '') + '</ul>' +
       '<h3>' + esc(ui(ctx, 'obszar')) + '</h3>' +
       '<p data-f="kontakt.obszar">' + inline(t(k.obszar, L)) + '</p>' +
       '<p class="miasta" data-f="kontakt.miasta">' + esc(k.miasta) + '</p>' +
-      '<div class="mapa" data-mapa="' + esc(k.mapa || 'Zgorzelec') + '"><button type="button" class="mapa-btn"><span class="mapa-ik" aria-hidden="true"></span>' + esc(ui(ctx, 'mapa')) + '<small>' + esc(ui(ctx, 'mapaInfo')) + '</small></button></div>' +
-      '<p class="linki-male"><a href="' + esc(bezpiecznyUrl(k.profilGoogle) || mapsUrl(k)) + '" target="_blank" rel="noopener" data-f="kontakt.profilGoogle">' + esc(bezpiecznyUrl(k.profilGoogle) ? ui(ctx, 'profil') : ui(ctx, 'otworzMapy')) + '</a>' +
+      '<p class="linki-male"><button type="button" class="link-mapa" data-mapa="' + esc(k.mapa || 'Zgorzelec') + '" aria-haspopup="dialog">' + esc(ui(ctx, 'mapa')) + '</button> · <a href="' + esc(bezpiecznyUrl(k.profilGoogle) || mapsUrl(k)) + '" target="_blank" rel="noopener" data-f="kontakt.profilGoogle">' + esc(bezpiecznyUrl(k.profilGoogle) ? ui(ctx, 'profil') : ui(ctx, 'otworzMapy')) + '</a>' +
       (bezpiecznyUrl(k.opinieGoogle) ? ' · <a href="' + esc(bezpiecznyUrl(k.opinieGoogle)) + '" target="_blank" rel="noopener" data-f="kontakt.opinieGoogle">' + esc(ui(ctx, 'opinie')) + '</a>' : '') + '</p>' +
       '</div>' + form + '</div></section>';
   };

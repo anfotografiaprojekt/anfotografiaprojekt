@@ -160,7 +160,7 @@
     oMnie: { n: 'O mnie', ik: '♡', opis: 'Misja, pełny tekst „czytaj więcej”, rodzaje sesji i wartości.', sek: 'oMnie' },
     historia: { n: 'Historia', ik: '❘', opis: 'Pełnoekranowe rozdziały: rok, tytuł, krótki tekst i zdjęcie w tle.', sek: 'historia' },
     kadra: { n: 'Kto fotografuje', ik: '☺', opis: 'Osoby, które fotografują (Anna i drugi fotograf przy reportażach ślubnych).', sek: 'kadra' },
-    portfolio: { n: 'Portfolio', ik: '▦', opis: 'Galeria zdjęć i wideo w pełnoekranowym sliderze, z podziałem na rodzaje sesji.', sek: 'portfolio' },
+    portfolio: { n: 'Portfolio', ik: '▦', opis: 'Galeria zdjęć i wideo w mozaice: każde zdjęcie w swojej orientacji (pion lub poziom), a strony mieszczą się na jednym ekranie.', sek: 'portfolio' },
     instagram: { n: 'Instagram', ik: '◉', opis: 'Najnowsze zdjęcia z Instagrama — automatycznie albo wybrane ręcznie.', sek: 'instagram' },
     kontakt: { n: 'Kontakt i stopka', ik: '✆', opis: 'Messenger, profile, obszar działania, dane działalności (NIP) i hasło w stopce.', sek: 'kontakt' },
     wiadomosci: { n: 'Wiadomości', ik: '✉', opis: 'Wiadomości wysłane przez formularz kontaktowy na stronie.' },
