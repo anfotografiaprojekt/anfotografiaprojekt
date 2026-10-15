@@ -218,7 +218,7 @@ em.akcent{font-family:var(--f-szer);font-size:1.12em;font-style:italic;color:var
 .form-status.ok{color:var(--ok)}.form-status.err{color:var(--blad)}
 
 /* ---------- stopka ---------- */
-.stopka{background:var(--ciemne);color:var(--stopka-tekst);font-size:.95rem;padding:64px 0 calc(24px + env(safe-area-inset-bottom))}
+.stopka{background:var(--ciemne);color:var(--stopka-tekst);font-size:.95rem;padding:64px 0 calc(24px + var(--bezp-dol,0px))}
 .stopka a{text-decoration:none;display:inline-flex;align-items:center;min-height:44px}
 .stopka a:hover{text-decoration:underline}
 .stopka :focus-visible{outline-color:var(--jasny)}
@@ -291,7 +291,7 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
   .dolny a:last-child{border:1px solid var(--tekst)}
   .dolny svg{width:18px;height:18px;fill:currentColor}
   .klodka{bottom:calc(76px + env(safe-area-inset-bottom))}
-  body{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+  body{padding-bottom:calc(64px + var(--bezp-dol,0px))}
   .klodka{opacity:.55}
 }
 @media (min-width:600px){
@@ -439,7 +439,7 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
   .kadra--2 .osoba-foto img,.kadra--3 .osoba-foto img{height:calc((var(--wys) - 2 * var(--pad-y)) * .42);width:auto;max-width:14vw}
 }
 @media (max-width:899px){
-  :root{--nag:60px;--dolny:calc(64px + env(safe-area-inset-bottom))}
+  :root{--nag:60px;--dolny:64px}
   .marka{font-size:1.35rem}
   .sek h2{font-size:clamp(1.55rem,1rem + 2.2vw + 1.2vh,2.4rem)}
   .omnie{display:block}
@@ -741,3 +741,28 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 .podpow-btn{border:0;background:none;padding:0 2px;font:inherit;font-weight:600;color:var(--glowny);text-decoration:underline;cursor:pointer;min-height:24px}
 .blad{line-height:1.35}
 @media (max-width:899px){.op-foto::after{display:none}.op-foto img{box-shadow:none}}
+
+/* =====================================================================
+   PŁYNNE PRZEWIJANIE NA TELEFONIE
+   Wysokość sekcji nie może zależeć od niczego, co zmienia się podczas
+   przewijania (pasek adresu, „bezpieczny obszar” iPhone'a, zawijający się
+   pasek komunikatów) — inaczej strona „skacze”.
+   ===================================================================== */
+@supports (overflow:clip){body{overflow-x:clip}}
+.pasek{height:44px;overflow:hidden}
+.pasek-in{height:100%;min-height:0}
+.pasek-lista{min-width:0;flex:0 1 auto;overflow:hidden}
+.pasek-lista li{min-width:0}
+.pasek-lista a{display:flex;max-width:100%;min-height:44px;white-space:nowrap}
+.pasek-lista strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-height:700px){.pasek{height:36px}.pasek-lista a{min-height:36px}}
+/* na ekranach dotykowych treść jest widoczna od razu (bez wsuwania) */
+@media (hover:none),(max-width:899px){
+  .anim .sek:not(.sek-hero):not(.widac) .sek-in > *{opacity:1;transform:none}
+  .anim .sek-in > *{transition:none}
+}
+
+/* ---------- podpis wykonawcy (stały, poza panelem) ---------- */
+.stopka-autor{max-width:var(--max);margin:18px auto 0;padding:14px var(--gut) 0;border-top:1px solid rgba(var(--stopka-rgb),.12);display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 12px;font-size:.78rem;letter-spacing:.08em;color:var(--stopka-tekst2)}
+.logo-sai{display:inline-block;width:150px;height:24px;background:currentColor;color:var(--stopka-tekst);-webkit-mask:url(../img/strony-ai-wroclaw-logo.png) center/contain no-repeat;mask:url(../img/strony-ai-wroclaw-logo.png) center/contain no-repeat}
+@media (max-width:899px){.stopka{padding-bottom:calc(76px + var(--bezp-dol,0px))}}

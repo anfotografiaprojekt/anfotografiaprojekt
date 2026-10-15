@@ -51,7 +51,7 @@
       f_imie: 'Imię i nazwisko', f_email: 'Adres e-mail', f_tel: 'Telefon (opcjonalnie)', f_rodzaj: 'Czego dotyczy wiadomość?',
       f_wybierz: 'Proszę wybrać…', f_inne: 'Inne', f_termin: 'Planowany termin (opcjonalnie)', f_wiad: 'Wiadomość',
       f_zgoda: 'Wyrażam zgodę na przetwarzanie moich danych w celu odpowiedzi na wiadomość. Szczegóły w',
-      f_wyslij: 'Wyślij wiadomość', f_kraj: 'Kraj (numer kierunkowy)', f_wym: 'pole wymagane', f_hp: 'Nie wypełniaj tego pola',
+      f_wyslij: 'Wyślij wiadomość', f_kraj: 'Kraj (numer kierunkowy)', autor: 'Strona stworzona przez', f_wym: 'pole wymagane', f_hp: 'Nie wypełniaj tego pola',
       sekcje: 'Sekcje strony', skip: 'Przejdź do treści', wartosci: 'Wartości', formOtworz: 'Napisz wiadomość', strona: 'Strona', formPod: 'Wiadomość prosto ze strony', f_opc: 'opcjonalnie', osPoprz: 'Wcześniej', osNast: 'Później', osLista: 'Oś czasu — przewiń w poziomie', czytajHist: 'Czytaj całą historię'
     },
     en: {
@@ -71,7 +71,7 @@
       f_imie: 'Full name', f_email: 'E-mail address', f_tel: 'Phone (optional)', f_rodzaj: 'What is your message about?',
       f_wybierz: 'Please choose…', f_inne: 'Other', f_termin: 'Planned date (optional)', f_wiad: 'Message',
       f_zgoda: 'I agree to the processing of my data in order to reply to my message. Details in the',
-      f_wyslij: 'Send message', f_kraj: 'Country (dialling code)', f_wym: 'required', f_hp: 'Leave this field empty',
+      f_wyslij: 'Send message', f_kraj: 'Country (dialling code)', autor: 'Website created by', f_wym: 'required', f_hp: 'Leave this field empty',
       sekcje: 'Page sections', skip: 'Skip to content', wartosci: 'Values', formOtworz: 'Write a message', strona: 'Page', formPod: 'Send a message from this page', f_opc: 'optional', osPoprz: 'Earlier', osNast: 'Later', osLista: 'Timeline — scroll horizontally', czytajHist: 'Read the whole story'
     }
   };
@@ -699,7 +699,9 @@
       '<div class="stopka-dane"><p class="stopka-tyt">' + esc(ui(ctx, 'dane')) + '</p><ul>' + dane + '</ul></div>' +
       '</div><div class="stopka-dol"><p>© ' + (ctx.today || '').slice(0, 4) + ' ' + esc(k.nazwaRejestrowa || 'Anna Niedobitek Fotografia') + '. ' + esc(ui(ctx, 'prawa')) + '</p>' +
       '<ul><li><a href="polityka-prywatnosci.html' + linkJezyka(L) + '">' + esc(ui(ctx, 'polityka')) + '</a></li>' +
-      '<li><a href="#panel" class="link-panel" data-panel>' + esc(ui(ctx, 'panel')) + '</a></li></ul></div></footer>';
+      '<li><a href="#panel" class="link-panel" data-panel>' + esc(ui(ctx, 'panel')) + '</a></li></ul></div>' +
+      /* podpis wykonawcy strony — stały, celowo bez możliwości edycji w panelu */
+      '<p class="stopka-autor"><span>' + esc(ui(ctx, 'autor')) + '</span><span class="logo-sai" role="img" aria-label="Strony AI Wrocław — strony, które budują wizerunek"></span></p></footer>';
   };
 
   /* ---------- SEO: JSON-LD, title, description, hreflang ---------- */

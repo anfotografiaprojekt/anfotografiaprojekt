@@ -113,9 +113,17 @@
 
   function ustawPasek() {
     var p = doc.querySelector('.pasek');
-    var h = p && !p.hidden ? p.offsetHeight : 0;
-    html.style.setProperty('--pasek', h + 'px');
+    var h = (p && !p.hidden ? p.offsetHeight : 0) + 'px';
+    if (html.style.getPropertyValue('--pasek') !== h) html.style.setProperty('--pasek', h);
   }
+  /* „bezpieczny obszar” na dole ekranu (iPhone) mierzony raz — Safari zmienia go podczas
+   * przewijania (chowający się pasek), a to przesuwałoby całą stronę */
+  var sondaBezp;
+  function ustawBezp() {
+    if (!sondaBezp) { sondaBezp = doc.createElement('div'); sondaBezp.style.cssText = 'position:fixed;left:0;bottom:0;width:1px;visibility:hidden;pointer-events:none;height:env(safe-area-inset-bottom,0px)'; doc.body.appendChild(sondaBezp); }
+    html.style.setProperty('--bezp-dol', Math.min(40, sondaBezp.offsetHeight) + 'px');
+  }
+  var dotyk = window.matchMedia && matchMedia('(hover:none) and (pointer:coarse)').matches;
 
   function initKropkiIMenu() {
     if (obsSekcji) obsSekcji.disconnect();
@@ -670,19 +678,21 @@
   });
   var tRes, szerPoprz = window.innerWidth, wysPoprz = window.innerHeight;
   window.addEventListener('resize', function () {
-    ustawPasek();
+    /* Telefon/tablet: zmiana samej wysokości okna to chowający się pasek adresu lub klawiatura —
+     * nic nie przeliczamy (inaczej strona skakałaby podczas przewijania). Liczy się tylko obrót ekranu. */
+    if (window.innerWidth === szerPoprz && (dotyk || Math.abs(window.innerHeight - wysPoprz) < 90)) return;
     clearTimeout(tRes);
     tRes = setTimeout(function () {
-      /* na telefonie pasek adresu zmienia wysokość okna przy przewijaniu — ignorujemy małe zmiany */
-      if (window.innerWidth === szerPoprz && Math.abs(window.innerHeight - wysPoprz) < 90) return;
+      if (window.innerWidth === szerPoprz && (dotyk || Math.abs(window.innerHeight - wysPoprz) < 90)) return;
       szerPoprz = window.innerWidth; wysPoprz = window.innerHeight;
+      ustawPasek(); ustawBezp();
       ulozMozaike(); initOs(); dopasuj();
     }, 160);
   }, { passive: true });
   if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(function () { initOs(); dopasuj(); ulozMozaike(); });
 
   function initDynamiczne() {
-    ustawPasek(); initNaglowek(); initKropkiIMenu(); initAnimacje(); initPasek(); initWideo(); initInstagram();
+    ustawPasek(); ustawBezp(); initNaglowek(); initKropkiIMenu(); initAnimacje(); initPasek(); initWideo(); initInstagram();
     moz.strona = 0; ulozMozaike(); initOs(); dopasuj();
   }
 

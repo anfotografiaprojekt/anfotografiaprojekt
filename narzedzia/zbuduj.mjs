@@ -39,7 +39,7 @@ const minCss = (css) => css
   .replace(/;}/g, '}')
   .trim();
 const css = minCss(cssZrodlo);
-const cssDla = (prefix) => css.replace(/url\(\.\.\/fonts\//g, `url(${prefix}assets/fonts/`);
+const cssDla = (prefix) => css.replace(/url\(\.\.\/(fonts|img)\//g, (m, d) => `url(${prefix}assets/${d}/`);
 
 // 3) Wersja plików (cache-busting)
 const WERSJA = crypto.createHash('sha1')
