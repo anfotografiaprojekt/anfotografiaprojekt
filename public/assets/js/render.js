@@ -701,7 +701,7 @@
       '<ul><li><a href="polityka-prywatnosci.html' + linkJezyka(L) + '">' + esc(ui(ctx, 'polityka')) + '</a></li>' +
       '<li><a href="#panel" class="link-panel" data-panel>' + esc(ui(ctx, 'panel')) + '</a></li></ul></div>' +
       /* podpis wykonawcy strony — stały, celowo bez możliwości edycji w panelu */
-      '<p class="stopka-autor"><span>' + esc(ui(ctx, 'autor')) + '</span><span class="logo-sai" role="img" aria-label="Strony AI Wrocław — strony, które budują wizerunek"></span></p></footer>';
+      '<p class="stopka-autor"><a href="https://stronyaiwroclaw.pl/" target="_blank" rel="noopener" title="Strony AI Wrocław — strony, które budują wizerunek"><span>' + esc(ui(ctx, 'autor')) + '</span><span class="logo-sai" role="img" aria-label="Strony AI Wrocław (otwiera się w nowej karcie)"></span></a></p></footer>';
   };
 
   /* ---------- SEO: JSON-LD, title, description, hreflang ---------- */
