@@ -172,6 +172,8 @@
     a.push('alt="' + esc(op.decor ? '' : t(o.alt, op.lang)) + '"');
     if (o.w && o.h) a.push('width="' + (+o.w) + '" height="' + (+o.h) + '"');
     if (op.cls) a.push('class="' + op.cls + '"');
+    /* punkt kadru ustawiony w panelu (fragment, który zostaje widoczny po przycięciu) */
+    if (o.poz && isFinite(o.poz.x) && isFinite(o.poz.y) && (+o.poz.x !== 50 || +o.poz.y !== 50)) a.push('style="object-position:' + Math.max(0, Math.min(100, +o.poz.x)) + '% ' + Math.max(0, Math.min(100, +o.poz.y)) + '%"');
     if (op.priority) a.push('fetchpriority="high" decoding="async"'); else a.push('loading="lazy" decoding="async"');
     if (op.f) a.push('data-f="' + esc(op.f) + '"');
     a.push('onerror="this.classList.add(\'img-blad\')"');

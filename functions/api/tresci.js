@@ -1,6 +1,6 @@
 // GET /api/tresci — publiczny odczyt treści strony
 // PUT /api/tresci — zapis (tylko po zalogowaniu, z ochroną CSRF)
-import { json, blad, kv, wymagaj, zapiszTresci, poprawneDane, KLUCZ_TRESCI } from '../../lib/serwer.js';
+import { json, blad, kv, wymagaj, zapiszTresci, poprawneDane, KLUCZ_TRESCI, bladKV } from '../../lib/serwer.js';
 
 export async function onRequestGet({ env }) {
   try {
@@ -15,6 +15,8 @@ export async function onRequestPut({ request, env }) {
   if (tekst.length > 3 * 1024 * 1024) return blad('Za dużo danych (maks. 3 MB). Zdjęcia wgrywaj przyciskiem „Wgraj z dysku”.', 413);
   let body; try { body = JSON.parse(tekst); } catch { return blad('Nieprawidłowy JSON.'); }
   if (!poprawneDane(body && body.dane)) return blad('Dane nie pochodzą z panelu tej strony.');
-  const z = await zapiszTresci(env, body.dane);
-  return json({ ok: true, zapisano: z.zapisano });
+  try {
+    const z = await zapiszTresci(env, body.dane);
+    return json({ ok: true, zapisano: z.zapisano });
+  } catch (e) { return bladKV(e); }
 }

@@ -1,6 +1,6 @@
 // POST /api/zdjecia — wgrywanie zdjęć z panelu (już zmniejszonych w przeglądarce do ok. 1600 px)
 // Zdjęcie zapisuje się w KV (klucz zdj:<id>) i jest serwowane przez GET /api/zdjecia/<id>.
-import { json, blad, kv, wymagaj, losowe } from '../../lib/serwer.js';
+import { json, blad, kv, wymagaj, losowe, bladKV } from '../../lib/serwer.js';
 
 const MAKS = 6 * 1024 * 1024;
 function typObrazu(b) {
@@ -18,6 +18,7 @@ export async function onRequestPost({ request, env }) {
   const typ = typObrazu(new Uint8Array(buf, 0, 12));
   if (!typ) return blad('Dozwolone są tylko zdjęcia JPG, PNG lub WebP.', 415);
   const id = Date.now().toString(36) + losowe(9);
-  await kv(env).put('zdj:' + id, buf, { metadata: { typ, rozmiar: buf.byteLength, czas: Date.now() } });
+  try { await kv(env).put('zdj:' + id, buf, { metadata: { typ, rozmiar: buf.byteLength, czas: Date.now() } }); }
+  catch (e) { return bladKV(e); }
   return json({ ok: true, id, url: '/api/zdjecia/' + id });
 }

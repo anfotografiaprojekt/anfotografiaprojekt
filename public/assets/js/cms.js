@@ -53,7 +53,20 @@
     site.renderuj(Rn.clone(P.stan));
     odswiezLiczniki();
     zaplanujZapis();
-    if (op && op.toast) toast(op.toast);
+    // „Zapisano” pokazujemy dopiero, gdy serwer potwierdzi zapis (zapiszTeraz)
+    if (op && op.toast) P.toastPoZapisie = op.toast;
+  }
+  function alarmZapisu(tekst) {
+    var a = P.root && P.root.querySelector('.cmsp-alarm');
+    if (!tekst) { if (a) a.remove(); return; }
+    if (!a) {
+      a = doc.createElement('div'); a.className = 'cmsp-alarm'; a.setAttribute('role', 'alert');
+      (P.root.querySelector('.cmsp-glowna') || P.root).prepend(a);
+    }
+    a.innerHTML = '<strong>Zmiany NIE zostały zapisane na serwerze.</strong> <span></span> ' +
+      '<span class="cmsp-alarm-info">Strona w tej karcie pokazuje wersję roboczą — po odświeżeniu zobaczysz ostatnią zapisaną.</span>' +
+      '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--glowny" data-akcja="ponow-zapis">Spróbuj ponownie</button>';
+    a.querySelector('span').textContent = tekst;
   }
   function zaplanujZapis() {
     wskaznik('trwa', 'Zapisywanie…');
@@ -67,10 +80,15 @@
     var obietnica = P.demo ? site.idb.set('stan', dane).then(function () { return { _ok: true }; })
       : api('PUT', '/tresci', { dane: dane });
     obietnica.then(function (r) {
-      if (r._ok) { wskaznik('ok', (P.demo ? 'Zapisano lokalnie ' : 'Zapisano ') + godzina()); return; }
+      if (r._ok) {
+        wskaznik('ok', (P.demo ? 'Zapisano lokalnie ' : 'Zapisano ') + godzina()); alarmZapisu('');
+        if (P.toastPoZapisie) { toast(P.toastPoZapisie); P.toastPoZapisie = null; }
+        return;
+      }
       if (r._status === 401) { wskaznik('blad', 'Sesja wygasła'); pokazLogowanie(function () { zaplanujZapis(); }, 'Sesja wygasła — proszę zalogować się ponownie, zmiany zostaną zapisane.'); return; }
-      wskaznik('blad', 'Błąd zapisu — ' + (r.blad || 'spróbuj ponownie'));
-    }).catch(function () { wskaznik('blad', 'Brak połączenia — zmiany nie zostały zapisane'); })
+      wskaznik('blad', 'Błąd zapisu'); P.toastPoZapisie = null;
+      alarmZapisu(r.blad || 'Serwer odpowiedział błędem ' + r._status + '.'); toast('Nie udało się zapisać zmian.', 'blad');
+    }).catch(function () { wskaznik('blad', 'Brak połączenia'); P.toastPoZapisie = null; alarmZapisu('Brak połączenia z serwerem.'); toast('Nie udało się zapisać zmian.', 'blad'); })
       .then(function () { zapisTrwa = false; if (zapisPonow) { zapisPonow = false; zapiszTeraz(); } });
   }
 
@@ -396,14 +414,63 @@
     var z = getP(obj, d.k) || {};
     return '<div class="cmsp-pole cmsp-zdj' + (d.szer ? ' cmsp-pole--' + d.szer : '') + '"' + hl + ' data-zdj="' + esc(d.k) + '">' +
       '<p class="cmsp-et">' + esc(d.et) + (d.wym ? ' <span class="cmsp-wym" aria-hidden="true">*</span><span class="cmsp-sr">(wymagane)</span>' : '') + '</p>' +
-      '<div class="cmsp-zdj-rzad"><div class="cmsp-zdj-pod">' + (z.src ? '<img src="' + esc(z.src) + '" alt="">' : '<span>Brak zdjęcia</span>') + '</div>' +
+      '<div class="cmsp-zdj-rzad"><div class="cmsp-zdj-pod">' + (z.src ? '<img src="' + esc(z.src) + '" alt="" style="object-position:' + pozZdj(z).x + '% ' + pozZdj(z).y + '%">' : '<span>Brak zdjęcia</span>') + '</div>' +
       '<div class="cmsp-zdj-akcje"><label class="cmsp-btn cmsp-btn--maly cmsp-btn--obrys cmsp-plik">Wgraj z dysku<input type="file" accept="image/jpeg,image/png,image/webp,image/heic" data-plik="' + esc(d.k) + '"></label>' +
       '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--jasny" data-akcja="zdj-usun" data-k="' + esc(d.k) + '"' + (z.src ? '' : ' disabled') + '>Usuń zdjęcie</button>' +
       '<p class="cmsp-pomoc">Zdjęcie zostanie automatycznie zmniejszone (do 1600 px) i zapisane jako JPEG.</p></div></div>' +
       '<div class="cmsp-zdj-pola"><div class="cmsp-pole"><label class="cmsp-et" for="' + id + '-u">Adres URL zdjęcia</label><input id="' + id + '-u" type="text" data-pole="' + esc(d.k) + '.src" value="' + esc(z.src || '') + '" placeholder="https://… lub assets/img/…"></div>' +
       (d.bezAlt ? '' : '<div class="cmsp-pole"><label class="cmsp-et" for="' + id + '-a">Opis zdjęcia dla Google i niewidomych (alt)</label><input id="' + id + '-a" type="text" data-pole="' + esc(d.k) + '.alt" value="' + esc(t(z.alt, 'pl')) + '" placeholder="np. Rodzina podczas sesji w plenerze w Zgorzelcu"></div>') +
-      '</div><p class="cmsp-zdj-stan" role="status" aria-live="polite"></p></div>';
+      '</div><div class="cmsp-kadr" data-kadr="' + esc(d.k) + '"' + (z.src ? '' : ' hidden') + '>' + (z.src ? kadrHtml(z) : '') + '</div>' +
+      '<p class="cmsp-zdj-stan" role="status" aria-live="polite"></p></div>';
   }
+  /* ---------- KADROWANIE: który fragment zdjęcia ma być zawsze widoczny ----------
+   * Na stronie zdjęcia są przycinane do kształtu ramki (inaczej na komputerze, inaczej na telefonie).
+   * Punkt kadru = object-position: ten fragment zostaje w kadrze. Zapis: zdjecie.poz = { x, y } w %. */
+  function pozZdj(z) { var p = z && z.poz; return { x: p && isFinite(p.x) ? +p.x : 50, y: p && isFinite(p.y) ? +p.y : 50 }; }
+  function kadrHtml(z) {
+    var p = pozZdj(z), op = 'object-position:' + p.x + '% ' + p.y + '%', src = esc(z.src);
+    return '<p class="cmsp-et">Kadrowanie — który fragment ma być zawsze widoczny</p>' +
+      '<div class="cmsp-kadr-uk"><div class="cmsp-kadr-obraz" data-kadr-obraz title="Kliknij lub przeciągnij punkt">' +
+      '<img src="' + src + '" alt="" draggable="false"><span class="cmsp-kadr-pkt" style="left:' + p.x + '%;top:' + p.y + '%" aria-hidden="true"></span></div>' +
+      '<div class="cmsp-kadr-podg" aria-hidden="true">' +
+      '<figure><span class="cmsp-kadr-ramka cmsp-kadr-ramka--poz"><img src="' + src + '" alt="" style="' + op + '"></span><figcaption>Komputer</figcaption></figure>' +
+      '<figure><span class="cmsp-kadr-ramka cmsp-kadr-ramka--kw"><img src="' + src + '" alt="" style="' + op + '"></span><figcaption>Kwadrat</figcaption></figure>' +
+      '<figure><span class="cmsp-kadr-ramka cmsp-kadr-ramka--pion"><img src="' + src + '" alt="" style="' + op + '"></span><figcaption>Telefon</figcaption></figure></div></div>' +
+      '<div class="cmsp-kadr-strz" role="group" aria-label="Przesuń kadr">' +
+      '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--obrys" data-akcja="kadr" data-dx="0" data-dy="-5" title="Pokaż więcej górnej części">↑ Wyżej</button>' +
+      '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--obrys" data-akcja="kadr" data-dx="0" data-dy="5" title="Pokaż więcej dolnej części">↓ Niżej</button>' +
+      '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--obrys" data-akcja="kadr" data-dx="-5" data-dy="0" title="Pokaż więcej lewej strony">← W lewo</button>' +
+      '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--obrys" data-akcja="kadr" data-dx="5" data-dy="0" title="Pokaż więcej prawej strony">→ W prawo</button>' +
+      '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--jasny" data-akcja="kadr-srodek">Wyśrodkuj</button></div>' +
+      '<p class="cmsp-pomoc cmsp-kadr-stan">Punkt kadru: <strong>' + p.x + '% od lewej, ' + p.y + '% od góry</strong>. Kliknij na zdjęciu miejsce, które ma być zawsze widoczne (np. twarz), albo użyj strzałek. Podgląd obok pokazuje przycięcie na różnych ekranach.</p>';
+  }
+  var kadrRaf = null;
+  function ustawKadr(el, x, y) {
+    var blok = el.closest('[data-kadr]'), fe = el.closest('[data-forma]'); if (!blok || !fe) return;
+    var F = FORMY[fe.getAttribute('data-forma')], k = blok.getAttribute('data-kadr'), z = F && getP(F.obj, k);
+    if (!z || !z.src) return;
+    x = Math.round(Math.max(0, Math.min(100, x))); y = Math.round(Math.max(0, Math.min(100, y)));
+    if (x === 50 && y === 50) delete z.poz; else z.poz = { x: x, y: y };
+    var pkt = blok.querySelector('.cmsp-kadr-pkt'); pkt.style.left = x + '%'; pkt.style.top = y + '%';
+    blok.querySelectorAll('.cmsp-kadr-ramka img').forEach(function (i) { i.style.objectPosition = x + '% ' + y + '%'; });
+    var miniat = blok.parentNode.querySelector('.cmsp-zdj-pod img'); if (miniat) miniat.style.objectPosition = x + '% ' + y + '%';
+    blok.querySelector('.cmsp-kadr-stan strong').textContent = x + '% od lewej, ' + y + '% od góry';
+    if (kadrRaf) cancelAnimationFrame(kadrRaf);
+    kadrRaf = requestAnimationFrame(function () { kadrRaf = null; if (F.onZmiana) F.onZmiana(k + '.poz', z.poz || null, false, 'change'); });
+  }
+  function kadrZPunktu(obraz, e) {
+    var r = obraz.querySelector('img').getBoundingClientRect();
+    ustawKadr(obraz, (e.clientX - r.left) / r.width * 100, (e.clientY - r.top) / r.height * 100);
+  }
+  var kadrCiagnij = null;
+  doc.addEventListener('pointerdown', function (e) {
+    var o = e.target.closest && e.target.closest('[data-kadr-obraz]'); if (!o) return;
+    e.preventDefault(); kadrCiagnij = o; try { o.setPointerCapture(e.pointerId); } catch (er) { }
+    kadrZPunktu(o, e);
+  });
+  doc.addEventListener('pointermove', function (e) { if (kadrCiagnij) { e.preventDefault(); kadrZPunktu(kadrCiagnij, e); } });
+  doc.addEventListener('pointerup', function () { kadrCiagnij = null; });
+  doc.addEventListener('pointercancel', function () { kadrCiagnij = null; });
   function forma(id, obj, pola, onZmiana) {
     FORMY[id] = { obj: obj, pola: pola, onZmiana: onZmiana };
     return '<div class="cmsp-forma" data-forma="' + id + '">' + pola.map(function (d) {
@@ -490,6 +557,7 @@
       box.querySelector('.cmsp-zdj-pod').innerHTML = '<img src="' + esc(z.src) + '" alt="">';
       var u = box.querySelector('[data-pole="' + k + '.src"]'); if (u) u.value = z.src.slice(0, 5) === 'data:' ? '(zdjęcie zapisane lokalnie)' : z.src;
       box.querySelector('[data-akcja="zdj-usun"]').disabled = false;
+      var kb = box.querySelector('.cmsp-kadr'); if (kb) { kb.innerHTML = kadrHtml(z); kb.hidden = false; }
       st.textContent = 'Gotowe — zdjęcie ' + z.w + '×' + z.h + ' px.' + (z.alt ? '' : ' Dodaj jeszcze opis zdjęcia (alt).');
       if (F.onZmiana) F.onZmiana(k, z, false, 'change');
     }).catch(function (err) { st.textContent = err.message; if (/401/.test(err.message)) pokazLogowanie(); })
@@ -1249,7 +1317,7 @@
       '<section class="cmsp-karta"><h2>Import</h2><p class="cmsp-pomoc">Wklej kopię lub wybierz plik. Przyjmowane są tylko kopie z tego panelu.</p>' +
       '<label class="cmsp-sr" for="cmsp-import">Wklej dane JSON</label><textarea id="cmsp-import" class="cmsp-kod" rows="5" placeholder="{ &quot;_app&quot;: &quot;anf-cms&quot;, … }"></textarea>' +
       '<div class="cmsp-rzad-przyc"><label class="cmsp-btn cmsp-btn--obrys cmsp-plik">Wybierz plik…<input type="file" accept="application/json,.json" id="cmsp-import-plik"></label><button type="button" class="cmsp-btn cmsp-btn--glowny" data-akcja="kop-import">Importuj</button></div></section>' +
-      (P.demo ? '' : '<section class="cmsp-karta"><h2>Kopie automatyczne na serwerze</h2><p class="cmsp-pomoc">Przy każdym zapisie serwer zachowuje poprzednią wersję — 10 ostatnich.</p><div id="cmsp-kopie"><p class="cmsp-pusto">Wczytywanie…</p></div></section>') +
+      (P.demo ? '' : '<section class="cmsp-karta"><h2>Kopie automatyczne na serwerze</h2><p class="cmsp-pomoc">Serwer zachowuje poprzednią wersję treści (najwyżej co 10 minut, żeby nie zużywać dziennego limitu zapisów Cloudflare) — 10 ostatnich kopii.</p><div id="cmsp-kopie"><p class="cmsp-pusto">Wczytywanie…</p></div></section>') +
       '<section class="cmsp-karta cmsp-karta--ryzyko"><h2>Przywróć treści początkowe</h2><p class="cmsp-pomoc">Usuwa wszystkie zmiany wprowadzone w panelu i przywraca treść z projektu strony. Przed tym warto pobrać kopię.</p>' +
       '<button type="button" class="cmsp-btn cmsp-btn--usun" data-akcja="kop-reset">Przywróć treści początkowe</button></section>';
     kont.querySelector('#cmsp-import-plik').addEventListener('change', function () {
@@ -1279,7 +1347,7 @@
   function klik(e) {
     var b = e.target.closest('button, [data-akcja], [data-idz]'); if (!b || !P.root.contains(b)) return;
     var a = b.getAttribute('data-akcja');
-    if (b.closest('.cmsp-modal-tlo') && a !== 'zdj-usun') return; // okno edycji ma własną obsługę
+    if (b.closest('.cmsp-modal-tlo') && ['zdj-usun', 'kadr', 'kadr-srodek'].indexOf(a) < 0) return; // okno edycji ma własną obsługę
     if (b.hasAttribute('data-idz')) { idz(b.getAttribute('data-idz')); return; }
     if (!a) return;
     if (b.closest('[data-lista]') && ['dodaj', 'edytuj', 'usun', 'gora', 'dol', 'ukryj', 'duplikuj', 'filtr'].indexOf(a) >= 0) { akcjaListy(b, a); return; }
@@ -1292,12 +1360,19 @@
         break;
       case 'szybko': idz(b.getAttribute('data-cel'), { dodaj: true }); break;
       case 'zapisz-strone': P.root.querySelector('#cmsp-strona')._zapisz(); break;
+      case 'ponow-zapis': b.disabled = true; b.textContent = 'Zapisywanie…'; P.toastPoZapisie = 'Zapisano zmiany. Są już na stronie.'; zaplanujZapis(); break;
       case 'cofnij': P.root.querySelector('#cmsp-strona')._cofnij(); break;
       case 'zdj-usun':
         var fe = b.closest('[data-forma]'), F = FORMY[fe.getAttribute('data-forma')], kk = b.getAttribute('data-k');
         setP(F.obj, kk, null);
         var box = b.closest('.cmsp-zdj'); box.querySelector('.cmsp-zdj-pod').innerHTML = '<span>Brak zdjęcia</span>'; box.querySelector('[data-pole="' + kk + '.src"]').value = ''; b.disabled = true;
+        var kb2 = box.querySelector('.cmsp-kadr'); if (kb2) { kb2.hidden = true; kb2.innerHTML = ''; }
         if (F.onZmiana) F.onZmiana(kk, null, false, 'change');
+        break;
+      case 'kadr': case 'kadr-srodek':
+        var kbl = b.closest('[data-kadr]'), fe3 = b.closest('[data-forma]'), F3 = fe3 && FORMY[fe3.getAttribute('data-forma')];
+        var z3 = F3 && getP(F3.obj, kbl.getAttribute('data-kadr')), p3 = pozZdj(z3);
+        if (a === 'kadr-srodek') ustawKadr(b, 50, 50); else ustawKadr(b, p3.x + (+b.getAttribute('data-dx')), p3.y + (+b.getAttribute('data-dy')));
         break;
       case 'sek-rozwin': rozwinSekcje(b); break;
       case 'sek-gora': case 'sek-dol':
