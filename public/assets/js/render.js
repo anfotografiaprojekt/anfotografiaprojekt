@@ -52,7 +52,7 @@
       f_wybierz: 'Proszę wybrać…', f_inne: 'Inne', f_termin: 'Planowany termin (opcjonalnie)', f_wiad: 'Wiadomość',
       f_zgoda: 'Wyrażam zgodę na przetwarzanie moich danych w celu odpowiedzi na wiadomość. Szczegóły w',
       f_wyslij: 'Wyślij wiadomość', f_wym: 'pole wymagane', f_hp: 'Nie wypełniaj tego pola',
-      sekcje: 'Sekcje strony', skip: 'Przejdź do treści', wartosci: 'Wartości', formOtworz: 'Napisz wiadomość', strona: 'Strona', formPod: 'Wiadomość prosto ze strony', f_opc: 'opcjonalnie'
+      sekcje: 'Sekcje strony', skip: 'Przejdź do treści', wartosci: 'Wartości', formOtworz: 'Napisz wiadomość', strona: 'Strona', formPod: 'Wiadomość prosto ze strony', f_opc: 'opcjonalnie', osPoprz: 'Wcześniej', osNast: 'Później', osLista: 'Oś czasu — przewiń w poziomie', czytajHist: 'Czytaj całą historię'
     },
     en: {
       menu: 'Menu', zamknij: 'Close', czytaj: 'Read more', czytajOMnie: 'Read more about me',
@@ -72,7 +72,7 @@
       f_wybierz: 'Please choose…', f_inne: 'Other', f_termin: 'Planned date (optional)', f_wiad: 'Message',
       f_zgoda: 'I agree to the processing of my data in order to reply to my message. Details in the',
       f_wyslij: 'Send message', f_wym: 'required', f_hp: 'Leave this field empty',
-      sekcje: 'Page sections', skip: 'Skip to content', wartosci: 'Values', formOtworz: 'Write a message', strona: 'Page', formPod: 'Send a message from this page', f_opc: 'optional'
+      sekcje: 'Page sections', skip: 'Skip to content', wartosci: 'Values', formOtworz: 'Write a message', strona: 'Page', formPod: 'Send a message from this page', f_opc: 'optional', osPoprz: 'Earlier', osNast: 'Later', osLista: 'Timeline — scroll horizontally', czytajHist: 'Read the whole story'
     }
   };
   A.UI = UI;
@@ -180,8 +180,8 @@
   /* Motywy kolorystyczne (przełączane w panelu → Wygląd i efekty) */
   var MOTYWY = [
     { id: 'bez', nazwa: 'Kremowy beż', opis: 'Ciepła kość słoniowa, mokka i karmel — miękko, rodzinnie.', tlo: '#FAF7F2', kolory: ['#FAF7F2', '#F2EBE3', '#7A5240', '#B88A6E', '#2B2622'] },
-    { id: 'szalwia', nazwa: 'Szałwia i len', opis: 'Naturalna zieleń szałwii i lniane tła — spokojnie, plenerowo.', tlo: '#F5F4EF', kolory: ['#F5F4EF', '#E6E9E0', '#4A5D4C', '#9DAF94', '#232822'] },
-    { id: 'grafit', nazwa: 'Grafit i złoto', opis: 'Chłodna biel, grafit i matowe złoto — elegancko, ślubnie.', tlo: '#F7F6F3', kolory: ['#F7F6F3', '#ECE9E3', '#2F2D2A', '#B4955A', '#1E1D1B'] }
+    { id: 'noc', nazwa: 'Nocna galeria', opis: 'Ciemna, kinowa strona: grafitowa czerń, kość słoniowa i złote akcenty. Zdjęcia świecą jak w galerii.', tlo: '#141210', kolory: ['#141210', '#1D1A17', '#C9A46A', '#EEE7DD', '#0B0A09'] },
+    { id: 'terakota', nazwa: 'Biel i terakota', opis: 'Nowoczesny, magazynowy styl: czysta biel, czerń, terakota, proste kanty i wyraźne bezszeryfowe nagłówki.', tlo: '#FFFFFF', kolory: ['#FFFFFF', '#F3EFEA', '#B03F22', '#141414', '#F4B49C'] }
   ];
   A.MOTYWY = MOTYWY;
   function motyw(s) { var m = (s.ustawienia && s.ustawienia.motyw) || 'bez'; return MOTYWY.some(function (x) { return x.id === m; }) ? m : 'bez'; }
@@ -200,7 +200,7 @@
   A.kolorTla = kolorTla;
   function ovStyle(tlo) {
     var c = Math.max(0, Math.min(90, +tlo.ciemno || 0)) / 100;
-    var rgb = tlo.tekst === 'ciemny' ? '250,247,242' : '28,22,18';
+    var rgb = tlo.tekst === 'ciemny' ? 'var(--bg-rgb)' : 'var(--ciemne-rgb)';
     return '--sek-kolor:' + kolorTla(tlo.kolor, tlo.kolorWlasny) + ';--sek-ov:rgba(' + rgb + ',' + c.toFixed(2) + ')';
   }
   function tloHtml(tlo, ctx, op) {
@@ -285,19 +285,49 @@
 
   R.historia = function (s, ctx) {
     if (!sekWidoczna(s, 'historia', ctx.today)) return pusta('historia');
-    var L = ctx.lang;
-    var rozdz = widoczne(s.historia.rozdzialy).map(function (r, i) {
-      var tl = { typ: r.tlo && r.tlo.src ? 'zdjecie' : 'kolor', obraz: r.tlo, kolor: r.kolor || 'motyw:ciemne', ciemno: r.ciemno == null ? 50 : r.ciemno, tekst: r.tekst || 'jasny' };
-      return '<li class="rozdzial t-' + (tl.tekst === 'ciemny' ? 'ciemny' : 'jasny') + (tl.typ === 'zdjecie' ? ' sek--foto' : '') + '" style="' + ovStyle(tl) + '" data-f="historia:' + esc(r.id) + '">' +
-        tloHtml(tl, ctx, { f: 'historia:' + r.id + ':tlo' }) +
-        (i === 0 && (t(s.sekcje.historia.nadtytul, L) || t(s.sekcje.historia.naglowek, L)) ? '<div class="rozdzial-glowa">' + naglowek('historia', s, ctx, 'h-historia') + '</div>' : '') +
-        '<div class="rozdzial-in">' + (t(r.rok, L) ? '<p class="rok" data-f="historia:' + esc(r.id) + ':rok">' + esc(t(r.rok, L)) + '</p>' : '') +
-        (t(r.tytul, L) ? '<h3 data-f="historia:' + esc(r.id) + ':tytul">' + esc(t(r.tytul, L)) + '</h3>' : '') +
-        (t(r.tresc, L) ? '<div class="rozdzial-tekst" data-f="historia:' + esc(r.id) + ':tresc">' + fmt(t(r.tresc, L)) + '</div>' : '') +
-        '<p class="rozdzial-nr" aria-hidden="true">' + String(i + 1).padStart(2, '0') + '</p></div></li>';
+    var L = ctx.lang, d = s.historia || {}, sek = s.sekcje.historia;
+    var glowa = naglowek('historia', s, ctx, 'h-historia');
+    /* Wariant 2: jedna opowieść ze zdjęciem */
+    if (d.wariant === 'opowiesc') {
+      var o = d.opowiesc || {}, foto = o.zdjecie && o.zdjecie.src;
+      var tr = t(o.tresc, L), wi = t(o.wiecej, L), lic = t(o.wyrLiczba, L), op = t(o.wyrOpis, L);
+      return otworzSekcje('historia', s, ctx, 'sek--opowiesc', ' aria-labelledby="h-historia"') +
+        tloHtml(sek.tlo, ctx) +
+        '<div class="sek-in opowiesc' + (foto ? '' : ' opowiesc--bez-foto') + '">' +
+        (foto ? '<figure class="op-foto">' + imgTag(o.zdjecie, { lang: L, sizes: '(min-width: 900px) 46vw, 100vw', f: 'historia.opowiesc.zdjecie' }) + '</figure>' : '') +
+        '<div class="op-tekst">' + glowa +
+        (tr ? '<div class="op-tresc" data-f="historia.opowiesc.tresc">' + fmt(tr) + '</div>' : '') +
+        (lic || op ? '<div class="op-wyr" data-f="historia.opowiesc.wyrLiczba">' + (lic ? '<span class="op-wyr-l">' + esc(lic) + '</span>' : '') + (op ? '<span class="op-wyr-o">' + inline(op) + '</span>' : '') + '</div>' : '') +
+        (wi ? czytajWiecej('historia-wiecej', ui(ctx, 'czytajHist'), t(sek.menu, L)) : '') +
+        '</div></div>' +
+        (wi ? '<div class="rm" id="historia-wiecej" data-f="historia.opowiesc.wiecej">' + fmt(wi) + '</div>' : '') +
+        '</section>';
+    }
+    /* Wariant 1 (domyślny): oś czasu przewijana w poziomie */
+    var el = widoczne(d.rozdzialy || []);
+    var etapy = el.map(function (r, i) {
+      var f = 'historia:' + r.id, tr = t(r.tresc, L), dl = plain(tr).length > 170, idw = 'hist-' + esc(r.id);
+      return '<li class="os-el" data-f="' + esc(f) + '">' +
+        '<p class="os-rok"' + (t(r.rok, L) ? ' data-f="' + esc(f) + ':rok"' : '') + '>' + (t(r.rok, L) ? esc(t(r.rok, L)) : String(i + 1).padStart(2, '0')) + '</p>' +
+        '<span class="os-kropka" aria-hidden="true"></span>' +
+        '<article class="os-karta">' +
+        (r.tlo && r.tlo.src ? '<figure class="os-foto">' + imgTag(r.tlo, { lang: L, sizes: '(min-width: 900px) 360px, 78vw', f: f + ':tlo' }) + '</figure>' : '') +
+        '<div class="os-tekst">' +
+        (t(r.tytul, L) ? '<h3 data-f="' + esc(f) + ':tytul">' + esc(t(r.tytul, L)) + '</h3>' : '') +
+        (tr ? '<div class="os-opis" data-f="' + esc(f) + ':tresc">' + (dl ? '<p>' + esc(skrot(tr, 150)) + '</p>' : fmt(tr)) + '</div>' : '') +
+        (dl ? czytajWiecej(idw, ui(ctx, 'czytaj'), t(r.tytul, L) || t(r.rok, L)) : '') +
+        '</div></article>' +
+        (dl ? '<div class="rm" id="' + idw + '">' + fmt(tr) + '</div>' : '') +
+        '</li>';
     }).join('');
-    return otworzSekcje('historia', s, ctx, '', ' aria-labelledby="h-historia"') +
-      '<ol class="rozdzialy">' + rozdz + '</ol></section>';
+    return otworzSekcje('historia', s, ctx, 'sek--os', ' aria-labelledby="h-historia"') +
+      tloHtml(sek.tlo, ctx) +
+      '<div class="sek-in historia-os">' +
+      '<div class="os-glowa"><div class="os-tyt">' + glowa + '</div>' +
+      (el.length > 1 ? '<div class="os-ster"><button type="button" class="moz-btn os-btn" data-os="-1" aria-label="' + esc(ui(ctx, 'osPoprz')) + '">←</button><button type="button" class="moz-btn os-btn" data-os="1" aria-label="' + esc(ui(ctx, 'osNast')) + '">→</button></div>' : '') +
+      '</div>' +
+      (etapy ? '<div class="os-okno"><ol class="os os--' + Math.min(el.length, 4) + '" tabindex="0" aria-label="' + esc(ui(ctx, 'osLista')) + '">' + etapy + '</ol></div>' : '') +
+      '</div></section>';
   };
 
   R.aktualnosci = function (s, ctx) {

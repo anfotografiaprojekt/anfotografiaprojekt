@@ -38,7 +38,7 @@
       ],
       kropki: true,      // kropki nawigacji z boku
       animacje: true,    // animacje wejścia sekcji
-      motyw: 'bez',      // kolorystyka: bez (Kremowy beż) | szalwia (Szałwia i len) | grafit (Grafit i złoto)
+      motyw: 'bez',      // kolorystyka: bez (Kremowy beż) | noc (Nocna galeria) | terakota (Biel i terakota)
       kolejnosc: ['oMnie', 'historia', 'aktualnosci', 'kadra', 'portfolio', 'instagram', 'kontakt']  // kolejność sekcji w menu i na stronie
     },
 
@@ -133,8 +133,16 @@
       ]
     },
 
-    /* Historia — pełnoekranowe rozdziały */
+    /* Historia — dwa warianty: 'os' (oś czasu przewijana w poziomie) albo 'opowiesc' (jeden główny element ze zdjęciem) */
     historia: {
+      wariant: 'os',
+      opowiesc: {
+        zdjecie: img('historia-poczatki-pasja-od-dziecka', 2000, 1333, 'Pierwszy aparat — początek fotograficznej pasji Anny Niedobitek', [800, 1200]),
+        tresc: { pl: 'Moja przygoda z fotografią rozpoczęła się już w dzieciństwie, kiedy odkryłam, jak wiele można opowiedzieć za pomocą zdjęć. Z czasem pasja przerodziła się w *sposób na życie*.' },
+        wiecej: { pl: 'Moja przygoda z fotografią rozpoczęła się już w dzieciństwie, kiedy odkryłam, jak wiele można opowiedzieć za pomocą zdjęć.\n\nZ czasem pasja przerodziła się w sposób na życie i w 2021 roku rozpoczęłam prowadzenie własnej działalności fotograficznej.\n\nDziś realizuję sesje w promieniu ok. 100 km od Zgorzelca — m.in. w Görlitz, Bolesławcu i Legnicy — a reportaże ślubne na terenie całego Dolnego Śląska, także we Wrocławiu.' },
+        wyrLiczba: { pl: '2021' },
+        wyrOpis: { pl: 'od tego roku prowadzę własną działalność fotograficzną' }
+      },
       rozdzialy: [
         { id: 'h1', rok: { pl: 'Dzieciństwo' }, tytul: { pl: 'Pierwsze kadry' },
           tresc: { pl: 'Moja przygoda z fotografią rozpoczęła się już w dzieciństwie, kiedy odkryłam, jak wiele można opowiedzieć za pomocą zdjęć.' },

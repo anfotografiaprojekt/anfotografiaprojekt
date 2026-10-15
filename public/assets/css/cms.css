@@ -89,10 +89,10 @@ html.cmsp-otwarty,html.cmsp-otwarty body{overflow:hidden}
 .cmsp-mini{position:relative;overflow-x:hidden;overflow-y:auto;border:1px solid var(--c-lin);border-radius:8px;background:#FAF7F2;max-height:440px;scrollbar-width:thin}
 .cmsp-mini-in{pointer-events:none;font-size:17px;font-family:Jost,'Segoe UI',system-ui,sans-serif;color:#2B2622}
 .cmsp-mini-in .sek{min-height:0!important;padding-top:70px!important;padding-bottom:70px!important}
-.cmsp-mini-in .sek-hero,.cmsp-mini-in .rozdzial{min-height:720px!important;position:relative!important}
+.cmsp-mini-in .sek-hero{min-height:720px!important;position:relative!important}
 .cmsp-mini-in .historia-intro{padding-top:70px!important}
 .cmsp-mini-in .kropki{display:none}
-.cmsp-mini-in .sek-in>*,.cmsp-mini-in .rozdzial-in>*{opacity:1!important;transform:none!important}
+.cmsp-mini-in .sek-in>*{opacity:1!important;transform:none!important}
 .cmsp-mini-in .sek-tlo-img{animation:none!important}
 .cmsp-mini-in .rm{display:none}
 .cmsp-mini-in .hero-dalej,.cmsp-mini-in .wideo-pauza{display:none}

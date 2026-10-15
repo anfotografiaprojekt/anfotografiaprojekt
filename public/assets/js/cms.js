@@ -158,13 +158,13 @@
     aktualnosci: { n: 'Aktualności', ik: '✎', opis: 'Wpisy z datą „pokazuj od / do”. Po terminie znikają ze strony same i zostają tu w archiwum.', sek: 'aktualnosci' },
     start: { n: 'Pierwszy ekran', ik: '◎', opis: 'Imię i nazwisko, podpis, myśl przewodnia, przycisk i duże zdjęcie lub film w tle.', sek: 'start' },
     oMnie: { n: 'O mnie', ik: '♡', opis: 'Misja, pełny tekst „czytaj więcej”, rodzaje sesji i wartości.', sek: 'oMnie' },
-    historia: { n: 'Historia', ik: '❘', opis: 'Pełnoekranowe rozdziały: rok, tytuł, krótki tekst i zdjęcie w tle.', sek: 'historia' },
+    historia: { n: 'Historia', ik: '❘', opis: 'Dwa układy do wyboru: oś czasu przewijana w poziomie albo jedna opowieść ze zdjęciem.', sek: 'historia' },
     kadra: { n: 'Kto fotografuje', ik: '☺', opis: 'Osoby, które fotografują (Anna i drugi fotograf przy reportażach ślubnych).', sek: 'kadra' },
     portfolio: { n: 'Portfolio', ik: '▦', opis: 'Galeria zdjęć i wideo w mozaice: każde zdjęcie w swojej orientacji (pion lub poziom), a strony mieszczą się na jednym ekranie.', sek: 'portfolio' },
     instagram: { n: 'Instagram', ik: '◉', opis: 'Najnowsze zdjęcia z Instagrama — automatycznie albo wybrane ręcznie.', sek: 'instagram' },
     kontakt: { n: 'Kontakt i stopka', ik: '✆', opis: 'Messenger, profile, obszar działania, dane działalności (NIP) i hasło w stopce.', sek: 'kontakt' },
     wiadomosci: { n: 'Wiadomości', ik: '✉', opis: 'Wiadomości wysłane przez formularz kontaktowy na stronie.' },
-    wyglad: { n: 'Wygląd i efekty', ik: '✦', opis: 'Kropki nawigacji z boku i animacje układu pełnoekranowego.' },
+    wyglad: { n: 'Wygląd i efekty', ik: '✦', opis: 'Motyw kolorystyczny (3 wyraźnie różne style), kropki nawigacji i animacje.' },
     seo: { n: 'SEO (Google)', ik: '⌕', opis: 'Tytuł i opis strony widoczne w wynikach wyszukiwania Google.' },
     jezyki: { n: 'Wersje językowe', ik: '⚑', opis: 'Włączanie i wyłączanie wersji językowych strony.' },
     haslo: { n: 'Hasło do panelu', ik: '⚿', opis: 'Zmiana hasła logowania do panelu administratora.' },
@@ -178,6 +178,9 @@
       var m = STARE[String(tl.kolor).toLowerCase()];
       if (m) tl.kolor = m; else { tl.kolorWlasny = tl.kolor; tl.kolor = 'wlasny'; }
     });
+    /* motywy z poprzedniej wersji (szałwia, grafit) → Kremowy beż */
+    if (s.ustawienia && !A.MOTYWY.some(function (x) { return x.id === s.ustawienia.motyw; })) s.ustawienia.motyw = 'bez';
+    if (s.historia && s.historia.wariant !== 'opowiesc') s.historia.wariant = 'os';
     return s;
   }
 
@@ -547,7 +550,7 @@
     }
     if (tl.typ !== 'kolor') pola.push({ k: p + '.ciemno', typ: 'suwak', et: 'Przyciemnienie / rozjaśnienie zdjęcia', min: 0, max: 85, krok: 5, f: f });
     pola.push({ k: p + '.kolor', typ: 'radio', et: tl.typ === 'kolor' ? 'Kolor tła' : 'Kolor tła (widoczny, zanim wczyta się zdjęcie)', f: f, przerysuj: true,
-      opcje: [{ v: 'motyw:jasne', n: 'Jasny (z motywu)' }, { v: 'motyw:tlo2', n: 'Drugi jasny (z motywu)' }, { v: 'motyw:ciemne', n: 'Ciemny (z motywu)' }, { v: 'wlasny', n: 'Własny kolor' }],
+      opcje: [{ v: 'motyw:jasne', n: 'Tło główne (z motywu)' }, { v: 'motyw:tlo2', n: 'Tło drugie (z motywu)' }, { v: 'motyw:ciemne', n: 'Tło najciemniejsze (z motywu)' }, { v: 'wlasny', n: 'Własny kolor' }],
       pomoc: 'Kolory „z motywu” zmieniają się automatycznie po wybraniu innej kolorystyki strony.' });
     if (tl.kolor === 'wlasny') pola.push({ k: p + '.kolorWlasny', typ: 'kolor', et: 'Własny kolor tła', f: f });
     pola.push({ k: p + '.tekst', typ: 'radio', et: 'Kolor tekstu', opcje: [{ v: 'jasny', n: 'Jasny (na ciemnym tle)' }, { v: 'ciemny', n: 'Ciemny (na jasnym tle)' }], f: f, przerysuj: true });
@@ -712,7 +715,7 @@
       { idz: 'aktualnosci', l: akt, n: 'Aktualności na stronie', d: zap ? '+ ' + zap + ' zaplanowane' : 'brak zaplanowanych', kl: akt ? 'ziel' : '' },
       { idz: 'portfolio', l: zdj, n: 'Zdjęcia i filmy w portfolio', d: wszZdj > zdj ? (wszZdj - zdj) + ' ukryte' : 'wszystkie widoczne' },
       { idz: 'kadra', l: Rn.widoczne(s.kadra.lista).length, n: 'Osoby w „Kto fotografuje”', d: (s.kadra.lista || []).length + ' w panelu' },
-      { idz: 'historia', l: Rn.widoczne(s.historia.rozdzialy).length, n: 'Rozdziały historii', d: 'pełnoekranowe' },
+      { idz: 'historia', l: Rn.widoczne(s.historia.rozdzialy).length, n: 'Etapy osi czasu', d: s.historia.wariant === 'opowiesc' ? 'układ: opowieść' : 'układ: oś czasu' },
       { idz: 'wiadomosci', l: P.wiadomosci ? P.wiadomosci.filter(function (w) { return !w.przeczytana; }).length : '–', n: 'Nowe wiadomości', d: 'z formularza kontaktowego', kl: 'wiad' },
       { idz: 'sekcje', l: widSek + '/8', n: 'Widoczne sekcje', d: 'pokaż / ukryj sekcje' }
     ];
@@ -878,25 +881,40 @@
 
   /* ---------- Historia ---------- */
   RYSUJ.historia = function (kont) {
-    edytorStrony(kont, 'historia', function () { return polaNaglowka('historia'); });
+    edytorStrony(kont, 'historia', function (s) {
+      var op = s.historia.wariant === 'opowiesc';
+      var pola = [
+        { naglowek: 'Układ sekcji', opis: 'Wybierz, jak ma wyglądać Historia. Można przełączać w dowolnej chwili — treści obu układów są zapamiętywane osobno.' },
+        { k: 'historia.wariant', typ: 'radio', et: 'Układ', przerysuj: true, f: 'historia', opcje: [
+          { v: 'os', n: 'Oś czasu — etapy obok siebie, przewijane w poziomie (palcem, myszą lub strzałkami)' },
+          { v: 'opowiesc', n: 'Opowieść — jedno duże zdjęcie i tekst historii z wyróżnionym rokiem' }] }
+      ].concat(polaNaglowka('historia'));
+      if (op) pola = pola.concat([
+        { naglowek: 'Opowieść', opis: 'Na ekranie widać krótki tekst; pełna historia otwiera się w oknie „Czytaj całą historię”.' },
+        { k: 'historia.opowiesc.zdjecie', typ: 'zdjecie', et: 'Główne zdjęcie (najlepiej pionowe lub kwadratowe)', f: 'historia.opowiesc.zdjecie' },
+        { k: 'historia.opowiesc.tresc', typ: 'obszar', i18n: true, et: 'Krótki tekst na ekranie (2–3 zdania)', wiersze: 3, f: 'historia.opowiesc.tresc', pomoc: 'Formatowanie: *kursywa*, **pogrubienie**.' },
+        { k: 'historia.opowiesc.wyrLiczba', typ: 'tekst', i18n: true, et: 'Wyróżnienie — liczba lub rok (np. 2021)', max: 12, szer: 'pol', f: 'historia.opowiesc.wyrLiczba' },
+        { k: 'historia.opowiesc.wyrOpis', typ: 'tekst', i18n: true, et: 'Wyróżnienie — podpis', max: 80, szer: 'pol', f: 'historia.opowiesc.wyrLiczba' },
+        { k: 'historia.opowiesc.wiecej', typ: 'obszar', i18n: true, et: 'Pełna historia w oknie „Czytaj całą historię” (puste = bez przycisku)', wiersze: 8, f: 'historia.opowiesc.wiecej', pomoc: 'Pusta linia = nowy akapit.' }
+      ]);
+      return pola.concat(polaTla('historia', s));
+    });
     lista(kont, {
-      id: 'rozdzialy', k: 'historia', sciezka: 'historia.rozdzialy', etykieta: 'Rozdziały historii', nazwa: 'rozdział', prefiks: 'h',
-      opis: 'Każdy rozdział to pełny ekran: rok lub etap, tytuł, krótki tekst i zdjęcie w tle. Tylko prawdziwe fakty.',
+      id: 'rozdzialy', k: 'historia', sciezka: 'historia.rozdzialy', etykieta: 'Etapy osi czasu', nazwa: 'etap', prefiks: 'h',
+      opis: 'Używane w układzie „Oś czasu”: rok lub etap, tytuł, krótki tekst i zdjęcie. Kolejność na liście = kolejność na osi. Tylko prawdziwe fakty.',
       tytul: function (x) { return t(x.rok, 'pl') + ' — ' + t(x.tytul, 'pl'); }, podsum: function (x) { return Rn.skrot(t(x.tresc, 'pl'), 80); },
       zdj: function (x) { return x.tlo; },
-      nowy: function () { return { id: uid('h'), rok: { pl: '' }, tytul: { pl: '' }, tresc: { pl: '' }, tlo: null, ciemno: 50, tekst: 'jasny' }; },
+      nowy: function () { return { id: uid('h'), rok: { pl: '' }, tytul: { pl: '' }, tresc: { pl: '' }, tlo: null }; },
       pola: function (x) {
         var f = 'historia:' + x.id;
         return [
           { k: 'rok', typ: 'tekst', i18n: true, et: 'Rok lub etap (np. 2021, Dziś)', max: 20, szer: 'pol', f: f + ':rok' },
-          { k: 'tytul', typ: 'tekst', i18n: true, et: 'Tytuł rozdziału', wym: true, max: 80, f: f + ':tytul' },
-          { k: 'tresc', typ: 'obszar', i18n: true, et: 'Krótki tekst', wiersze: 4, f: f + ':tresc' },
-          { k: 'tlo', typ: 'zdjecie', et: 'Zdjęcie w tle (poziome)', f: f + ':tlo' },
-          { k: 'ciemno', typ: 'suwak', et: 'Przyciemnienie zdjęcia', min: 0, max: 85, krok: 5, f: f },
-          { k: 'tekst', typ: 'radio', et: 'Kolor tekstu', opcje: [{ v: 'jasny', n: 'Jasny' }, { v: 'ciemny', n: 'Ciemny' }], f: f }
+          { k: 'tytul', typ: 'tekst', i18n: true, et: 'Tytuł etapu', wym: true, max: 80, f: f + ':tytul' },
+          { k: 'tresc', typ: 'obszar', i18n: true, et: 'Krótki tekst (dłuższy niż ok. 170 znaków otworzy się w oknie „Czytaj więcej”)', wiersze: 4, f: f + ':tresc' },
+          { k: 'tlo', typ: 'zdjecie', et: 'Zdjęcie na karcie (poziome, opcjonalnie)', f: f + ':tlo' }
         ];
       },
-      waliduj: function (x) { return t(x.tytul, 'pl').trim() || t(x.rok, 'pl').trim() || t(x.tresc, 'pl').trim() ? '' : 'Rozdział jest pusty — wpisz rok, tytuł albo tekst.'; },
+      waliduj: function (x) { return t(x.tytul, 'pl').trim() || t(x.rok, 'pl').trim() || t(x.tresc, 'pl').trim() ? '' : 'Etap jest pusty — wpisz rok, tytuł albo tekst.'; },
       poZmianie: function () { odswiezMini('historia', P.szkic || P.stan); }
     });
   };
@@ -1114,7 +1132,7 @@
 
   /* ---------- Wygląd i efekty ---------- */
   RYSUJ.wyglad = function (kont) {
-    edytorStrony(kont, 'start', function () {
+    edytorStrony(kont, 'oMnie', function () {
       return [
         { naglowek: 'Kolorystyka strony', opis: 'Wybierz motyw — podgląd zmienia się od razu, a na stronie po kliknięciu „Zapisz”.' },
         { k: 'ustawienia.motyw', typ: 'motyw', et: 'Motyw kolorystyczny' },
