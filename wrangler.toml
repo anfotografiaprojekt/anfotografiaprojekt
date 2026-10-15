@@ -9,7 +9,7 @@ compatibility_date = "2026-09-01"
 # 2) wklej zwrócone id poniżej (zamiast WSTAW_ID_Z_KROKU_1)
 [[kv_namespaces]]
 binding = "TRESCI"
-id = "WSTAW_ID_Z_KROKU_1"
+id = "534b63fddc6448719b9dc21bd845c3f5"
 
 # Sekrety NIE trafiają do tego pliku. Ustaw je poleceniami:
 #   npx wrangler pages secret put ADMIN_PASSWORD_HASH
