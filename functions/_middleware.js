@@ -57,7 +57,7 @@ export async function onRequest(context) {
       .on('meta[name="anf-ssr"]', { element(el) { el.setAttribute('content', out.znacznik); } });
     if (glowna) {
       const stanJson = JSON.stringify(stan).replace(/</g, '\\u003c');
-      rw = rw.on('head', { element(el) { el.append(`<script type="application/json" id="cms-state">${stanJson}</script>`, { html: true }); } });
+      rw = rw.on('head', { element(el) { el.append(`<script type="application/json" id="cms-state" data-zapisano="${String((zap && zap.zapisano) || '').replace(/[^\w:.\-]/g, '')}">${stanJson}</script>`, { html: true }); } });
     }
     const wynik = rw.transform(odp);
     const h = new Headers(wynik.headers);

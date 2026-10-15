@@ -4,7 +4,7 @@ import { json, blad, kv, wymagaj, zapiszTresci, poprawneDane, KLUCZ_TRESCI, blad
 
 export async function onRequestGet({ env }) {
   try {
-    const z = await kv(env).get(KLUCZ_TRESCI, 'json');
+    const z = await kv(env).get(KLUCZ_TRESCI, { type: 'json', cacheTtl: 30 });   // najkrótszy czas pamięci podręcznej KV
     return json(z || { dane: null, zapisano: null }, 200, { 'Cache-Control': 'no-cache' });
   } catch (e) { return blad(e.message, 503); }
 }
