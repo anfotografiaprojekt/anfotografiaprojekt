@@ -92,7 +92,7 @@ Otwarcie `public/index.html` bezpośrednio z dysku uruchamia **tryb demonstracyj
 | Kto fotografuje | Anna + drugi fotograf (domyślnie ukryty — do uzupełnienia) |
 | Portfolio | zdjęcia i filmy (YouTube/MP4), kolejność, kategorie (filtry) |
 | Instagram | tryb automatyczny / ręczny |
-| Kontakt i stopka | Messenger, profile, telefon/e-mail (domyślnie ukryte), obszar, mapa, opinie Google, NIP, hasło w stopce |
+| Kontakt i stopka | Kanały kontaktu pod sobą z ikonami (Messenger, Facebook, Instagram, telefon/e-mail — domyślnie ukryte, formularz w osobnym oknie), obszar, mapa, opinie Google, NIP, hasło w stopce |
 | Ustawienia | kropki i animacje, SEO (title/description), wersje językowe, hasło, kopia zapasowa |
 
 Formatowanie w tekstach: `*kursywa*` (kolor akcentu), `**pogrubienie**`, pusta linia = nowy akapit.
