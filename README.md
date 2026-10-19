@@ -60,8 +60,7 @@ Wymagane: konto Cloudflare (darmowe), Node.js 18+.
 | Zmienna (Secret) | Do czego |
 |---|---|
 | `INSTAGRAM_TOKEN` | automatyczne „Najnowsze zdjęcia z Instagrama”. Konto IG musi być **profesjonalne (twórca/firma)**. Token: [developers.facebook.com](https://developers.facebook.com) → aplikacja → *Instagram API with Instagram Login* → wygeneruj token dla konta. Serwer odnawia go sam co ~7 dni. Bez tokenu w panelu można dodać zdjęcia ręcznie. |
-| `RESEND_API_KEY` (Secret) | **wymagane do działania formularza** — wiadomości z formularza są wysyłane e-mailem przez [resend.com](https://resend.com) (bezpłatnie do 3000 / mies.). Adres odbiorcy ustawia się w panelu → *Wiadomości e-mail* (nie jest publiczny). Bez własnej domeny Resend dostarcza pocztę tylko na adres, na który założono konto Resend. |
-| `MAIL_OD` | opcjonalnie, po zweryfikowaniu domeny w Resend: nadawca, np. `Formularz <formularz@twojadomena.pl>` |
+| `BREVO_API_KEY` (Secret), `BREVO_NADAWCA` | **jednorazowo, wykonawca strony** — wysyłka wiadomości z formularza przez [Brevo](https://www.brevo.com) (UE, plan darmowy 300 maili/dzień). `BREVO_NADAWCA` = adres nadawcy zweryfikowany w Brevo (najlepiej na własnej domenie, np. `formularz@stronyaiwroclaw.pl`). Adres, na który wiadomości przychodzą, ustawia i zmienia w każdej chwili klientka w panelu → *Formularz kontaktowy* (panel niczego nie wysyła). „Odpowiedz” w poczcie trafia od razu do osoby, która pisała. Opcjonalnie `BREVO_NAZWA` (nazwa nadawcy). Zapasowo działa też SMTP własnej skrzynki: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`. |
 | `MAIL_DO` | opcjonalnie: adres odbiorcy, gdy nie ustawiono go w panelu |
 
 ### Test lokalny
@@ -99,7 +98,9 @@ Otwarcie `public/index.html` bezpośrednio z dysku uruchamia **tryb demonstracyj
 | Kontakt i stopka | Kanały kontaktu pod sobą z ikonami (Messenger, Facebook, Instagram, telefon/e-mail — domyślnie ukryte, formularz w osobnym oknie), obszar, mapa, opinie Google, NIP, hasło w stopce |
 | Ustawienia → Wygląd i efekty | **3 motywy kolorystyczne** (Kremowy beż, Nocna galeria — ciemny ze złotem, Biel i terakota — nowoczesny bezszeryfowy), kropki nawigacji, animacje |
 | Sekcje strony | włączanie/wyłączanie sekcji, **kolejność sekcji w menu i na stronie** (▲▼), nagłówki |
-| Kontakt i dane → Wiadomości e-mail | prywatny adres, na który przychodzą wiadomości z formularza, wiadomość testowa, instrukcja konfiguracji Resend |
+| Kontakt i dane → Formularz kontaktowy | adres e-mail, na który przychodzą wiadomości z formularza (zmiana w każdej chwili), włączanie formularza i tekst nad formularzem; pola formularza — w zakładce Kontakt |
+| Przegląd → Do uzupełnienia | automatyczna lista niewypełnionych miejsc: teksty „[DO UZUPEŁNIENIA]”, zdjęcia zastępcze, brakujące opisy zdjęć (alt), NIP, dane w polityce prywatności, linki Google/Messenger, ustawienia wysyłki formularza — z przyciskiem „Uzupełnij” prowadzącym do pola; licznik w menu i karta na Pulpicie |
+| Ustawienia → Polityka prywatności | dane administratora (imię i nazwisko, NIP, adres, e-mail), wstęp i kolejne punkty polityki (edycja, kolejność, ukrywanie); data aktualizacji ustawia się sama |
 | Kontakt → Pola formularza | **dodawanie, edycja, kolejność i ukrywanie pól formularza** (tekst, e-mail, telefon, data, lista wyboru, pole do zaznaczenia); imię i e-mail są stałe. Walidacja: e-mail (znak @, domena, podpowiedź literówek np. gmial.com → gmail.com), telefon z wyborem kraju (+48 = 9 cyfr, liczba cyfr dopasowana do kraju), data nie z przeszłości — sprawdzane w przeglądarce i ponownie na serwerze |
 | Ustawienia | SEO (title/description), wersje językowe, hasło, kopia zapasowa |
 

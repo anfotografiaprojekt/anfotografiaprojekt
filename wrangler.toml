@@ -14,4 +14,4 @@ id = "534b63fddc6448719b9dc21bd845c3f5"
 # Sekrety NIE trafiają do tego pliku. Ustaw je poleceniami:
 #   npx wrangler pages secret put ADMIN_PASSWORD_HASH
 #   npx wrangler pages secret put SESSION_SECRET
-# (opcjonalnie) INSTAGRAM_TOKEN, RESEND_API_KEY, MAIL_DO, MAIL_OD
+# Wysyłka formularza (jednorazowo): BREVO_API_KEY (Secret) + BREVO_NADAWCA; (opcjonalnie) INSTAGRAM_TOKEN
