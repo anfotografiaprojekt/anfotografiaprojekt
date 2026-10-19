@@ -14,4 +14,4 @@ id = "534b63fddc6448719b9dc21bd845c3f5"
 # Sekrety NIE trafiają do tego pliku. Ustaw je poleceniami:
 #   npx wrangler pages secret put ADMIN_PASSWORD_HASH
 #   npx wrangler pages secret put SESSION_SECRET
-# (opcjonalnie) INSTAGRAM_TOKEN; wysyłkę formularza (SMTP) ustawia się w panelu → Formularz kontaktowy
+# Wysyłka formularza (jednorazowo): SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS (Secret); (opcjonalnie) INSTAGRAM_TOKEN
