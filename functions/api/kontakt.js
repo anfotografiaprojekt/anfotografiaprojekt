@@ -56,10 +56,12 @@ export async function onRequestPost({ request, env }) {
   const imie = (pola.find((x) => x.id === 'imie') || {}).wartosc || 'formularz';
   const email = (pola.find((x) => x.typ === 'email') || {}).wartosc || '';
   const rodzaj = (pola.find((x) => x.typ === 'wybor') || {}).wartosc || '';
-  const { html, tekst } = mailZFormularza({ pola, host: new URL(request.url).host, czas: new Date() });
+  const host = new URL(request.url).host;                       // np. anfotografiaprojekt.pages.dev
+  const { html, tekst } = mailZFormularza({ pola, host, czas: new Date() });
   const r = await wyslijMail(env, {
     do: do_, odpowiedzDo: email,
-    temat: 'Wiadomość ze strony: ' + imie + (rodzaj ? ' — ' + rodzaj : ''),
+    nadawcaNazwa: host,
+    temat: 'Wiadomość ze strony ' + host + ': ' + imie + (rodzaj ? ' — ' + rodzaj : ''),
     html, tekst,
   });
   if (!r.ok) return blad('Nie udało się wysłać wiadomości. Proszę spróbować za chwilę lub napisać przez Messengera.', 502);
