@@ -185,7 +185,7 @@
     portfolio: { n: 'Portfolio', ik: '▦', opis: 'Galeria zdjęć i wideo w mozaice: każde zdjęcie w swojej orientacji (pion lub poziom), a strony mieszczą się na jednym ekranie.', sek: 'portfolio' },
     instagram: { n: 'Instagram', ik: '◉', opis: 'Najnowsze zdjęcia z Instagrama — automatycznie albo wybrane ręcznie.', sek: 'instagram' },
     kontakt: { n: 'Kontakt i stopka', ik: '✆', opis: 'Messenger, profile, obszar działania, dane działalności (NIP) i hasło w stopce.', sek: 'kontakt' },
-    formularz: { n: 'Formularz kontaktowy', ik: '✉', opis: 'Adres e-mail, na który przychodzą wiadomości z formularza na stronie, oraz tekst nad formularzem. Wiadomości nie są przechowywane na stronie.', sek: 'kontakt' },
+    formularz: { n: 'Formularz kontaktowy', ik: '✉', opis: 'Treść wstępna i pola formularza, adres, na który przychodzą wiadomości, oraz skrzynka, z której strona je wysyła. Wiadomości nie są przechowywane na stronie.', sek: 'kontakt' },
     wyglad: { n: 'Wygląd i efekty', ik: '✦', opis: 'Motyw kolorystyczny (3 wyraźnie różne style), kropki nawigacji i animacje.' },
     polityka: { n: 'Polityka prywatności', ik: '§', opis: 'Treść podstrony „Polityka prywatności”: dane administratora i kolejne punkty. Data aktualizacji ustawia się sama przy zapisie.' },
     seo: { n: 'SEO (Google)', ik: '⌕', opis: 'Tytuł i opis strony widoczne w wynikach wyszukiwania Google.' },
@@ -797,7 +797,7 @@
       { idz: 'portfolio', l: zdj, n: 'Zdjęcia i filmy w portfolio', d: wszZdj > zdj ? (wszZdj - zdj) + ' ukryte' : 'wszystkie widoczne' },
       { idz: 'kadra', l: Rn.widoczne(s.kadra.lista).length, n: 'Osoby w „Kto fotografuje”', d: (s.kadra.lista || []).length + ' w panelu' },
       { idz: 'historia', l: Rn.widoczne(s.historia.rozdzialy).length, n: 'Etapy osi czasu', d: s.historia.wariant === 'opowiesc' ? 'układ: opowieść' : 'układ: oś czasu' },
-      { idz: 'formularz', l: '✉', n: 'Formularz kontaktowy', d: 'adres, na który przychodzą wiadomości' },
+      { idz: 'formularz', l: '✉', n: 'Formularz kontaktowy', d: 'adres odbiorcy i wysyłka' },
       { idz: 'sekcje', l: widSek + '/8', n: 'Widoczne sekcje', d: 'pokaż / ukryj sekcje' }
     ];
     kont.innerHTML =
@@ -1116,7 +1116,7 @@
         { k: 'kontakt.telefonWidoczny', typ: 'tak', et: 'Pokazuj telefon na stronie', szer: 'pol' },
         { k: 'kontakt.email', typ: 'email', et: 'E-mail', szer: 'pol', f: 'kontakt.email' },
         { k: 'kontakt.emailWidoczny', typ: 'tak', et: 'Pokazuj e-mail na stronie', szer: 'pol' },
-        { naglowek: 'Formularz kontaktowy', opis: 'Adres e-mail, na który przychodzą wiadomości, i tekst nad formularzem ustawiasz w zakładce „Formularz kontaktowy”. Pola formularza — na dole tej strony.' },
+        { naglowek: 'Formularz kontaktowy', opis: 'Treść, pola i adres e-mail formularza ustawiasz w zakładce „Formularz kontaktowy”.' },
         { naglowek: 'Obszar działania i Google' },
         { k: 'kontakt.obszar', typ: 'obszar', i18n: true, et: 'Opis obszaru działania', wiersze: 2, f: 'kontakt.obszar' },
         { k: 'kontakt.miasta', typ: 'tekst', et: 'Miasta (po przecinku — trafiają też do danych dla Google)', f: 'kontakt.miasta' },
@@ -1138,7 +1138,6 @@
         return '';
       }
     });
-    listaPolFormularza(kont);
   };
 
   var TYPY_POLA = [{ v: 'tekst', n: 'Krótki tekst' }, { v: 'obszar', n: 'Dłuższy tekst (wiadomość)' }, { v: 'email', n: 'Adres e-mail' }, { v: 'telefon', n: 'Telefon' },
@@ -1181,28 +1180,58 @@
   }
 
   /* ---------- Formularz kontaktowy: treść, pola, adres odbiorcy i skrzynka wysyłająca ---------- */
+  var DOSTAWCY = [
+    { v: 'gmail', n: 'Gmail', host: 'smtp.gmail.com', port: 465, pomoc: 'Gmail wymaga „hasła do aplikacji” (zwykłe hasło nie zadziała): Konto Google → Bezpieczeństwo → włącz Weryfikację dwuetapową → „Hasła do aplikacji” → utwórz hasło (np. „Strona”) i wklej tutaj 16 znaków.' },
+    { v: 'onet', n: 'Onet Poczta', host: 'smtp.poczta.onet.pl', port: 465, pomoc: 'W ustawieniach Poczty Onet włącz dostęp przez programy pocztowe (IMAP/POP3/SMTP). Hasło — takie jak do poczty.' },
+    { v: 'wp', n: 'WP Poczta', host: 'smtp.wp.pl', port: 465, pomoc: 'W ustawieniach Poczty WP włącz dostęp przez programy pocztowe (IMAP/POP3/SMTP). Hasło — takie jak do poczty.' },
+    { v: 'o2', n: 'o2', host: 'poczta.o2.pl', port: 465, pomoc: 'W ustawieniach poczty o2 włącz dostęp przez programy pocztowe (IMAP/POP3/SMTP). Hasło — takie jak do poczty.' },
+    { v: 'interia', n: 'Interia', host: 'poczta.interia.pl', port: 465, pomoc: 'W ustawieniach Poczty Interia włącz obsługę programów pocztowych. Hasło — takie jak do poczty.' },
+    { v: 'inna', n: 'Inna (np. poczta w hostingu z własną domeną)', host: '', port: 465, pomoc: 'Adres serwera SMTP i port znajdziesz w pomocy swojej poczty lub u dostawcy hostingu (najczęściej port 465 — SSL).' }
+  ];
+  function dostawcaDla(host) { return DOSTAWCY.filter(function (d) { return d.host && d.host === host; })[0] || (host ? DOSTAWCY[DOSTAWCY.length - 1] : DOSTAWCY[0]); }
   RYSUJ.formularz = function (kont) {
-    var karta = '<div id="cmsp-form-karty"><section class="cmsp-karta"><p class="cmsp-pusto">Wczytywanie…</p></section></div>';
+    var karty = '<div id="cmsp-form-karty"><section class="cmsp-karta"><p class="cmsp-pusto">Wczytywanie ustawień wysyłki…</p></section></div>';
     edytorStrony(kont, 'kontakt', function () {
       return [
-        { naglowek: 'Formularz na stronie', opis: 'Wiadomości wysłane przez klientów formularzem na stronie trafiają na jeden adres e-mail (ustawiasz go wyżej). Zabezpieczenia formularza (sprawdzanie e-maila i telefonu, ochrona przed spamem i botami, limit wiadomości) działają zawsze.' },
+        { naglowek: 'Formularz na stronie', opis: 'Formularz otwiera się w osobnym oknie po kliknięciu „Formularz kontaktowy” w sekcji Kontakt. Wszystkie zabezpieczenia (sprawdzanie e-maila i telefonu, ochrona przed spamem i botami, limit wiadomości) działają zawsze.' },
         { k: 'kontakt.formularz', typ: 'tak', et: 'Pokazuj formularz kontaktowy na stronie' },
         { k: 'kontakt.zachetaFormularza', typ: 'obszar', i18n: true, et: 'Treść wstępna (tekst nad polami formularza)', wiersze: 3, f: 'kontakt.zachetaFormularza', pomoc: 'Formatowanie: *kursywa*, **pogrubienie**. Puste = bez tekstu wstępnego.' }
       ];
-    }, { przed: karta });
-    if (P.demo) { kont.querySelector('#cmsp-form-karty').innerHTML = '<section class="cmsp-karta"><p class="cmsp-pusto">Tryb demonstracyjny — adres odbiorcy ustawia się po wdrożeniu strony na serwer.</p></section>'; return; }
+    }, { przed: karty });
+    listaPolFormularza(kont);
+    if (P.demo) { kont.querySelector('#cmsp-form-karty').innerHTML = '<section class="cmsp-karta"><p class="cmsp-pusto">Tryb demonstracyjny — wysyłka wiadomości e-mail działa po wdrożeniu strony na serwer.</p></section>'; return; }
     rysujKartyFormularza(kont.querySelector('#cmsp-form-karty'));
   };
   function rysujKartyFormularza(box) {
     api('GET', '/formularz').then(function (d) {
       if (!d._ok) { box.innerHTML = '<section class="cmsp-karta"><p class="cmsp-pusto">' + esc(d.blad || 'Nie udało się wczytać ustawień.') + '</p></section>'; return; }
-      var info = !d.email ? '' : d.serwer ? '<p class="cmsp-status cmsp-status--ziel" role="status">Wiadomości z formularza przychodzą na: <strong>' + esc(d.email) + '</strong></p>'
-        : '<p class="cmsp-status cmsp-status--czer" role="status">Adres jest zapisany, ale wysyłka nie jest jeszcze włączona po stronie serwera (jednorazowe ustawienie wykonawcy strony). Do tego czasu formularz prosi klientów o kontakt przez Messengera.</p>';
-      box.innerHTML = '<section class="cmsp-karta cmsp-waska"><h2>Adres, na który przychodzą wiadomości z formularza</h2>' + info +
-        '<form id="cmsp-f-mail" novalidate><div class="cmsp-pole"><label class="cmsp-et" for="cmsp-mail">Twój adres e-mail</label>' +
+      var c = d.smtp || {}, dost = dostawcaDla(c.host);
+      var stan = d.gotowe ? ['ziel', 'Formularz działa: wiadomości są wysyłane ze skrzynki ' + c.login + ' na adres ' + d.email + '.']
+        : !d.email ? ['czer', 'Wpisz adres, na który mają przychodzić wiadomości z formularza.']
+        : ['czer', 'Ustaw skrzynkę, z której strona ma wysyłać wiadomości (niżej). Do tego czasu formularz prosi klientów o kontakt przez Messengera.'];
+      box.innerHTML =
+        '<section class="cmsp-karta"><h2>Stan wysyłki</h2><p class="cmsp-status cmsp-status--' + stan[0] + '" role="status">' + esc(stan[1]) + '</p>' +
+        '<div class="cmsp-rzad-przyc"><button type="button" class="cmsp-btn cmsp-btn--obrys" data-akcja="mail-test"' + (d.gotowe ? '' : ' disabled') + '>Wyślij wiadomość testową</button></div>' +
+        '<p class="cmsp-blad-modal" id="cmsp-test-blad" role="alert" hidden></p></section>' +
+        '<section class="cmsp-karta cmsp-waska"><h2>Adres, na który przychodzą wiadomości</h2>' +
+        '<form id="cmsp-f-mail" novalidate><div class="cmsp-pole"><label class="cmsp-et" for="cmsp-mail">Adres e-mail odbiorcy</label>' +
         '<input id="cmsp-mail" type="email" autocomplete="email" value="' + esc(d.email || '') + '" required aria-describedby="cmsp-mail-p">' +
-        '<p class="cmsp-pomoc" id="cmsp-mail-p">Możesz go zmienić w każdej chwili — kolejne wiadomości trafią już na nowy adres. Adres nie jest widoczny na stronie ani w jej kodzie. Na wiadomość odpowiadasz zwykłym „Odpowiedz” w swojej poczcie.</p></div>' +
-        '<p class="cmsp-blad-modal" role="alert" hidden></p><button type="submit" class="cmsp-btn cmsp-btn--glowny">Zapisz adres</button></form></section>';
+        '<p class="cmsp-pomoc" id="cmsp-mail-p">Możesz go zmienić w każdej chwili — kolejne wiadomości trafią już na nowy adres. Adres nie jest widoczny na stronie ani w jej kodzie.</p></div>' +
+        '<p class="cmsp-blad-modal" role="alert" hidden></p><button type="submit" class="cmsp-btn cmsp-btn--glowny">Zapisz adres</button></form></section>' +
+        '<section class="cmsp-karta cmsp-waska"><h2>Skrzynka, z której strona wysyła wiadomości</h2>' +
+        '<p class="cmsp-pomoc">Strona wysyła wiadomość z Twojej własnej skrzynki pocztowej (jak program pocztowy) — bez żadnych zewnętrznych usług. Może to być ta sama skrzynka co odbiorca. Hasło jest zapisywane w zaszyfrowanej postaci i nigdy nie wraca do przeglądarki.</p>' +
+        (c.zrodlo === 'cloudflare' ? '<p class="cmsp-pomoc"><strong>Teraz używane są ustawienia ze zmiennych Cloudflare (SMTP_*).</strong> Zapisanie formularza poniżej zastąpi je ustawieniami z panelu.</p>' : '') +
+        '<form id="cmsp-f-smtp" novalidate>' +
+        '<div class="cmsp-pole"><label class="cmsp-et" for="cmsp-smtp-d">Poczta</label><select id="cmsp-smtp-d">' + DOSTAWCY.map(function (x) { return '<option value="' + x.v + '"' + (x === dost ? ' selected' : '') + '>' + esc(x.n) + '</option>'; }).join('') + '</select>' +
+        '<p class="cmsp-pomoc" id="cmsp-smtp-pomoc">' + esc(dost.pomoc) + '</p></div>' +
+        '<div class="cmsp-pole-rzad"><div class="cmsp-pole"><label class="cmsp-et" for="cmsp-smtp-h">Serwer SMTP</label><input id="cmsp-smtp-h" type="text" autocomplete="off" spellcheck="false" value="' + esc(c.host || dost.host) + '" placeholder="np. smtp.gmail.com"></div>' +
+        '<div class="cmsp-pole"><label class="cmsp-et" for="cmsp-smtp-p">Port</label><select id="cmsp-smtp-p"><option value="465"' + (+(c.port || dost.port) === 465 ? ' selected' : '') + '>465 (SSL)</option><option value="587"' + (+(c.port || dost.port) === 587 ? ' selected' : '') + '>587 (STARTTLS)</option></select></div></div>' +
+        '<div class="cmsp-pole"><label class="cmsp-et" for="cmsp-smtp-l">Adres skrzynki (login)</label><input id="cmsp-smtp-l" type="email" autocomplete="off" value="' + esc(c.login || '') + '" placeholder="np. anna.fotografia@gmail.com"></div>' +
+        '<div class="cmsp-pole"><label class="cmsp-et" for="cmsp-smtp-x">Hasło do skrzynki' + (c.maHaslo && c.zrodlo === 'panel' ? ' (zapisane — wpisz tylko, jeśli chcesz zmienić)' : '') + '</label><input id="cmsp-smtp-x" type="password" autocomplete="new-password" value="" placeholder="' + (c.maHaslo && c.zrodlo === 'panel' ? '••••••••••••' : '') + '"></div>' +
+        '<p class="cmsp-blad-modal" role="alert" hidden></p><div class="cmsp-rzad-przyc"><button type="submit" class="cmsp-btn cmsp-btn--glowny">Zapisz skrzynkę</button></div></form></section>' +
+        (d.stare ? '<section class="cmsp-karta cmsp-karta--ryzyko"><h2>Stare wiadomości na serwerze</h2><p class="cmsp-pomoc">Poprzednia wersja strony zapisywała wiadomości na serwerze — jest ich ' + d.stare + '. Nie są już nigdzie wyświetlane; możesz je trwale usunąć.</p>' +
+          '<button type="button" class="cmsp-btn cmsp-btn--usun" data-akcja="mail-stare">Usuń stare wiadomości (' + d.stare + ')</button></section>' : '');
+      // adres odbiorcy
       var f = box.querySelector('#cmsp-f-mail'), bl = f.querySelector('.cmsp-blad-modal'), inp = f.querySelector('#cmsp-mail');
       f.onsubmit = function (e) {
         e.preventDefault(); bl.hidden = true;
@@ -1213,7 +1242,43 @@
           else { bl.textContent = r.blad || 'Nie udało się zapisać.'; bl.hidden = false; }
         });
       };
+      // skrzynka wysyłająca
+      var fs = box.querySelector('#cmsp-f-smtp'), bs = fs.querySelector('.cmsp-blad-modal'), selD = fs.querySelector('#cmsp-smtp-d');
+      selD.onchange = function () {
+        var x = DOSTAWCY.filter(function (y) { return y.v === selD.value; })[0];
+        fs.querySelector('#cmsp-smtp-pomoc').textContent = x.pomoc;
+        if (x.host) { fs.querySelector('#cmsp-smtp-h').value = x.host; fs.querySelector('#cmsp-smtp-p').value = String(x.port); }
+        else { fs.querySelector('#cmsp-smtp-h').value = ''; fs.querySelector('#cmsp-smtp-h').focus(); }
+      };
+      fs.onsubmit = function (e) {
+        e.preventDefault(); bs.hidden = true;
+        var dane = { host: fs.querySelector('#cmsp-smtp-h').value.trim(), port: +fs.querySelector('#cmsp-smtp-p').value, login: fs.querySelector('#cmsp-smtp-l').value.trim(), haslo: fs.querySelector('#cmsp-smtp-x').value };
+        var msg = !dane.host ? 'Proszę wpisać adres serwera SMTP.' : !dane.login ? 'Proszę wpisać adres skrzynki.' : A.form.emailBlad(dane.login);
+        if (!msg && !dane.haslo && !(c.maHaslo && c.zrodlo === 'panel' && c.login === dane.login && c.host === dane.host)) msg = 'Proszę wpisać hasło do skrzynki.';
+        if (msg) { bs.textContent = msg; bs.hidden = false; return; }
+        var btn = fs.querySelector('[type=submit]'); btn.disabled = true; btn.textContent = 'Zapisywanie…';
+        api('POST', '/formularz', { smtp: dane }).then(function (r) {
+          btn.disabled = false; btn.textContent = 'Zapisz skrzynkę';
+          if (r._ok) { toast('Zapisano skrzynkę. Kliknij „Wyślij wiadomość testową”, aby sprawdzić połączenie.'); rysujKartyFormularza(box); }
+          else { bs.textContent = r.blad || 'Nie udało się zapisać.'; bs.hidden = false; }
+        });
+      };
     }).catch(function () { box.innerHTML = '<section class="cmsp-karta"><p class="cmsp-pusto">Brak połączenia z serwerem.</p></section>'; });
+  }
+  function akcjaPowiadomien(btn, akcja) {
+    var box = P.root.querySelector('#cmsp-form-karty');
+    if (akcja === 'mail-stare') {
+      if (!btn.classList.contains('cmsp-pewno')) { btn.classList.add('cmsp-pewno'); btn.textContent = 'Na pewno? Kliknij jeszcze raz'; return; }
+      api('DELETE', '/formularz').then(function (r) { toast(r._ok ? 'Usunięto stare wiadomości (' + r.usunieto + ').' : (r.blad || 'Nie udało się.'), r._ok ? '' : 'blad'); rysujKartyFormularza(box); });
+      return;
+    }
+    var bl = box.querySelector('#cmsp-test-blad'); if (bl) bl.hidden = true;
+    btn.disabled = true; btn.textContent = 'Wysyłanie…';
+    api('POST', '/formularz', { test: 1 }).then(function (r) {
+      btn.disabled = false; btn.textContent = 'Wyślij wiadomość testową';
+      if (r._ok) toast('Wysłano wiadomość testową — sprawdź skrzynkę odbiorcy (także folder Spam).');
+      else { if (bl) { bl.textContent = r.blad || 'Nie udało się wysłać.'; bl.hidden = false; } toast('Nie udało się wysłać wiadomości testowej.', 'blad'); }
+    }).catch(function () { btn.disabled = false; btn.textContent = 'Wyślij wiadomość testową'; toast('Brak połączenia z serwerem.', 'blad'); });
   }
 
   /* ---------- Polityka prywatności ---------- */
@@ -1311,13 +1376,13 @@
     if (!k.profilGoogle) dodaj({ klucz: 'kontakt.profilGoogle', waga: 'zalecane', co: 'Link do Profilu Firmy w Google (Mapy)', sc: 'kontakt.profilGoogle' });
     if (!k.opinieGoogle) dodaj({ klucz: 'kontakt.opinieGoogle', waga: 'zalecane', co: 'Link do opinii w Google', sc: 'kontakt.opinieGoogle' });
     if (/\[DOMENA\]/.test(A.DOMENA || '')) dodaj({ klucz: 'domena', waga: 'zalecane', co: 'Adres domeny (np. annaniedobitek.pl) — ustawia go wykonawca strony przy podłączaniu domeny; potrzebny m.in. dla Google', sc: '', bezPrzejscia: true });
-    if (P.formularzBezAdresu && k.formularz) dodaj({ klucz: 'formularz', waga: 'wazne', co: 'Adres e-mail, na który mają przychodzić wiadomości z formularza', sc: 'kontakt.formularz', strona: 'formularz' });
+    if (P.formularzGotowy === false && k.formularz) dodaj({ klucz: 'formularz', waga: 'wazne', co: 'Wysyłka formularza nie jest ustawiona — wpisz adres odbiorcy i skrzynkę wysyłającą', sc: 'kontakt.formularz', strona: 'formularz' });
     wyn.forEach(function (b) { b.strona = b.strona || stronaSciezki(b.sc || ''); });
     return wyn;
   }
   function sprawdzFormularzSerwera(poTym) {
-    if (P.demo) { P.formularzBezAdresu = false; if (poTym) poTym(); return; }
-    api('GET', '/formularz').then(function (d) { P.formularzBezAdresu = d._ok ? !d.email : false; odswiezLiczniki(); if (poTym) poTym(); }).catch(function () { if (poTym) poTym(); });
+    if (P.demo) { P.formularzGotowy = null; if (poTym) poTym(); return; }
+    api('GET', '/formularz').then(function (d) { P.formularzGotowy = d._ok ? !!d.gotowe : null; odswiezLiczniki(); if (poTym) poTym(); }).catch(function () { if (poTym) poTym(); });
   }
   function wierszBraku(b, i) {
     var gdzie = b.strona ? STRONY[b.strona].n : 'Wykonawca strony';
@@ -1538,6 +1603,7 @@
         P.stan.ustawienia.jezyki.push({ kod: kod, nazwa: nazwa, wl: false });
         zastosuj({ toast: 'Dodano język (wyłączony). Uzupełnij tłumaczenia i włącz go.' }); idz('jezyki');
         break;
+      case 'mail-test': case 'mail-stare': akcjaPowiadomien(b, a); break;
       case 'kop-schowek':
         var ta = P.root.querySelector('#cmsp-eksport');
         (navigator.clipboard ? navigator.clipboard.writeText(ta.value) : Promise.reject()).then(function () { toast('Skopiowano do schowka.'); }, function () { ta.select(); doc.execCommand('copy'); toast('Skopiowano do schowka.'); });
