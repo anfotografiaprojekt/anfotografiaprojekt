@@ -253,6 +253,26 @@
 
     stopka: {
       haslo: { pl: 'Z miłości do pięknych kadrów' }
+    },
+
+    /* Polityka prywatności (panel → Ustawienia → Polityka prywatności).
+     * Punkt 1 („Administrator danych”) składa się sam z pól poniżej i danych z Kontaktu (nazwa, NIP).
+     * Pozostałe punkty to edytowalna lista. Puste wymagane pola panel pokazuje w „Do uzupełnienia”. */
+    polityka: {
+      administrator: 'Anna Niedobitek',
+      adres: '',          // adres do korespondencji
+      email: '',          // e-mail w sprawach danych osobowych (publiczny)
+      data: '2026-10-19', // data ostatniej aktualizacji — panel ustawia ją sam przy każdym zapisie polityki
+      wstep: { pl: 'Szanuję Państwa prywatność. Strona nie używa śledzących plików cookies ani narzędzi reklamowych. Poniżej wyjaśniam, jakie dane i w jakim celu przetwarzam.' },
+      punkty: [
+        { id: 'p1', tytul: { pl: 'Formularz kontaktowy' }, tresc: { pl: 'Gdy wysyłają Państwo wiadomość przez formularz, przetwarzam podane dane (imię, adres e-mail, opcjonalnie numer telefonu, planowany termin i rodzaj sesji, treść wiadomości) wyłącznie w celu odpowiedzi i ewentualnego ustalenia szczegółów sesji. Podstawą jest Państwa zgoda (art. 6 ust. 1 lit. a RODO) oraz prawnie uzasadniony interes administratora — prowadzenie korespondencji (art. 6 ust. 1 lit. f RODO).\n\nWiadomość z formularza nie jest zapisywana na stronie — serwer strony od razu przesyła ją e-mailem na moją skrzynkę pocztową za pośrednictwem usługi Brevo (Sendinblue SAS, Francja), która działa jako podmiot przetwarzający dane na moje zlecenie, na terenie Unii Europejskiej. Korespondencję przechowuję maksymalnie 12 miesięcy, a jeśli przerodzi się we współpracę — przez czas wymagany przepisami. Zgodę można wycofać w dowolnym momencie.' } },
+        { id: 'p2', tytul: { pl: 'Kontakt przez Messenger, Facebook i Instagram' }, tresc: { pl: 'Kliknięcie przycisku Messengera lub odnośnika do Facebooka czy Instagrama przenosi do serwisów Meta Platforms. Od tej chwili obowiązuje polityka prywatności Meta. Sama strona nie łączy się z serwisami Meta podczas jej oglądania.' } },
+        { id: 'p3', tytul: { pl: 'Hosting i bezpieczeństwo' }, tresc: { pl: 'Strona jest utrzymywana na infrastrukturze Cloudflare, która technicznie przetwarza m.in. adres IP i dane przeglądarki, aby wyświetlić stronę i chronić ją przed atakami. Adres IP jest też krótko wykorzystywany do ochrony formularza przed spamem (limit liczby wiadomości). Cloudflare przetwarza dane na podstawie umowy powierzenia i standardowych klauzul umownych.' } },
+        { id: 'p4', tytul: { pl: 'Mapa Google i filmy YouTube' }, tresc: { pl: 'Mapa Google oraz filmy z YouTube nie ładują się automatycznie. Połączenie z serwerami Google następuje dopiero po kliknięciu przycisku „Pokaż mapę” lub „Odtwórz wideo” (filmy w trybie rozszerzonej prywatności youtube-nocookie.com).' } },
+        { id: 'p5', tytul: { pl: 'Pliki cookies i pamięć przeglądarki' }, tresc: { pl: 'Strona nie zapisuje cookies u odwiedzających. Wybór wersji językowej może zostać zapamiętany w pamięci przeglądarki (localStorage). Ciasteczko sesji jest zapisywane wyłącznie osobie zalogowanej do panelu administracyjnego — jest niezbędne do jego działania.' } },
+        { id: 'p6', tytul: { pl: 'Państwa prawa' }, tresc: { pl: 'Przysługuje Państwu prawo dostępu do danych, ich sprostowania, usunięcia, ograniczenia przetwarzania, przenoszenia, sprzeciwu oraz wycofania zgody. Mają Państwo również prawo wnieść skargę do Prezesa Urzędu Ochrony Danych Osobowych (ul. Stawki 2, 00-193 Warszawa).' } },
+        { id: 'p7', tytul: { pl: 'Zdjęcia na stronie' }, tresc: { pl: 'Zdjęcia osób publikuję wyłącznie za ich zgodą, a w przypadku dzieci — za zgodą rodziców lub opiekunów. Jeśli chcą Państwo, aby zdjęcie zostało usunięte ze strony, proszę o wiadomość.' } }
+      ]
     }
   };
 

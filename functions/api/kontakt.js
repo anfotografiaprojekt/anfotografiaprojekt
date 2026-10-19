@@ -3,7 +3,7 @@
 // funkcją co przeglądarka (render.js → ANF.form): e-mail, telefon (długość numeru zależna
 // od kraju), data, imię itd. Wiadomości NIE są przechowywane na serwerze — idą tylko e-mailem.
 // Antyspam: ukryte pole-pułapka, minimalny czas wypełnienia, limit 5 wiadomości / godzinę z IP,
-// sprawdzenie nagłówka i pochodzenia żądania, limit linków.
+// sprawdzenie nagłówka i pochodzenia żądania, limit linków. Wysyłka: SMTP własnej skrzynki (lib/poczta.js).
 import '../../public/assets/js/dane.js';
 import '../../public/assets/js/render.js';
 import { json, blad, kv, limit, zwieksz, ip, zgodnyOrigin } from '../../lib/serwer.js';
@@ -46,7 +46,7 @@ export async function onRequestPost({ request, env }) {
   if (!pola.length) return blad('Formularz jest pusty.');
   if ((pola.map((x) => x.wartosc).join(' ').match(/https?:\/\/|www\./g) || []).length > 3) return blad('Wiadomość zawiera zbyt wiele linków.');
 
-  if (!skonfigurowany(env)) return blad(NIEDOSTEPNY, 503);
+  if (!(await skonfigurowany(env))) return blad(NIEDOSTEPNY, 503);
   const do_ = await odbiorca(env);
   if (!do_) return blad(NIEDOSTEPNY, 503);
 

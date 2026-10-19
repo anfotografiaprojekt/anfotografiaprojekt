@@ -46,7 +46,7 @@
       obszar: 'Obszar działania', formularz: 'Formularz kontaktowy', mapa: 'Pokaż mapę obszaru działania',
       mapaInfo: 'Mapa Google wczyta się dopiero po kliknięciu.', otworzMapy: 'Otwórz w Mapach Google',
       dane: 'Dane działalności', nip: 'NIP', regon: 'REGON', krs: 'KRS', uzupelnij: '[DO UZUPEŁNIENIA]',
-      polityka: 'Polityka prywatności', panel: 'Panel administratora', prawa: 'Wszelkie prawa zastrzeżone. Zdjęcia chronione prawem autorskim.',
+      polityka: 'Polityka prywatności', wroc: 'Wróć na stronę główną', panel: 'Panel administratora', prawa: 'Wszelkie prawa zastrzeżone. Zdjęcia chronione prawem autorskim.',
       pasek: 'Komunikaty', aktualnosci: 'Aktualności', jezyk: 'Język strony',
       f_imie: 'Imię i nazwisko', f_email: 'Adres e-mail', f_tel: 'Telefon (opcjonalnie)', f_rodzaj: 'Czego dotyczy wiadomość?',
       f_wybierz: 'Proszę wybrać…', f_inne: 'Inne', f_termin: 'Planowany termin (opcjonalnie)', f_wiad: 'Wiadomość',
@@ -66,7 +66,7 @@
       obszar: 'Service area', formularz: 'Contact form', mapa: 'Show service area map',
       mapaInfo: 'Google Maps loads only after you click.', otworzMapy: 'Open in Google Maps',
       dane: 'Business details', nip: 'VAT ID (NIP)', regon: 'REGON', krs: 'KRS', uzupelnij: '[TO BE COMPLETED]',
-      polityka: 'Privacy policy', panel: 'Admin panel', prawa: 'All rights reserved. Photos protected by copyright.',
+      polityka: 'Privacy policy', wroc: 'Back to the home page', panel: 'Admin panel', prawa: 'All rights reserved. Photos protected by copyright.',
       pasek: 'Announcements', aktualnosci: 'News', jezyk: 'Language',
       f_imie: 'Full name', f_email: 'E-mail address', f_tel: 'Phone (optional)', f_rodzaj: 'What is your message about?',
       f_wybierz: 'Please choose…', f_inne: 'Other', f_termin: 'Planned date (optional)', f_wiad: 'Message',
@@ -714,6 +714,23 @@
         return '<li' + (i ? ' hidden' : '') + '><a href="#wpis-' + esc(w.id) + '"><strong>' + esc(t(w.tytul, ctx.lang)) + '</strong><span aria-hidden="true"> →</span></a></li>';
       }).join('') + '</ul>' + (poz.length > 1 ? '<span class="pasek-licznik" aria-hidden="true">1/' + poz.length + '</span>' : '') + '</div></div>';
   };
+  /* Polityka prywatności (podstrona) — punkt 1 składa się z danych administratora, reszta z listy w panelu */
+  R.polityka = function (s, ctx) {
+    var L = ctx.lang, p = s.polityka || {}, k = s.kontakt, U = '[DO UZUPEŁNIENIA]';
+    var admin = 'Administratorem danych osobowych jest ' + esc(p.administrator || U) + ', prowadząca działalność gospodarczą pod nazwą ' +
+      esc(k.nazwaRejestrowa || 'Anna Niedobitek Fotografia') + ', NIP: ' + esc(k.nip || U) + ', adres do korespondencji: ' + esc(p.adres || U) +
+      '. Kontakt w sprawach danych osobowych: przez formularz kontaktowy na stronie, Messengera lub e-mail ' +
+      (p.email ? '<a href="mailto:' + esc(p.email) + '">' + esc(p.email) + '</a>' : U) + '.';
+    var nr = 1;
+    return '<article class="prose" data-ssr="polityka"><h1>' + esc(ui(ctx, 'polityka')) + '</h1>' +
+      (t(p.wstep, L) ? '<div class="prose-lead" data-f="polityka.wstep">' + fmt(t(p.wstep, L)) + '</div>' : '') +
+      '<h2>' + (nr++) + '. Administrator danych</h2><p data-f="polityka.administrator">' + admin + '</p>' +
+      widoczne(p.punkty || []).map(function (x) {
+        return '<section data-f="polityka:' + esc(x.id) + '"><h2>' + (nr++) + '. ' + esc(t(x.tytul, L)) + '</h2>' + fmt(t(x.tresc, L)) + '</section>';
+      }).join('') +
+      (p.data ? '<p class="prose-data">Ostatnia aktualizacja: ' + esc(dataPL(p.data, L)) + '</p>' : '') +
+      '<p><a class="btn btn--obrys" href="./">← ' + esc(ui(ctx, 'wroc')) + '</a></p></article>';
+  };
   R.stopka = function (s, ctx) {
     var L = ctx.lang, k = s.kontakt;
     var dane = '<li>' + esc(k.nazwaRejestrowa || t(s.start.nazwa, L)) + '</li>' +
@@ -815,7 +832,7 @@
       out.sekcje = kolejnosc(s).map(function (x) { return out[x.k]; }).join('\n');
       out.motyw = motyw(s);
       out.motywTlo = MOTYWY.filter(function (m) { return m.id === out.motyw; })[0].tlo;
-      ['nav', 'kropki', 'jezyki', 'pasek', 'stopka'].forEach(function (k) { out[k] = R[k](s, ctx); });
+      ['nav', 'kropki', 'jezyki', 'pasek', 'stopka', 'polityka'].forEach(function (k) { out[k] = R[k](s, ctx); });
       out.jsonld = R.jsonld(s, ctx);
       out.hreflang = R.hreflang(s);
       out.title = t(s.seo.title, ctx.lang);

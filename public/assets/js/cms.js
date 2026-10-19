@@ -166,15 +166,16 @@
 
   /* ================= DEFINICJA STRON PANELU ================= */
   var GRUPY = [
-    { n: 'Przegląd', s: ['pulpit', 'sekcje'] },
+    { n: 'Przegląd', s: ['pulpit', 'braki', 'sekcje'] },
     { n: 'Treści czasowe', s: ['aktualnosci'] },
     { n: 'Wizerunek', s: ['start', 'oMnie', 'historia', 'kadra'] },
     { n: 'Galeria', s: ['portfolio', 'instagram'] },
-    { n: 'Kontakt i dane', s: ['kontakt', 'powiadomienia'] },
-    { n: 'Ustawienia', s: ['wyglad', 'seo', 'jezyki', 'haslo', 'kopia'] }
+    { n: 'Kontakt i dane', s: ['kontakt', 'formularz'] },
+    { n: 'Ustawienia', s: ['wyglad', 'seo', 'polityka', 'jezyki', 'haslo', 'kopia'] }
   ];
   var STRONY = {
     pulpit: { n: 'Pulpit', ik: '◧', opis: 'Najważniejsze informacje o stronie w jednym miejscu.' },
+    braki: { n: 'Do uzupełnienia', ik: '!', opis: 'Lista miejsc, które nie zostały jeszcze wypełnione: teksty „[DO UZUPEŁNIENIA]”, zdjęcia zastępcze, brakujące dane i linki. Kliknij „Uzupełnij”, aby przejść prosto do pola.' },
     sekcje: { n: 'Sekcje strony', ik: '☰', opis: 'Włączanie i wyłączanie sekcji, nazwy w menu i nagłówki.' },
     aktualnosci: { n: 'Aktualności', ik: '✎', opis: 'Wpisy z datą „pokazuj od / do”. Po terminie znikają ze strony same i zostają tu w archiwum.', sek: 'aktualnosci' },
     start: { n: 'Pierwszy ekran', ik: '◎', opis: 'Imię i nazwisko, podpis, myśl przewodnia, przycisk i duże zdjęcie lub film w tle.', sek: 'start' },
@@ -184,8 +185,9 @@
     portfolio: { n: 'Portfolio', ik: '▦', opis: 'Galeria zdjęć i wideo w mozaice: każde zdjęcie w swojej orientacji (pion lub poziom), a strony mieszczą się na jednym ekranie.', sek: 'portfolio' },
     instagram: { n: 'Instagram', ik: '◉', opis: 'Najnowsze zdjęcia z Instagrama — automatycznie albo wybrane ręcznie.', sek: 'instagram' },
     kontakt: { n: 'Kontakt i stopka', ik: '✆', opis: 'Messenger, profile, obszar działania, dane działalności (NIP) i hasło w stopce.', sek: 'kontakt' },
-    powiadomienia: { n: 'Wiadomości e-mail', ik: '✉', opis: 'Na jaki adres e-mail przychodzą wiadomości z formularza kontaktowego. Wiadomości nie są przechowywane na stronie — trafiają prosto do Twojej skrzynki.' },
+    formularz: { n: 'Formularz kontaktowy', ik: '✉', opis: 'Adres e-mail, na który przychodzą wiadomości z formularza na stronie, oraz tekst nad formularzem. Wiadomości nie są przechowywane na stronie.', sek: 'kontakt' },
     wyglad: { n: 'Wygląd i efekty', ik: '✦', opis: 'Motyw kolorystyczny (3 wyraźnie różne style), kropki nawigacji i animacje.' },
+    polityka: { n: 'Polityka prywatności', ik: '§', opis: 'Treść podstrony „Polityka prywatności”: dane administratora i kolejne punkty. Data aktualizacji ustawia się sama przy zapisie.' },
     seo: { n: 'SEO (Google)', ik: '⌕', opis: 'Tytuł i opis strony widoczne w wynikach wyszukiwania Google.' },
     jezyki: { n: 'Wersje językowe', ik: '⚑', opis: 'Włączanie i wyłączanie wersji językowych strony.' },
     haslo: { n: 'Hasło do panelu', ik: '⚿', opis: 'Zmiana hasła logowania do panelu administratora.' },
@@ -258,6 +260,7 @@
       aktualnosci: { n: (s.aktualnosci.lista || []).length, akt: akt },
       historia: { n: (s.historia.rozdzialy || []).length },
       kadra: { n: (s.kadra.lista || []).length },
+      braki: (function () { var b = znajdzBraki(s).filter(function (x) { return !x.ukryte; }).length; return b ? { n: b, uwaga: true } : null; })(),
       portfolio: { n: (s.portfolio.elementy || []).length }
     };
   }
@@ -266,7 +269,8 @@
     m.innerHTML = GRUPY.map(function (g) {
       return '<div class="cmsp-grupa"><p class="cmsp-grupa-n">' + esc(g.n) + '</p><ul>' + g.s.map(function (id) {
         var st = STRONY[id], l = L[id], lic = '';
-        if (l && l.akt != null) lic = '<span class="cmsp-licz cmsp-licz--ziel" title="Aktywne na stronie">' + l.akt + '</span><span class="cmsp-licz">' + l.n + '</span>';
+        if (l && l.uwaga) lic = '<span class="cmsp-licz cmsp-licz--uwaga" title="Do uzupełnienia">' + l.n + '</span>';
+        else if (l && l.akt != null) lic = '<span class="cmsp-licz cmsp-licz--ziel" title="Aktywne na stronie">' + l.akt + '</span><span class="cmsp-licz">' + l.n + '</span>';
         else if (l && l.nowe) lic = l.n ? '<span class="cmsp-licz cmsp-licz--ziel" title="Nieprzeczytane">' + l.n + '</span>' : '';
         else if (l) lic = '<span class="cmsp-licz">' + l.n + '</span>';
         return '<li><button type="button" data-idz="' + id + '"' + (P.strona === id ? ' aria-current="page"' : '') + '><span class="cmsp-ik" aria-hidden="true">' + st.ik + '</span><span class="cmsp-menu-n">' + esc(st.n) + '</span>' + lic + '</button></li>';
@@ -297,10 +301,11 @@
   }
 
   /* ================= PODGLĄD SEKCJI NA ŻYWO ================= */
-  var NAZWY_SEK = { start: 'Pierwszy ekran', oMnie: 'O mnie', historia: 'Historia', aktualnosci: 'Aktualności', kadra: 'Kto fotografuje', portfolio: 'Portfolio', instagram: 'Instagram', kontakt: 'Kontakt + stopka' };
+  var NAZWY_SEK = { polityka: 'Polityka prywatności (podstrona)', start: 'Pierwszy ekran', oMnie: 'O mnie', historia: 'Historia', aktualnosci: 'Aktualności', kadra: 'Kto fotografuje', portfolio: 'Portfolio', instagram: 'Instagram', kontakt: 'Kontakt + stopka' };
   function htmlSekcji(k, stan) {
     var ctx = Rn.ctx(stan, { lang: 'pl' });
     var h = A.R[k](stan, ctx);
+    if (k === 'polityka') h = '<div class="podstrona-tresc cmsp-podstrona">' + h + '</div>';
     if (k === 'kontakt') h = h.replace('<dialog class="okno okno-form"', '<div class="okno okno-form cmsp-form-podglad"').replace('</dialog>', '</div>') + A.R.stopka(stan, ctx);
     if (/^<section[^>]*hidden><\/section>$/.test(h)) {
       h = '<div class="cmsp-mini-pusta">Ta sekcja jest teraz ukryta na stronie' + (k === 'aktualnosci' ? ' (brak aktywnych wpisów lub sekcja wyłączona)' : '') + '.</div>';
@@ -792,7 +797,7 @@
       { idz: 'portfolio', l: zdj, n: 'Zdjęcia i filmy w portfolio', d: wszZdj > zdj ? (wszZdj - zdj) + ' ukryte' : 'wszystkie widoczne' },
       { idz: 'kadra', l: Rn.widoczne(s.kadra.lista).length, n: 'Osoby w „Kto fotografuje”', d: (s.kadra.lista || []).length + ' w panelu' },
       { idz: 'historia', l: Rn.widoczne(s.historia.rozdzialy).length, n: 'Etapy osi czasu', d: s.historia.wariant === 'opowiesc' ? 'układ: opowieść' : 'układ: oś czasu' },
-      { idz: 'powiadomienia', l: '✉', n: 'Formularz → e-mail', d: 'gdzie przychodzą wiadomości' },
+      { idz: 'formularz', l: '✉', n: 'Formularz kontaktowy', d: 'adres, na który przychodzą wiadomości' },
       { idz: 'sekcje', l: widSek + '/8', n: 'Widoczne sekcje', d: 'pokaż / ukryj sekcje' }
     ];
     kont.innerHTML =
@@ -800,6 +805,7 @@
       '<button type="button" class="cmsp-btn cmsp-btn--glowny" data-akcja="szybko" data-cel="aktualnosci">+ Aktualność</button>' +
       '<button type="button" class="cmsp-btn cmsp-btn--obrys" data-akcja="szybko" data-cel="portfolio">+ Zdjęcie do portfolio</button>' +
       '<button type="button" class="cmsp-btn cmsp-btn--obrys" data-idz="start">Pierwszy ekran</button></div></section>' +
+      '<div id="cmsp-pulpit-braki">' + kartaBrakow() + '</div>' +
       '<div class="cmsp-kafle">' + kafle.map(function (k) {
         return '<button type="button" class="cmsp-kafel' + (k.kl ? ' cmsp-kafel--' + k.kl : '') + '" data-idz="' + k.idz + '"><span class="cmsp-kafel-l"' + '' + '>' + k.l + '</span><span class="cmsp-kafel-n">' + esc(k.n) + '</span><small>' + esc(k.d) + '</small></button>';
       }).join('') + '</div>' +
@@ -811,6 +817,7 @@
           '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--obrys" data-idz="' + x.k + '">Edytuj tę sekcję</button></div>';
       }).join('') + '</div></section>';
     skalujMini(kont);
+    sprawdzFormularzSerwera(function () { var b = kont.querySelector('#cmsp-pulpit-braki'); if (b && P.strona === 'pulpit') b.innerHTML = kartaBrakow(); });
   };
   function gantt(lista, today) {
     var od = plusDni(today, -30), dni = 120;
@@ -1109,8 +1116,7 @@
         { k: 'kontakt.telefonWidoczny', typ: 'tak', et: 'Pokazuj telefon na stronie', szer: 'pol' },
         { k: 'kontakt.email', typ: 'email', et: 'E-mail', szer: 'pol', f: 'kontakt.email' },
         { k: 'kontakt.emailWidoczny', typ: 'tak', et: 'Pokazuj e-mail na stronie', szer: 'pol' },
-        { k: 'kontakt.formularz', typ: 'tak', et: 'Pokazuj formularz kontaktowy' },
-        { k: 'kontakt.zachetaFormularza', typ: 'obszar', i18n: true, et: 'Tekst nad formularzem', wiersze: 2, f: 'kontakt.zachetaFormularza' },
+        { naglowek: 'Formularz kontaktowy', opis: 'Adres e-mail, na który przychodzą wiadomości, i tekst nad formularzem ustawiasz w zakładce „Formularz kontaktowy”. Pola formularza — na dole tej strony.' },
         { naglowek: 'Obszar działania i Google' },
         { k: 'kontakt.obszar', typ: 'obszar', i18n: true, et: 'Opis obszaru działania', wiersze: 2, f: 'kontakt.obszar' },
         { k: 'kontakt.miasta', typ: 'tekst', et: 'Miasta (po przecinku — trafiają też do danych dla Google)', f: 'kontakt.miasta' },
@@ -1174,61 +1180,189 @@
     });
   }
 
-  /* ---------- Wiadomości e-mail (formularz → prywatna skrzynka) ---------- */
-  RYSUJ.powiadomienia = function (kont) {
-    if (P.demo) { kont.innerHTML = '<section class="cmsp-karta"><p class="cmsp-pusto">Tryb demonstracyjny — wysyłka wiadomości e-mail działa po wdrożeniu strony na serwer.</p></section>'; return; }
-    kont.innerHTML = '<section class="cmsp-karta"><p class="cmsp-pusto">Wczytywanie…</p></section>';
-    api('GET', '/powiadomienia').then(function (d) {
-      if (!d._ok) { kont.innerHTML = '<section class="cmsp-karta"><p class="cmsp-pusto">' + esc(d.blad || 'Nie udało się wczytać ustawień.') + '</p></section>'; return; }
-      var stan = d.klucz && d.email ? ['ziel', 'Formularz wysyła wiadomości na ' + d.email] : !d.klucz ? ['czer', 'Wysyłka nie jest jeszcze skonfigurowana — brak klucza RESEND_API_KEY (instrukcja niżej).'] : ['czer', 'Wpisz adres, na który mają przychodzić wiadomości.'];
-      kont.innerHTML =
-        '<section class="cmsp-karta cmsp-waska"><h2>Gdzie przychodzą wiadomości</h2>' +
-        '<p class="cmsp-status cmsp-status--' + stan[0] + '" role="status">' + esc(stan[1]) + '</p>' +
-        '<form id="cmsp-f-mail" novalidate><div class="cmsp-pole"><label class="cmsp-et" for="cmsp-mail">Twój adres e-mail (prywatny)</label>' +
+  /* ---------- Formularz kontaktowy: treść, pola, adres odbiorcy i skrzynka wysyłająca ---------- */
+  RYSUJ.formularz = function (kont) {
+    var karta = '<div id="cmsp-form-karty"><section class="cmsp-karta"><p class="cmsp-pusto">Wczytywanie…</p></section></div>';
+    edytorStrony(kont, 'kontakt', function () {
+      return [
+        { naglowek: 'Formularz na stronie', opis: 'Wiadomości wysłane przez klientów formularzem na stronie trafiają na jeden adres e-mail (ustawiasz go wyżej). Zabezpieczenia formularza (sprawdzanie e-maila i telefonu, ochrona przed spamem i botami, limit wiadomości) działają zawsze.' },
+        { k: 'kontakt.formularz', typ: 'tak', et: 'Pokazuj formularz kontaktowy na stronie' },
+        { k: 'kontakt.zachetaFormularza', typ: 'obszar', i18n: true, et: 'Treść wstępna (tekst nad polami formularza)', wiersze: 3, f: 'kontakt.zachetaFormularza', pomoc: 'Formatowanie: *kursywa*, **pogrubienie**. Puste = bez tekstu wstępnego.' }
+      ];
+    }, { przed: karta });
+    if (P.demo) { kont.querySelector('#cmsp-form-karty').innerHTML = '<section class="cmsp-karta"><p class="cmsp-pusto">Tryb demonstracyjny — adres odbiorcy ustawia się po wdrożeniu strony na serwer.</p></section>'; return; }
+    rysujKartyFormularza(kont.querySelector('#cmsp-form-karty'));
+  };
+  function rysujKartyFormularza(box) {
+    api('GET', '/formularz').then(function (d) {
+      if (!d._ok) { box.innerHTML = '<section class="cmsp-karta"><p class="cmsp-pusto">' + esc(d.blad || 'Nie udało się wczytać ustawień.') + '</p></section>'; return; }
+      var info = !d.email ? '' : d.serwer ? '<p class="cmsp-status cmsp-status--ziel" role="status">Wiadomości z formularza przychodzą na: <strong>' + esc(d.email) + '</strong></p>'
+        : '<p class="cmsp-status cmsp-status--czer" role="status">Adres jest zapisany, ale wysyłka nie jest jeszcze włączona po stronie serwera (jednorazowe ustawienie wykonawcy strony). Do tego czasu formularz prosi klientów o kontakt przez Messengera.</p>';
+      box.innerHTML = '<section class="cmsp-karta cmsp-waska"><h2>Adres, na który przychodzą wiadomości z formularza</h2>' + info +
+        '<form id="cmsp-f-mail" novalidate><div class="cmsp-pole"><label class="cmsp-et" for="cmsp-mail">Twój adres e-mail</label>' +
         '<input id="cmsp-mail" type="email" autocomplete="email" value="' + esc(d.email || '') + '" required aria-describedby="cmsp-mail-p">' +
-        '<p class="cmsp-pomoc" id="cmsp-mail-p">Ten adres nie jest widoczny na stronie ani w jej kodzie — zna go tylko serwer. Odpowiadasz klientowi zwykłym „Odpowiedz” w poczcie.</p></div>' +
-        '<p class="cmsp-blad-modal" role="alert" hidden></p>' +
-        '<div class="cmsp-rzad-przyc"><button type="submit" class="cmsp-btn cmsp-btn--glowny">Zapisz adres</button>' +
-        '<button type="button" class="cmsp-btn cmsp-btn--obrys" data-akcja="mail-test"' + (d.klucz && d.email ? '' : ' disabled') + '>Wyślij wiadomość testową</button></div></form></section>' +
-        '<section class="cmsp-karta"><h2>Jak to działa</h2><ol class="cmsp-kroki">' +
-        '<li>Klient wypełnia formularz — strona sprawdza dane (e-mail ze znakiem @, numer telefonu z właściwą liczbą cyfr dla wybranego kraju, data w przyszłości).</li>' +
-        '<li>Serwer sprawdza je jeszcze raz i wysyła e-mail przez usługę <strong>Resend</strong> na adres powyżej. Na stronie nic nie jest zapisywane.</li>' +
-        '<li>W skrzynce klikasz „Odpowiedz” — odpowiedź trafia na adres klienta.</li></ol>' +
-        '<h3 class="cmsp-podtytul">Konfiguracja (jednorazowo)</h3><ol class="cmsp-kroki">' +
-        '<li>Załóż bezpłatne konto na resend.com <strong>na ten sam adres e-mail</strong>, który wpisujesz powyżej (bez własnej domeny Resend dostarcza wiadomości tylko na adres właściciela konta).</li>' +
-        '<li>W Resend: <em>API Keys → Create API Key</em> (uprawnienie „Sending access”) i skopiuj klucz.</li>' +
-        '<li>W Cloudflare: projekt strony → <em>Settings → Variables and Secrets → Add</em>: nazwa <code>RESEND_API_KEY</code>, typ <em>Secret</em>, wartość = klucz. Zapisz i wdroż stronę ponownie (Deployments → Retry deployment).</li>' +
-        '<li>Wróć tutaj i kliknij „Wyślij wiadomość testową”.</li>' +
-        '<li>Po zakupie domeny: dodaj ją w Resend (Domains), wpisz rekordy DNS w Cloudflare, a potem zmienną <code>MAIL_OD</code> np. <code>Formularz &lt;formularz@twojadomena.pl&gt;</code> — wtedy można wysyłać na dowolny adres i poczta rzadziej trafia do spamu.</li></ol>' +
-        '<p class="cmsp-pomoc">Nadawca teraz: ' + esc(d.nadawca) + (d.wlasnaDomena ? '' : ' (adres testowy Resend)') + '.</p></section>' +
-        (d.stare ? '<section class="cmsp-karta cmsp-karta--ryzyko"><h2>Stare wiadomości na serwerze</h2><p class="cmsp-pomoc">Poprzednia wersja strony zapisywała wiadomości na serwerze — jest ich ' + d.stare + '. Nie są już nigdzie wyświetlane; możesz je trwale usunąć (zgodnie z polityką prywatności i tak usunęłyby się same po 12 miesiącach).</p>' +
-          '<button type="button" class="cmsp-btn cmsp-btn--usun" data-akcja="mail-stare">Usuń stare wiadomości (' + d.stare + ')</button></section>' : '');
-      var f = kont.querySelector('#cmsp-f-mail'), bl = f.querySelector('.cmsp-blad-modal'), inp = f.querySelector('#cmsp-mail');
+        '<p class="cmsp-pomoc" id="cmsp-mail-p">Możesz go zmienić w każdej chwili — kolejne wiadomości trafią już na nowy adres. Adres nie jest widoczny na stronie ani w jej kodzie. Na wiadomość odpowiadasz zwykłym „Odpowiedz” w swojej poczcie.</p></div>' +
+        '<p class="cmsp-blad-modal" role="alert" hidden></p><button type="submit" class="cmsp-btn cmsp-btn--glowny">Zapisz adres</button></form></section>';
+      var f = box.querySelector('#cmsp-f-mail'), bl = f.querySelector('.cmsp-blad-modal'), inp = f.querySelector('#cmsp-mail');
       f.onsubmit = function (e) {
         e.preventDefault(); bl.hidden = true;
-        var v = inp.value.trim(), msg = A.form.emailBlad(v);
-        if (!v) msg = 'Proszę wpisać adres e-mail.';
+        var v = inp.value.trim(), msg = v ? A.form.emailBlad(v) : 'Proszę wpisać adres e-mail.';
         if (msg) { bl.textContent = msg; bl.hidden = false; inp.focus(); return; }
-        api('POST', '/powiadomienia', { email: v }).then(function (r) {
-          if (r._ok) { toast('Zapisano. Wiadomości z formularza będą przychodzić na ' + v + '.'); RYSUJ.powiadomienia(kont); }
+        api('POST', '/formularz', { email: v }).then(function (r) {
+          if (r._ok) { toast('Zapisano. Wiadomości z formularza będą przychodzić na ' + v + '.'); rysujKartyFormularza(box); }
           else { bl.textContent = r.blad || 'Nie udało się zapisać.'; bl.hidden = false; }
         });
       };
+    }).catch(function () { box.innerHTML = '<section class="cmsp-karta"><p class="cmsp-pusto">Brak połączenia z serwerem.</p></section>'; });
+  }
+
+  /* ---------- Polityka prywatności ---------- */
+  RYSUJ.polityka = function (kont) {
+    edytorStrony(kont, 'polityka', function () {
+      return [
+        { naglowek: 'Administrator danych (punkt 1)', opis: 'Z tych pól i danych z zakładki Kontakt (nazwa działalności, NIP) składa się pierwszy punkt polityki. Puste pola widać na stronie jako „[DO UZUPEŁNIENIA]” i na liście „Do uzupełnienia”.' },
+        { k: 'polityka.administrator', typ: 'tekst', et: 'Imię i nazwisko administratora danych', max: 80, szer: 'pol', f: 'polityka.administrator' },
+        { k: 'kontakt.nip', typ: 'tekst', et: 'NIP (ten sam co w stopce)', max: 20, szer: 'pol', ph: '[DO UZUPEŁNIENIA]', f: 'polityka.administrator' },
+        { k: 'polityka.adres', typ: 'tekst', et: 'Adres do korespondencji', max: 160, ph: 'np. ul. Przykładowa 1, 59-900 Zgorzelec', f: 'polityka.administrator' },
+        { k: 'polityka.email', typ: 'email', et: 'E-mail w sprawach danych osobowych (widoczny publicznie)', szer: 'pol', f: 'polityka.administrator' },
+        { naglowek: 'Wstęp' },
+        { k: 'polityka.wstep', typ: 'obszar', i18n: true, et: 'Tekst pod tytułem', wiersze: 3, f: 'polityka.wstep' }
+      ];
+    }, {
+      waliduj: function (s) {
+        var p = s.polityka;
+        if (p.email && A.form.emailBlad(p.email)) return 'E-mail w sprawach danych: ' + A.form.emailBlad(p.email);
+        p.data = dzis();          // data ostatniej aktualizacji = dzień zapisu
+        return '';
+      }
+    });
+    lista(kont, {
+      id: 'punkty', k: 'polityka', sciezka: 'polityka.punkty', etykieta: 'Punkty polityki (od punktu 2)', nazwa: 'punkt', prefiks: 'p', naKoniec: true,
+      opis: 'Kolejność na liście = numeracja na stronie. Ukryty punkt nie jest pokazywany.',
+      tytul: function (x) { return t(x.tytul, 'pl'); }, podsum: function (x) { return Rn.skrot(t(x.tresc, 'pl'), 90); },
+      nowy: function () { return { id: uid('p'), tytul: { pl: '' }, tresc: { pl: '' } }; },
+      pola: function (x) { return [
+        { k: 'tytul', typ: 'tekst', i18n: true, et: 'Tytuł punktu', wym: true, max: 90, f: 'polityka:' + x.id },
+        { k: 'tresc', typ: 'obszar', i18n: true, et: 'Treść', wiersze: 8, f: 'polityka:' + x.id, pomoc: 'Pusta linia = nowy akapit, **pogrubienie**, *kursywa*.' }
+      ]; },
+      waliduj: function (x) { return t(x.tytul, 'pl').trim() && t(x.tresc, 'pl').trim() ? '' : 'Uzupełnij tytuł i treść punktu.'; },
+      poZmianie: function () { P.stan.polityka.data = dzis(); if (P.szkic) P.szkic.polityka.data = P.stan.polityka.data; odswiezMini('polityka', P.szkic || P.stan); }
     });
   };
-  function akcjaPowiadomien(btn, akcja) {
-    var kont = P.root.querySelector('#cmsp-strona');
-    if (akcja === 'mail-stare') {
-      if (!btn.classList.contains('cmsp-pewno')) { btn.classList.add('cmsp-pewno'); btn.textContent = 'Na pewno? Kliknij jeszcze raz'; return; }
-      api('DELETE', '/powiadomienia').then(function (r) { toast(r._ok ? 'Usunięto stare wiadomości (' + r.usunieto + ').' : (r.blad || 'Nie udało się.'), r._ok ? '' : 'blad'); RYSUJ.powiadomienia(kont); });
-      return;
+
+  /* ---------- Do uzupełnienia: wykrywanie niewypełnionych miejsc ---------- */
+  var ZNACZNIK_BRAKU = /\[(?:DO UZUPEŁNIENIA|LINK DO UZUPEŁNIENIA|DOMENA)[^\]]*\]/i;
+  var STRONA_SCIEZKI = [
+    [/^kontakt\.(pola|zachetaFormularza|formularz)/, 'formularz'], [/^sekcje\.([a-zA-Z]+)\./, '$1'], [/^(start|oMnie|historia|aktualnosci|kadra|portfolio|instagram|kontakt|polityka|seo)\b/, '$1'],
+    [/^stopka\./, 'kontakt'], [/^ustawienia\./, 'wyglad']
+  ];
+  function stronaSciezki(p) {
+    for (var i = 0; i < STRONA_SCIEZKI.length; i++) { var m = p.match(STRONA_SCIEZKI[i][0]); if (m) { var w = STRONA_SCIEZKI[i][1].replace('$1', m[1] || ''); return STRONY[w] ? w : null; } }
+    return null;
+  }
+  function nazwaElementu(o) {
+    if (!o || typeof o !== 'object') return '';
+    return Rn.plain(t(o.tytul, 'pl') || t(o.imie, 'pl') || t(o.nazwa, 'pl') || t(o.etykieta, 'pl') || t(o.podpis, 'pl') || t(o.rok, 'pl') || '');
+  }
+  function znajdzBraki(s) {
+    var wyn = [], today = dzis();
+    function dodaj(b) { if (!wyn.some(function (x) { return x.klucz === b.klucz; })) wyn.push(b); }
+    function przejdz(o, sc, ukryte, el, lista, idx) {
+      if (o == null) return;
+      if (typeof o === 'string') {
+        if (/(^|\.)en$/.test(sc)) return;                       // wersja angielska wyłączona
+        if (ZNACZNIK_BRAKU.test(o)) dodaj({ klucz: sc, waga: 'wazne', co: 'Tekst do uzupełnienia: „' + Rn.skrot(o.replace(/\s+/g, ' '), 90) + '”', sc: sc, ukryte: ukryte, el: el, lista: lista, idx: idx });
+        return;
+      }
+      if (Array.isArray(o)) {
+        o.forEach(function (x, i) {
+          var uk = ukryte || !!(x && x.ukryta) || (sc === 'aktualnosci.lista' && x && ['aktywna', 'zaplanowana'].indexOf(Rn.status(x, today)) < 0);
+          przejdz(x, sc + '.' + i, uk, nazwaElementu(x) || el, sc, i);
+        });
+        return;
+      }
+      if (typeof o !== 'object') return;
+      if ('src' in o) {
+        var src = String(o.src || '');
+        if (/^assets\/img\//.test(src)) dodaj({ klucz: sc, waga: 'wazne', co: 'Zdjęcie zastępcze — wgraj prawdziwe zdjęcie' + (t(o.alt, 'pl') ? ' („' + Rn.skrot(t(o.alt, 'pl'), 60) + '”)' : ''), sc: sc, ukryte: ukryte, el: el, lista: lista, idx: idx, zdj: true });
+        else if (src && !/\.tlo\.(obraz|plakat)$/.test(sc) && !Rn.plain(t(o.alt, 'pl'))) dodaj({ klucz: sc + ':alt', waga: 'zalecane', co: 'Brak opisu zdjęcia (alt) — ważny dla Google i osób niewidomych', sc: sc, ukryte: ukryte, el: el, lista: lista, idx: idx, zdj: true });
+        return;
+      }
+      Object.keys(o).forEach(function (k) {
+        if (sc === '' && (k === 'ustawienia' || k === '_app')) return;
+        var nsc = sc ? sc + '.' + k : k, uk = ukryte;
+        if (sc === 'sekcje' && o[k] && !Rn.sekWidoczna(s, k, today)) uk = true;
+        if (/^(start|oMnie|historia|aktualnosci|kadra|portfolio|instagram)$/.test(k) && sc === '' && s.sekcje[k] && !Rn.sekWidoczna(s, k, today)) uk = true;
+        if (/\.tlo$/.test(nsc) && o[k] && o[k].typ === 'kolor') return;                     // tło z kolorem — zdjęcie nieużywane
+        if (nsc === 'historia.opowiesc' && s.historia.wariant !== 'opowiesc') uk = true;
+        if (nsc === 'historia.rozdzialy' && s.historia.wariant === 'opowiesc') uk = true;
+        if ((nsc === 'instagram.reczne') && (s.instagram.posty === false || s.instagram.tryb !== 'reczny')) uk = true;
+        przejdz(o[k], nsc, uk, el, lista, idx);
+      });
     }
-    btn.disabled = true; btn.textContent = 'Wysyłanie…';
-    api('POST', '/powiadomienia', { test: 1 }).then(function (r) {
-      btn.disabled = false; btn.textContent = 'Wyślij wiadomość testową';
-      if (r._ok) toast('Wysłano wiadomość testową — sprawdź skrzynkę (także folder Spam).');
-      else { var bl = kont.querySelector('.cmsp-blad-modal'); if (bl) { bl.textContent = r.blad || 'Nie udało się wysłać.'; bl.hidden = false; } toast('Nie udało się wysłać wiadomości testowej.', 'blad'); }
-    });
+    przejdz(s, '', false, '', null, null);
+    var k = s.kontakt, p = s.polityka || {};
+    if (!k.nip) dodaj({ klucz: 'kontakt.nip', waga: 'wazne', co: 'NIP działalności (stopka i polityka prywatności)', sc: 'kontakt.nip' });
+    if (!p.adres) dodaj({ klucz: 'polityka.adres', waga: 'wazne', co: 'Adres do korespondencji w polityce prywatności', sc: 'polityka.adres' });
+    if (!p.email) dodaj({ klucz: 'polityka.email', waga: 'wazne', co: 'E-mail w sprawach danych osobowych (polityka prywatności)', sc: 'polityka.email' });
+    if (!t(s.seo.title, 'pl') || !t(s.seo.description, 'pl')) dodaj({ klucz: 'seo', waga: 'wazne', co: 'Tytuł lub opis strony dla Google', sc: 'seo.title' });
+    if (Rn.sekWidoczna(s, 'instagram', today) && !k.instagram) dodaj({ klucz: 'kontakt.instagram', waga: 'wazne', co: 'Adres profilu na Instagramie (sekcja Instagram jest włączona)', sc: 'kontakt.instagram' });
+    if (!k.messenger) dodaj({ klucz: 'kontakt.messenger', waga: 'zalecane', co: 'Link do Messengera (np. https://m.me/…) — teraz przycisk prowadzi do profilu na Facebooku', sc: 'kontakt.messenger' });
+    if (!k.profilGoogle) dodaj({ klucz: 'kontakt.profilGoogle', waga: 'zalecane', co: 'Link do Profilu Firmy w Google (Mapy)', sc: 'kontakt.profilGoogle' });
+    if (!k.opinieGoogle) dodaj({ klucz: 'kontakt.opinieGoogle', waga: 'zalecane', co: 'Link do opinii w Google', sc: 'kontakt.opinieGoogle' });
+    if (/\[DOMENA\]/.test(A.DOMENA || '')) dodaj({ klucz: 'domena', waga: 'zalecane', co: 'Adres domeny (np. annaniedobitek.pl) — ustawia go wykonawca strony przy podłączaniu domeny; potrzebny m.in. dla Google', sc: '', bezPrzejscia: true });
+    if (P.formularzBezAdresu && k.formularz) dodaj({ klucz: 'formularz', waga: 'wazne', co: 'Adres e-mail, na który mają przychodzić wiadomości z formularza', sc: 'kontakt.formularz', strona: 'formularz' });
+    wyn.forEach(function (b) { b.strona = b.strona || stronaSciezki(b.sc || ''); });
+    return wyn;
+  }
+  function sprawdzFormularzSerwera(poTym) {
+    if (P.demo) { P.formularzBezAdresu = false; if (poTym) poTym(); return; }
+    api('GET', '/formularz').then(function (d) { P.formularzBezAdresu = d._ok ? !d.email : false; odswiezLiczniki(); if (poTym) poTym(); }).catch(function () { if (poTym) poTym(); });
+  }
+  function wierszBraku(b, i) {
+    var gdzie = b.strona ? STRONY[b.strona].n : 'Wykonawca strony';
+    return '<li class="cmsp-brak cmsp-brak--' + b.waga + '"><div class="cmsp-brak-t"><strong>' + esc(b.co) + '</strong>' +
+      '<small>' + esc(gdzie) + (b.el ? ' · ' + esc(Rn.skrot(b.el, 60)) : '') + (b.ukryte ? ' · niewidoczne na stronie' : '') + '</small></div>' +
+      (b.strona && !b.bezPrzejscia ? '<button type="button" class="cmsp-btn cmsp-btn--maly cmsp-btn--obrys" data-akcja="brak-idz" data-i="' + i + '">Uzupełnij →</button>' : '') + '</li>';
+  }
+  function kartaBrakow() {
+    var lis = znajdzBraki(P.stan); P.ostatnieBraki = lis;
+    var wid = lis.filter(function (x) { return !x.ukryte; }), w = wid.filter(function (x) { return x.waga === 'wazne'; });
+    if (!wid.length) return '<section class="cmsp-karta cmsp-braki-ok"><h2>Wszystko uzupełnione ✓</h2><p class="cmsp-pomoc">Na widocznych częściach strony nie ma już miejsc do uzupełnienia.</p></section>';
+    return '<section class="cmsp-karta"><h2>Do uzupełnienia <span class="cmsp-licz cmsp-licz--uwaga">' + wid.length + '</span></h2>' +
+      '<p class="cmsp-pomoc">' + w.length + ' ważnych, ' + (wid.length - w.length) + ' zalecanych. Najważniejsze:</p><ul class="cmsp-braki">' +
+      wid.slice(0, 5).map(function (b) { return wierszBraku(b, lis.indexOf(b)); }).join('') + '</ul>' +
+      '<button type="button" class="cmsp-btn cmsp-btn--obrys" data-idz="braki">Zobacz całą listę →</button></section>';
+  }
+  RYSUJ.braki = function (kont) {
+    function rysuj() {
+      var lis = znajdzBraki(P.stan); P.ostatnieBraki = lis;
+      var w = lis.filter(function (x) { return !x.ukryte && x.waga === 'wazne'; }), z = lis.filter(function (x) { return !x.ukryte && x.waga === 'zalecane'; }), u = lis.filter(function (x) { return x.ukryte; });
+      function grupa(tyt, opis, el) { return el.length ? '<section class="cmsp-karta"><h2>' + esc(tyt) + ' <span class="cmsp-licz">' + el.length + '</span></h2><p class="cmsp-pomoc">' + esc(opis) + '</p><ul class="cmsp-braki">' + el.map(function (b) { return wierszBraku(b, lis.indexOf(b)); }).join('') + '</ul></section>' : ''; }
+      kont.innerHTML = (!w.length && !z.length ? '<section class="cmsp-karta cmsp-braki-ok"><h2>Wszystko uzupełnione ✓</h2><p>Na widocznych częściach strony nie ma już tekstów „[DO UZUPEŁNIENIA]” ani zdjęć zastępczych.</p></section>' : '') +
+        grupa('Ważne — widoczne na stronie', 'Te miejsca widzą odwiedzający (albo Google) — warto uzupełnić je przed pokazaniem strony klientom.', w) +
+        grupa('Zalecane', 'Strona działa bez nich, ale uzupełnienie poprawi wygląd, wyniki w Google lub wygodę klientów.', z) +
+        grupa('W ukrytych elementach', 'Tych elementów nie widać teraz na stronie (sekcja, pozycja lub układ są wyłączone) — uzupełnij je, zanim je włączysz.', u);
+    }
+    rysuj(); sprawdzFormularzSerwera(function () { if (P.strona === 'braki') rysuj(); });
+  };
+  function przejdzDoBraku(b) {
+    if (!b || !b.strona) return;
+    idz(b.strona);
+    setTimeout(function () {
+      var kont = P.root.querySelector('#cmsp-strona'); if (!kont) return;
+      if (b.lista != null && b.idx != null) {
+        var cfg = Object.keys(LISTY).map(function (k) { return LISTY[k]; }).filter(function (c) { return c.sciezka === b.lista && P.root.querySelector('[data-lista="' + c.id + '"]'); })[0];
+        if (cfg) { modalElementu(cfg, b.idx); return; }
+      }
+      var sc = b.zdj ? b.sc : b.sc;
+      var el = kont.querySelector('[data-zdj="' + sc + '"]') || kont.querySelector('[data-pole="' + sc + '"]') || kont.querySelector('[data-pole^="' + sc + '."]');
+      if (!el) return;
+      var pole = el.closest('.cmsp-pole') || el;
+      pole.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      pole.classList.add('cmsp-szukane'); setTimeout(function () { pole.classList.remove('cmsp-szukane'); }, 2600);
+      var f = el.matches('input,textarea,select') ? el : el.querySelector('input:not([type=file]),textarea,select'); if (f) f.focus({ preventScroll: true });
+    }, 60);
   }
 
   /* ---------- Wygląd i efekty ---------- */
@@ -1356,13 +1490,14 @@
     if (b.closest('[data-lista]') && ['dodaj', 'edytuj', 'usun', 'gora', 'dol', 'ukryj', 'duplikuj', 'filtr'].indexOf(a) >= 0) { akcjaListy(b, a); return; }
     switch (a) {
       case 'zobacz': zamknijPanel(); break;
-      case 'pokaz': var k = b.getAttribute('data-sek'); zamknijPanel(function () { if (!site.pokaz(k)) alert('Ta sekcja jest teraz ukryta na stronie.'); }); break;
+      case 'pokaz': var k = b.getAttribute('data-sek'); if (k === 'polityka') { window.open('polityka-prywatnosci.html', '_blank', 'noopener'); break; } zamknijPanel(function () { if (!site.pokaz(k)) alert('Ta sekcja jest teraz ukryta na stronie.'); }); break;
       case 'wyloguj':
         if (!potwierdzPorzucenie()) return;
         api('POST', '/logout', {}).then(function () { P.zalogowany = false; site.oznaczZalogowany(false); P.szkic = null; zamknijPanel(); });
         break;
       case 'szybko': idz(b.getAttribute('data-cel'), { dodaj: true }); break;
       case 'zapisz-strone': P.root.querySelector('#cmsp-strona')._zapisz(); break;
+      case 'brak-idz': przejdzDoBraku((P.ostatnieBraki || [])[+b.getAttribute('data-i')]); break;
       case 'ponow-zapis': b.disabled = true; b.textContent = 'Zapisywanie…'; P.toastPoZapisie = 'Zapisano zmiany. Są już na stronie.'; zaplanujZapis(); break;
       case 'cofnij': P.root.querySelector('#cmsp-strona')._cofnij(); break;
       case 'zdj-usun':
@@ -1403,7 +1538,6 @@
         P.stan.ustawienia.jezyki.push({ kod: kod, nazwa: nazwa, wl: false });
         zastosuj({ toast: 'Dodano język (wyłączony). Uzupełnij tłumaczenia i włącz go.' }); idz('jezyki');
         break;
-      case 'mail-test': case 'mail-stare': akcjaPowiadomien(b, a); break;
       case 'kop-schowek':
         var ta = P.root.querySelector('#cmsp-eksport');
         (navigator.clipboard ? navigator.clipboard.writeText(ta.value) : Promise.reject()).then(function () { toast('Skopiowano do schowka.'); }, function () { ta.select(); doc.execCommand('copy'); toast('Skopiowano do schowka.'); });
