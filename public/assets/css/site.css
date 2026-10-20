@@ -6,6 +6,13 @@
  *   kolor główny   #7A5240 (6,3:1)     akcent    #8A5A44 (5,4:1)   dekor #B88A6E (tylko linie/tła)
  * Plik jest wstawiany w <head> strony przez narzedzia/zbuduj.mjs (krytyczny CSS).
  */
+/* --vh1 = 1% wysokości ekranu, MIERZONE RAZ (i ponownie tylko przy obrocie telefonu).
+   Zwykłe jednostki vh/svh w przeglądarkach wbudowanych w aplikacje (Messenger, Instagram,
+   Facebook) zmieniają się, gdy chowa się pasek narzędzi — wtedy zmieniały się wysokości sekcji
+   i wielkość nagłówków, a strona skakała. Wartość ustawia skrypt w <head> i site.js. */
+:root{--vh1:1vh}
+@supports (height:1svh){:root{--vh1:1svh}}
+
 @font-face{font-family:Cormorant;font-style:normal;font-weight:300 700;font-display:swap;src:url(../fonts/cormorant-garamond-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:Cormorant;font-style:normal;font-weight:300 700;font-display:swap;src:url(../fonts/cormorant-garamond-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:Cormorant;font-style:italic;font-weight:300 700;font-display:swap;src:url(../fonts/cormorant-garamond-latin-wght-italic.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -105,7 +112,7 @@ em.akcent{font-family:var(--f-szer);font-size:1.12em;font-style:italic;color:var
 .kropki a:hover .kropka-et,.kropki a:focus-visible .kropka-et{opacity:1;transform:none}
 
 /* ---------- sekcje pełnoekranowe ---------- */
-.sek{position:relative;isolation:isolate;min-height:calc(100vh - var(--nag) - var(--pasek,0px));min-height:calc(100svh - var(--nag) - var(--pasek,0px));display:flex;flex-direction:column;justify-content:flex-start;background:var(--sek-kolor,var(--bg));color:var(--tekst);padding:clamp(40px,7vh,72px) 0 clamp(56px,9vh,96px);overflow:hidden}
+.sek{position:relative;isolation:isolate;min-height:calc(calc(100 * var(--vh1)) - var(--nag) - var(--pasek,0px));display:flex;flex-direction:column;justify-content:flex-start;background:var(--sek-kolor,var(--bg));color:var(--tekst);padding:clamp(40px,calc(7 * var(--vh1)),72px) 0 clamp(56px,calc(9 * var(--vh1)),96px);overflow:hidden}
 .sek.t-jasny{color:var(--jasny)}
 .sek-tlo{position:absolute;inset:0;z-index:-2;background:var(--sek-kolor,var(--bg2))}
 .sek-tlo-img,.sek-tlo-wideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -123,7 +130,7 @@ em.akcent{font-family:var(--f-szer);font-size:1.12em;font-style:italic;color:var
 .wideo-pauza[aria-pressed="true"] span{width:0;height:0;border:0;border-left:12px solid var(--jasny);border-top:8px solid transparent;border-bottom:8px solid transparent;margin-left:4px}
 
 /* Pierwszy ekran */
-.sek-hero{min-height:100vh;min-height:100svh;justify-content:center;padding-top:calc(var(--nag) + var(--pasek,0px));text-align:center;justify-content:center}
+.sek-hero{min-height:calc(100 * var(--vh1));justify-content:center;padding-top:calc(var(--nag) + var(--pasek,0px));text-align:center;justify-content:center}
 .hero-in{display:flex;flex-direction:column;align-items:center}
 .hero-h1{display:flex;flex-direction:column;align-items:center;gap:.5em;font-weight:300}
 .hero-nazwa{font-size:clamp(3.1rem,1.4rem + 8.5vw,8rem);line-height:.95;font-weight:300;letter-spacing:-.01em}
@@ -322,7 +329,7 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 .prose h2{font-size:1.7rem;margin:1.8em 0 .5em}
 .prose-lead{font-family:var(--f-szer);font-size:1.4rem;line-height:1.45;color:var(--tekst2)}
 .prose-data{font-size:.9rem;color:var(--tekst2);margin-top:2.5em}
-.strona-404{min-height:80vh;display:flex;flex-direction:column;justify-content:center}
+.strona-404{min-height:calc(80 * var(--vh1));display:flex;flex-direction:column;justify-content:center}
 .strona-404 h1{font-size:clamp(2.6rem,1.8rem + 4vw,4.6rem);margin-bottom:.3em}
 .akcje-404{display:flex;flex-wrap:wrap;gap:10px;margin-top:1em}
 .podstrona .stopka{margin-top:0}
@@ -334,18 +341,17 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
    i dolnego paska na telefonie). Każda sekcja ma dokładnie tyle wysokości;
    gdyby treść się nie zmieściła, site.js delikatnie ją zmniejsza (zoom ≥ 0,85).
    ===================================================================== */
-:root{--dolny:0px;--pad-y:clamp(18px,4vh,52px);--wys:calc(100vh - var(--nag) - var(--pasek,0px) - var(--dolny))}
-@supports (height:100svh){:root{--wys:calc(100svh - var(--nag) - var(--pasek,0px) - var(--dolny))}}
+:root{--dolny:0px;--pad-y:clamp(18px,calc(4 * var(--vh1)),52px);--wys:calc(calc(100 * var(--vh1)) - var(--nag) - var(--pasek,0px) - var(--dolny))}
 .sek{min-height:var(--wys);padding:var(--pad-y) 0}
 .sek-hero{min-height:calc(var(--wys) + var(--nag) + var(--pasek,0px));padding:calc(var(--nag) + var(--pasek,0px)) 0 0}
-.sek h2{font-size:clamp(1.7rem,.9rem + 1.6vw + 1.6vh,3.2rem)}
+.sek h2{font-size:clamp(1.7rem,.9rem + 1.6vw + calc(1.6 * var(--vh1)),3.2rem)}
 .nadtytul{margin-bottom:.7em}
 .sek-wstep{margin-top:.6em;font-size:.98rem;max-width:70ch}
 .sek-wstep p{margin-bottom:.4em}
 .link-wiecej{margin:.2em 0 .8em}
 
 /* O mnie */
-.lead{font-size:clamp(1.08rem,.75rem + .55vw + .55vh,1.5rem);margin-top:.6em}
+.lead{font-size:clamp(1.08rem,.75rem + .55vw + calc(.55 * var(--vh1)),1.5rem);margin-top:.6em}
 .lead p{margin-bottom:.45em}
 .obszary{margin:.2em 0 .3em}
 .obszary ul{gap:5px}
@@ -360,19 +366,19 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 .wpis{scroll-snap-align:start}
 .wpis-foto img{max-height:calc(var(--wys) * .34);aspect-ratio:3/2}
 .wpis-tekst{padding:16px 18px 6px}
-.wpis h3{font-size:clamp(1.25rem,1rem + .5vw + .3vh,1.6rem)}
+.wpis h3{font-size:clamp(1.25rem,1rem + .5vw + calc(.3 * var(--vh1)),1.6rem)}
 .wpis-skrot,.wpis-tresc{font-size:.94rem}
 
 /* Kto fotografuje */
 .kadra{margin-top:1.1em;gap:24px}
-.osoba h3{font-size:clamp(1.5rem,1rem + 1.2vw + .7vh,2.4rem)}
+.osoba h3{font-size:clamp(1.5rem,1rem + 1.2vw + calc(.7 * var(--vh1)),2.4rem)}
 .osoba-tekst p,.osoba-tekst div{font-size:.98rem}
 
 /* Portfolio — mozaika: każde zdjęcie w swojej orientacji, strona = jeden ekran */
 .sek--portfolio{padding-bottom:var(--pad-y)}
 .port{display:flex;flex-direction:column;height:calc(var(--wys) - 2 * var(--pad-y))}
-.port-glowa{display:flex;flex-direction:row;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 28px;margin-bottom:clamp(10px,2vh,22px);flex:none}
-.sek--portfolio h2{font-size:clamp(1.55rem,.9rem + 1.3vw + 1.2vh,2.7rem);max-width:none}
+.port-glowa{display:flex;flex-direction:row;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 28px;margin-bottom:clamp(10px,calc(2 * var(--vh1)),22px);flex:none}
+.sek--portfolio h2{font-size:clamp(1.55rem,.9rem + 1.3vw + calc(1.2 * var(--vh1)),2.7rem);max-width:none}
 .port-tyt .nadtytul{margin-bottom:.45em}
 .filtry{gap:6px}
 .filtr{min-height:40px;padding:0 1em;font-size:.76rem}
@@ -395,7 +401,7 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 .moz-strona{flex:0 0 100%;height:100%;scroll-snap-align:start;display:flex;flex-direction:column;justify-content:center;align-items:center}
 .moz-wiersz{display:flex;flex:none}
 .mozaika--js .kafel{flex:none;aspect-ratio:auto}
-.mozaika-ster{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:clamp(8px,1.6vh,16px);flex:none}
+.mozaika-ster{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:clamp(8px,calc(1.6 * var(--vh1)),16px);flex:none}
 .moz-btn{width:44px;height:44px;border-radius:50%;border:1px solid currentColor;background:transparent;cursor:pointer;font-size:1.05rem;transition:background .25s,color .25s}
 .moz-btn:disabled{opacity:.3;cursor:default}
 .moz-btn:hover:not(:disabled){background:var(--jasny);color:var(--ciemne)}
@@ -421,7 +427,7 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 .pole label{font-size:.8rem;margin-bottom:3px}
 .pole input,.pole select{min-height:44px;padding:.45em .7em}
 .pole textarea{min-height:76px}
-.okno-mapa iframe{width:100%;height:min(60vh,480px);border:0;display:block}
+.okno-mapa iframe{width:100%;height:min(calc(60 * var(--vh1)),480px);border:0;display:block}
 
 @media (min-width:900px){
   .omnie{grid-template-columns:auto minmax(0,1fr);gap:clamp(28px,4vw,72px)}
@@ -441,7 +447,7 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 @media (max-width:899px){
   :root{--nag:60px;--dolny:64px}
   .marka{font-size:1.35rem}
-  .sek h2{font-size:clamp(1.55rem,1rem + 2.2vw + 1.2vh,2.4rem)}
+  .sek h2{font-size:clamp(1.55rem,1rem + 2.2vw + calc(1.2 * var(--vh1)),2.4rem)}
   .omnie{display:block}
   .omnie-foto{float:right;width:36%;max-width:190px;margin:4px 0 10px 16px}
   .omnie-foto img{width:100%;height:auto}
@@ -470,12 +476,12 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 
 /* niskie ekrany (małe telefony, laptopy 13") — ciaśniejsze odstępy zamiast mniejszego tekstu */
 @media (max-height:700px){
-  :root{--pad-y:clamp(12px,2.6vh,28px)}
+  :root{--pad-y:clamp(12px,calc(2.6 * var(--vh1)),28px)}
   .pasek-in{min-height:36px;font-size:.84rem}
   .pasek-lista a{min-height:36px}
   .nadtytul{margin-bottom:.45em;font-size:.72rem}
-  .sek h2{font-size:clamp(1.45rem,.9rem + 1.4vw + 1.2vh,2.6rem)}
-  .lead{font-size:clamp(1rem,.8rem + .4vw + .4vh,1.3rem)}
+  .sek h2{font-size:clamp(1.45rem,.9rem + 1.4vw + calc(1.2 * var(--vh1)),2.6rem)}
+  .lead{font-size:clamp(1rem,.8rem + .4vw + calc(.4 * var(--vh1)),1.3rem)}
   .akcje .btn{min-height:44px;padding:.45em 1em}
   .kontakt-info h3{margin:.6em 0 .2em;font-size:1.15rem}
   .wpis-tekst{padding:12px 14px 4px}
@@ -512,7 +518,7 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 .okno-form :focus-visible{outline-color:var(--glowny)}
 @media (min-width:900px){
   .kontakt{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr)}
-  .kontakt-obszar{padding-top:clamp(40px,9vh,110px)}
+  .kontakt-obszar{padding-top:clamp(40px,calc(9 * var(--vh1)),110px)}
 }
 @media (max-width:599px){
   #formularz{grid-template-columns:1fr}
@@ -536,7 +542,7 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
    HISTORIA — dwa warianty (panel → Historia → Układ sekcji)
    ===================================================================== */
 /* Wariant 1: oś czasu przewijana w poziomie (palcem, myszą, strzałkami) */
-.os-glowa{display:flex;align-items:flex-end;justify-content:space-between;gap:12px 28px;flex-wrap:wrap;margin-bottom:clamp(12px,3vh,34px)}
+.os-glowa{display:flex;align-items:flex-end;justify-content:space-between;gap:12px 28px;flex-wrap:wrap;margin-bottom:clamp(12px,calc(3 * var(--vh1)),34px)}
 .os-tyt{min-width:0;flex:1 1 420px}
 .os-ster{display:flex;gap:10px;flex:none}
 .os-ster[hidden]{display:none}
@@ -548,7 +554,7 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 .os.da-sie:not(.os--koniec){-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 90px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 90px),transparent)}
 .os.da-sie:not(.os--start):not(.os--koniec){-webkit-mask-image:linear-gradient(90deg,transparent,#000 60px,#000 calc(100% - 90px),transparent);mask-image:linear-gradient(90deg,transparent,#000 60px,#000 calc(100% - 90px),transparent)}
 .os.da-sie.os--koniec:not(.os--start){-webkit-mask-image:linear-gradient(90deg,transparent,#000 60px);mask-image:linear-gradient(90deg,transparent,#000 60px)}
-.os-postep{height:2px;background:rgba(var(--dekor-rgb),.35);margin:clamp(6px,1.4vh,14px) 0 0;position:relative;overflow:hidden;max-width:320px}
+.os-postep{height:2px;background:rgba(var(--dekor-rgb),.35);margin:clamp(6px,calc(1.4 * var(--vh1)),14px) 0 0;position:relative;overflow:hidden;max-width:320px}
 .os-postep span{position:absolute;left:0;top:0;bottom:0;background:var(--glowny);width:30%;transition:transform .2s}
 .os-postep[hidden]{display:none}
 .os.ciagnij{cursor:grabbing;scroll-snap-type:none;-webkit-user-select:none;user-select:none}
@@ -556,9 +562,9 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 .os-el{flex:0 0 clamp(280px,33vw,430px);scroll-snap-align:start;position:relative;padding-right:clamp(18px,2.4vw,34px);display:flex;flex-direction:column}
 .os--1 .os-el,.os--2 .os-el{flex-grow:1}
 .os--1 .os-el{max-width:760px}
-.os-rok{font-family:var(--f-szer);font-style:italic;font-size:clamp(2rem,.9rem + 2vw + 1.8vh,3.8rem);line-height:1;margin:0 0 .2em;color:var(--akcent);font-variant-numeric:lining-nums;white-space:nowrap}
+.os-rok{font-family:var(--f-szer);font-style:italic;font-size:clamp(2rem,.9rem + 2vw + calc(1.8 * var(--vh1)),3.8rem);line-height:1;margin:0 0 .2em;color:var(--akcent);font-variant-numeric:lining-nums;white-space:nowrap}
 .t-jasny .os-rok{color:var(--akcent-j)}
-.os-kropka{display:block;position:relative;height:22px;flex:none;margin-bottom:clamp(10px,2.2vh,22px)}
+.os-kropka{display:block;position:relative;height:22px;flex:none;margin-bottom:clamp(10px,calc(2.2 * var(--vh1)),22px)}
 .os-kropka::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--dekor)}
 .os-el:last-child .os-kropka::before{right:auto;width:70%;background:linear-gradient(90deg,var(--dekor),transparent)}
 .os-kropka::after{content:"";position:absolute;left:0;top:50%;width:15px;height:15px;margin-top:-7.5px;border-radius:50%;background:var(--bg);border:2px solid var(--glowny);box-shadow:0 0 0 6px rgba(var(--glowny-rgb),.14);transition:background .3s,transform .3s}
@@ -569,7 +575,7 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 .os-foto img{width:100%;aspect-ratio:3/2;max-height:calc(var(--wys) * .3);object-fit:cover;transition:transform 1s cubic-bezier(.2,.7,.2,1)}
 .os-el:hover .os-foto img{transform:scale(1.04)}
 .os-tekst{padding:14px 18px 8px}
-.os-karta h3{font-size:clamp(1.15rem,.85rem + .6vw + .45vh,1.55rem);margin-bottom:.35em}
+.os-karta h3{font-size:clamp(1.15rem,.85rem + .6vw + calc(.45 * var(--vh1)),1.55rem);margin-bottom:.35em}
 .os-opis{font-size:.92rem;line-height:1.55;color:var(--tekst2)}
 .os-opis p{margin-bottom:.5em}
 .os-karta .link-wiecej{margin:0 0 .5em;min-height:38px;font-size:.74rem}
@@ -582,11 +588,11 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 
 /* Wariant 2: jedna opowieść — duże zdjęcie + tekst + wyróżnienie */
 .opowiesc{display:grid;gap:clamp(18px,4vw,72px);align-items:start}
-.op-tekst{padding-top:clamp(0px,2vh,24px)}
+.op-tekst{padding-top:clamp(0px,calc(2 * var(--vh1)),24px)}
 .op-foto{margin:0;position:relative;justify-self:stretch}
 .op-foto img{width:100%;height:calc(var(--wys) * .34);object-fit:cover;border-radius:var(--r);box-shadow:var(--cien)}
 .op-foto::after{content:"";position:absolute;right:-12px;bottom:-12px;width:38%;height:38%;border-right:1px solid var(--dekor);border-bottom:1px solid var(--dekor);pointer-events:none}
-.op-tresc{font-family:var(--f-szer);font-size:clamp(1.08rem,.72rem + .6vw + .65vh,1.6rem);line-height:1.45;margin-top:.6em}
+.op-tresc{font-family:var(--f-szer);font-size:clamp(1.08rem,.72rem + .6vw + calc(.65 * var(--vh1)),1.6rem);line-height:1.45;margin-top:.6em}
 .op-tresc p{margin-bottom:.45em}
 .op-tresc{position:relative}
 .op-tresc--ucieta{overflow:hidden;-webkit-mask-image:linear-gradient(#000 calc(100% - 3.2em),transparent);mask-image:linear-gradient(#000 calc(100% - 3.2em),transparent)}
@@ -654,7 +660,7 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 }
 [data-motyw="terakota"] ::selection{background:var(--glowny);color:#fff}
 [data-motyw="terakota"] h1,[data-motyw="terakota"] h2,[data-motyw="terakota"] h3{font-weight:600;letter-spacing:-.02em;line-height:1.04}
-[data-motyw="terakota"] .sek h2{text-transform:uppercase;font-size:clamp(1.45rem,.75rem + 1.35vw + 1.35vh,2.9rem);letter-spacing:-.01em}
+[data-motyw="terakota"] .sek h2{text-transform:uppercase;font-size:clamp(1.45rem,.75rem + 1.35vw + calc(1.35 * var(--vh1)),2.9rem);letter-spacing:-.01em}
 [data-motyw="terakota"] .sek h2::after{content:"";display:block;width:64px;height:5px;background:var(--glowny);margin-top:.42em}
 [data-motyw="terakota"] .t-jasny h2::after{background:var(--akcent-j)}
 [data-motyw="terakota"] h3{font-weight:500}
@@ -725,7 +731,7 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 @media (max-height:700px){
   [data-motyw="terakota"] .sek h2::after{width:44px;height:3px;margin-top:.28em}
   [data-motyw="terakota"] .nadtytul{padding:.25em .7em}
-  [data-motyw="terakota"] .sek h2{font-size:clamp(1.3rem,.7rem + 1.2vw + 1.2vh,2.5rem)}
+  [data-motyw="terakota"] .sek h2{font-size:clamp(1.3rem,.7rem + 1.2vw + calc(1.2 * var(--vh1)),2.5rem)}
 }
 @media (max-height:660px){[data-motyw="terakota"] .sek h2::after{display:none}}
 
@@ -775,7 +781,7 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
    INSTAGRAM — zaproszenie do profilu (gdy posty są wyłączone w panelu)
    ===================================================================== */
 .igz{display:grid;gap:clamp(22px,5vw,88px);align-items:center}
-.igz-tresc{font-family:var(--f-szer);font-size:clamp(1.08rem,.75rem + .6vw + .6vh,1.55rem);line-height:1.45;margin-top:.7em}
+.igz-tresc{font-family:var(--f-szer);font-size:clamp(1.08rem,.75rem + .6vw + calc(.6 * var(--vh1)),1.55rem);line-height:1.45;margin-top:.7em}
 .igz-tresc p{margin-bottom:.4em}
 .igz-punkty{list-style:none;padding:0;margin:.9em 0 1.4em;display:grid;gap:.45em;font-size:.95rem}
 .igz-punkty li{display:flex;gap:.8em;align-items:center}
