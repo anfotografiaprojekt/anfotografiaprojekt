@@ -14,7 +14,7 @@
   /* ---------- Konfiguracja domeny: JEDYNE miejsce do podmiany ----------
    * Po zakupie domeny wpisz ją tutaj i uruchom: node narzedzia/zbuduj.mjs
    * (skrypt podmieni adres w index.html, sitemap.xml, robots.txt i podstronach). */
-  var DOMENA = 'https://[DOMENA]';
+  var DOMENA = 'https://annanfoto.pl';
   A.DOMENA = DOMENA;
   A.STREFA = 'Europe/Warsaw';
 

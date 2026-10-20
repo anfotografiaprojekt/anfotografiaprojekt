@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<script>(function(){var h=window.innerHeight||document.documentElement.clientHeight;if(h>200)document.documentElement.style.setProperty('--vh1',(h/100)+'px')})()</script>
+<script>(function(){var d=document.documentElement,h=window.innerHeight||d.clientHeight;if(h<=200)return;d.style.setProperty('--vh1',(h/100)+'px');[500,660,680,700].forEach(function(g){d.classList.toggle('h'+g,h<=g)})})()</script>
 <title data-ssr="title"><!--SSR:title--></title>
 <meta name="description" content="<!--SSR:description-->" data-ssr="description">
 <link rel="canonical" href="{{DOMENA}}/">

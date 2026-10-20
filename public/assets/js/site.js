@@ -738,9 +738,16 @@
     if (el.value.trim()) blad(el, bladPola(el));
   });
   /* stała wysokość ekranu dla CSS (--vh1) — patrz site.css; zmienia się tylko przy obrocie */
-  function ustawVh() { var h = window.innerHeight; if (h > 200) html.style.setProperty('--vh1', (h / 100) + 'px'); }
+  /* klasy .h500/.h660/.h680/.h700 zastępują @media (max-height:…) — przeliczane tylko przy obrocie,
+   * więc chowający się pasek przeglądarki (Messenger, Instagram, Safari) nie przełącza układu */
+  function ustawVh() {
+    var h = window.innerHeight; if (h <= 200) return;
+    html.style.setProperty('--vh1', (h / 100) + 'px');
+    [500, 660, 680, 700].forEach(function (g) { html.classList.toggle('h' + g, h <= g); });
+  }
   var tRes, szerPoprz = window.innerWidth, wysPoprz = window.innerHeight;
   window.addEventListener('resize', function () {
+    if (!dotyk) ustawVh();                                    // komputer: zmiana rozmiaru okna = nowy układ
     /* Telefon/tablet: zmiana samej wysokości okna to chowający się pasek adresu lub klawiatura —
      * nic nie przeliczamy (inaczej strona skakałaby podczas przewijania). Liczy się tylko obrót ekranu. */
     if (window.innerWidth === szerPoprz && (dotyk || Math.abs(window.innerHeight - wysPoprz) < 90)) return;
