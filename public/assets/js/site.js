@@ -737,6 +737,8 @@
     if (el.dataset.typ === 'telefon') telFormatuj(el);
     if (el.value.trim()) blad(el, bladPola(el));
   });
+  /* stała wysokość ekranu dla CSS (--vh1) — patrz site.css; zmienia się tylko przy obrocie */
+  function ustawVh() { var h = window.innerHeight; if (h > 200) html.style.setProperty('--vh1', (h / 100) + 'px'); }
   var tRes, szerPoprz = window.innerWidth, wysPoprz = window.innerHeight;
   window.addEventListener('resize', function () {
     /* Telefon/tablet: zmiana samej wysokości okna to chowający się pasek adresu lub klawiatura —
@@ -746,7 +748,7 @@
     tRes = setTimeout(function () {
       if (window.innerWidth === szerPoprz && (dotyk || Math.abs(window.innerHeight - wysPoprz) < 90)) return;
       szerPoprz = window.innerWidth; wysPoprz = window.innerHeight;
-      ustawPasek(); ustawBezp();
+      ustawVh(); ustawPasek(); ustawBezp();
       ulozMozaike(); initOs(); dopasuj();
     }, 160);
   }, { passive: true });
