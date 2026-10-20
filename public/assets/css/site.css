@@ -820,3 +820,11 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 [data-motyw="terakota"] .igk-av{border-radius:0}[data-motyw="terakota"] .igk-av img{border-radius:0}
 [data-motyw="noc"] .igk{border-color:rgba(var(--glowny-rgb),.3)}
 .sek--igz{justify-content:center}
+
+/* =====================================================================
+   STABILNOŚĆ NA iPHONE / SAFARI
+   — przewijanie wewnątrz okien (formularz, galeria, opisy) nie „przelewa się” na stronę pod spodem,
+   — na ekranach dotykowych strona pod otwartym oknem stoi w miejscu (po zamknięciu nie ma skoku).
+   ===================================================================== */
+dialog,dialog .okno-tresc,.menu-lista{overscroll-behavior:contain}
+@media (hover:none){html:has(dialog[open]){overflow:hidden}}

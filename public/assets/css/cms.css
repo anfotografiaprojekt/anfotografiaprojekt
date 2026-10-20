@@ -382,3 +382,10 @@ html.cmsp-otwarty,html.cmsp-otwarty body{overflow:hidden}
 .cmsp-pole-rzad{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:0 12px}
 .cmsp-mini-in .cmsp-podstrona{padding:60px 80px 80px!important;max-width:none}
 @media (max-width:600px){.cmsp-brak{flex-wrap:wrap}.cmsp-pole-rzad{grid-template-columns:1fr}}
+
+/* iPhone/iPad: pola z czcionką mniejszą niż 16 px powodują automatyczne powiększenie
+   ekranu przy kliknięciu (i „skok” całego widoku) — na ekranach dotykowych zawsze 16 px */
+@media (hover:none),(pointer:coarse),(max-width:899px){
+  [class*="cmsp"] input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),
+  [class*="cmsp"] select,[class*="cmsp"] textarea,dialog[class*="cmsp"] input,dialog[class*="cmsp"] select,dialog[class*="cmsp"] textarea{font-size:16px!important}
+}

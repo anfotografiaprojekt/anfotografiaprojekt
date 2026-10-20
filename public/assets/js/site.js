@@ -48,6 +48,7 @@
   function ustawMeta(sel, v) { var m = doc.querySelector(sel); if (m) m.setAttribute('content', v); }
   function renderuj(s, op) {
     op = op || {};
+    var k = op.bezInit ? null : zlapKotwice();
     site.state = s;
     site.lang = wybierzJezyk(s);
     var out = Rn.wszystko(s, { lang: site.lang });
@@ -67,9 +68,17 @@
     html.lang = site.lang;
     var meta = doc.querySelector('meta[name="anf-ssr"]');
     if (meta) meta.setAttribute('content', out.znacznik);
-    if (!op.bezInit) initDynamiczne();
+    if (!op.bezInit) { initDynamiczne(); if (k) popraw(k); }
   }
   site.renderuj = renderuj;
+  /* miejsce czytania przed podmianą treści (każda przeglądarka — podmiana całych sekcji) */
+  function zlapKotwice() {
+    if ((window.pageYOffset || 0) < 2) return null;
+    var gora = (parseFloat(getComputedStyle(html).getPropertyValue('--nag')) || 60) + 1;
+    var lista = doc.querySelectorAll('main > section[id]:not([hidden]), body > footer');
+    for (var i = 0; i < lista.length; i++) { var r = lista[i].getBoundingClientRect(); if (r.bottom > gora) return { id: lista[i].id, top: r.top }; }
+    return null;
+  }
 
   function aktualnyHtml(s) {
     var meta = doc.querySelector('meta[name="anf-ssr"]');
@@ -132,6 +141,49 @@
     html.style.setProperty('--bezp-dol', Math.min(40, sondaBezp.offsetHeight) + 'px');
   }
   var dotyk = window.matchMedia && matchMedia('(hover:none) and (pointer:coarse)').matches;
+  /* powrót fokusu po zamknięciu okna — bez przewijania strony (iOS przewijał do przycisku) */
+  function wrocFokus(el) { try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); } }
+
+  /* ---------- stabilne przewijanie (Safari / iPhone) ----------
+   * Chrome i Firefox same pilnują, żeby treść nie „uciekała”, gdy coś nad miejscem, które
+   * czytamy, zmieni wysokość (wczytana czcionka, zdjęcia z Instagrama, dopasowanie tekstu,
+   * odświeżenie treści). Safari tego nie robi (brak „scroll anchoring”) — stąd skoki.
+   * Tu zapamiętujemy sekcję widoczną u góry ekranu i po każdej zmianie wysokości
+   * wcześniejszych sekcji korygujemy przewinięcie o dokładnie tyle, o ile się przesunęła. */
+  var kotwica = null, obsRozm = null, korekta = false, rafKotw = 0;
+  var bezKotwic = !(window.CSS && CSS.supports && CSS.supports('overflow-anchor', 'auto'));
+  function sekcjeStrony() { return doc.querySelectorAll('main > section[id]:not([hidden]), body > footer'); }
+  function zapiszKotwice() {
+    rafKotw = 0;
+    if (korekta) return;
+    var gora = (parseFloat(getComputedStyle(html).getPropertyValue('--nag')) || 60) + 1, lista = sekcjeStrony();
+    kotwica = null;
+    if ((window.pageYOffset || 0) < 2) return;                   // na samej górze nic nie trzeba trzymać
+    for (var i = 0; i < lista.length; i++) {
+      var r = lista[i].getBoundingClientRect();
+      if (r.bottom > gora) { kotwica = { el: lista[i], id: lista[i].id, top: r.top }; return; }
+    }
+  }
+  function przewinBez(y) {                                       // natychmiast, bez płynnego przewijania
+    var pl = html.classList.contains('plynnie'); if (pl) html.classList.remove('plynnie');
+    korekta = true; window.scrollTo(0, y);
+    if (pl) html.classList.add('plynnie');
+    requestAnimationFrame(function () { korekta = false; zapiszKotwice(); });
+  }
+  function popraw(k) {
+    k = k || kotwica; if (!k) return;
+    var el = k.el && k.el.isConnected ? k.el : (k.id && doc.getElementById(k.id)); if (!el) return;
+    var d = el.getBoundingClientRect().top - k.top;
+    if (Math.abs(d) >= 1) przewinBez((window.pageYOffset || 0) + d);
+  }
+  function initKotwice() {
+    if (!bezKotwic || !('ResizeObserver' in window)) return;
+    if (obsRozm) obsRozm.disconnect();
+    obsRozm = new ResizeObserver(function () { if (!korekta) { popraw(); zapiszKotwice(); } });
+    sekcjeStrony().forEach(function (s) { obsRozm.observe(s); });
+    zapiszKotwice();
+  }
+  if (bezKotwic) window.addEventListener('scroll', function () { if (!rafKotw) rafKotw = requestAnimationFrame(zapiszKotwice); }, { passive: true });
 
   function initKropkiIMenu() {
     if (obsSekcji) obsSekcji.disconnect();
@@ -428,7 +480,7 @@
     el.querySelector('.lb-prev').addEventListener('click', function () { lbKrok(-1); });
     el.querySelector('.lb-next').addEventListener('click', function () { lbKrok(1); });
     el.addEventListener('keydown', function (e) { if (e.key === 'ArrowRight') lbKrok(1); if (e.key === 'ArrowLeft') lbKrok(-1); });
-    el.addEventListener('close', function () { if (lb.wrocDo) lb.wrocDo.focus(); });
+    el.addEventListener('close', function () { if (lb.wrocDo) wrocFokus(lb.wrocDo); });
     el.addEventListener('click', function (e) { if (e.target === el || e.target.classList.contains('lb-in')) el.close(); });
     var x0 = null;
     el.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
@@ -446,7 +498,7 @@
     oknoWroc = btn; okno.showModal(); okno.querySelector('.zamknij').focus();
   }
   if (okno) {
-    okno.addEventListener('close', function () { if (oknoWroc) oknoWroc.focus(); });
+    okno.addEventListener('close', function () { if (oknoWroc) wrocFokus(oknoWroc); });
     okno.addEventListener('click', function (e) { if (e.target === okno) okno.close(); });
   }
 
@@ -478,10 +530,11 @@
   function otworzFormularz(btn) {
     var d = doc.getElementById('kontakt-form'); if (!d || !d.showModal) return;
     formWroc = btn; d.showModal();
-    var p = d.querySelector('#f-imie'); if (p) p.focus();
+    /* na telefonie nie otwieramy od razu klawiatury (iOS przesuwa wtedy i powiększa widok) */
+    var p = dotyk ? d.querySelector('.zamknij') : d.querySelector('#f-imie'); if (p) p.focus({ preventScroll: true });
     if (!d._nasluch) {
       d._nasluch = true;
-      d.addEventListener('close', function () { if (formWroc) formWroc.focus(); });
+      d.addEventListener('close', function () { if (formWroc) wrocFokus(formWroc); });
       d.addEventListener('click', function (e) { if (e.target === d) d.close(); });
     }
   }
@@ -701,14 +754,14 @@
 
   function initDynamiczne() {
     ustawPasek(); ustawBezp(); initNaglowek(); initKropkiIMenu(); initAnimacje(); initPasek(); initWideo(); initInstagram();
-    moz.strona = 0; ulozMozaike(); initOs(); dopasuj();
+    moz.strona = 0; ulozMozaike(); initOs(); dopasuj(); initKotwice();
   }
 
   /* ---------- start ---------- */
   if (!reduced) html.classList.add('plynnie');
   if (!aktualnyHtml(state)) renderuj(state, { bezInit: true });
   initDynamiczne();
-  var proby = 0;
+  var proby = 0, lokalnyByl = false;
   function sprawdzSerwer() {
     wczytaj().then(function (s) {
       if (!s) return;
@@ -718,9 +771,14 @@
           return;
         }
         try { localStorage.removeItem('anf-zapis'); } catch (e) { }
-        lokalny = null;
+        lokalny = null; lokalnyByl = true;
       }
-      if (site.hash(s) !== site.hash(site.state) || !aktualnyHtml(s)) renderuj(s);
+      /* Strona przyszła już z aktualną treścią z serwera (SSR). Odpowiedź API bywa przez chwilę
+       * starsza (pamięć podręczna serwerów) — wtedy jej nie używamy, żeby treść nie podmieniała się
+       * pod palcem. Podmiana tylko, gdy serwer ma nowszą wersję albo zmieniła się data/język. */
+      var nowsza = !zapSerwera || lokalnyByl || (site.zapisanoSerwer && site.zapisanoSerwer > zapSerwera);
+      var cel = nowsza ? s : site.state;
+      if (site.hash(cel) !== site.hash(site.state) || !aktualnyHtml(cel)) renderuj(cel);
     });
   }
   sprawdzSerwer();
