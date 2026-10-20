@@ -467,27 +467,29 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
   .klodka{bottom:calc(var(--dolny) + 12px)}
 }
 /* telefon poziomo / bardzo niskie okna: bez dolnego paska, sekcje mogą rosnąć */
-@media (max-height:500px){
-  :root{--dolny:0px}
-  .dolny{display:none!important}
-  body{padding-bottom:0!important}
-  .klodka{bottom:12px}
-}
+/* dawniej @media (max-height:500px) — klasa .h500 ustawiana raz (stała wysokość ekranu) */
+
+  :root:where(.h500){--dolny:0px}
+  :where(.h500) .dolny{display:none!important}
+  :where(.h500) body{padding-bottom:0!important}
+  :where(.h500) .klodka{bottom:12px}
+
 
 /* niskie ekrany (małe telefony, laptopy 13") — ciaśniejsze odstępy zamiast mniejszego tekstu */
-@media (max-height:700px){
-  :root{--pad-y:clamp(12px,calc(2.6 * var(--vh1)),28px)}
-  .pasek-in{min-height:36px;font-size:.84rem}
-  .pasek-lista a{min-height:36px}
-  .nadtytul{margin-bottom:.45em;font-size:.72rem}
-  .sek h2{font-size:clamp(1.45rem,.9rem + 1.4vw + calc(1.2 * var(--vh1)),2.6rem)}
-  .lead{font-size:clamp(1rem,.8rem + .4vw + calc(.4 * var(--vh1)),1.3rem)}
-  .akcje .btn{min-height:44px;padding:.45em 1em}
-  .kontakt-info h3{margin:.6em 0 .2em;font-size:1.15rem}
-  .wpis-tekst{padding:12px 14px 4px}
-  .wpis-foto img{max-height:calc(var(--wys) * .28)}
-  .osoba-rola{margin:.2em 0 .5em}
-}
+/* dawniej @media (max-height:700px) — klasa .h700 ustawiana raz (stała wysokość ekranu) */
+
+  :root:where(.h700){--pad-y:clamp(12px,calc(2.6 * var(--vh1)),28px)}
+  :where(.h700) .pasek-in{min-height:36px;font-size:.84rem}
+  :where(.h700) .pasek-lista a{min-height:36px}
+  :where(.h700) .nadtytul{margin-bottom:.45em;font-size:.72rem}
+  :where(.h700) .sek h2{font-size:clamp(1.45rem,.9rem + 1.4vw + calc(1.2 * var(--vh1)),2.6rem)}
+  :where(.h700) .lead{font-size:clamp(1rem,.8rem + .4vw + calc(.4 * var(--vh1)),1.3rem)}
+  :where(.h700) .akcje .btn{min-height:44px;padding:.45em 1em}
+  :where(.h700) .kontakt-info h3{margin:.6em 0 .2em;font-size:1.15rem}
+  :where(.h700) .wpis-tekst{padding:12px 14px 4px}
+  :where(.h700) .wpis-foto img{max-height:calc(var(--wys) * .28)}
+  :where(.h700) .osoba-rola{margin:.2em 0 .5em}
+
 
 /* ---------- Kontakt: kanały pod sobą + formularz w osobnym oknie ---------- */
 .kontakt{display:grid;gap:clamp(20px,4vw,72px);align-items:start}
@@ -525,18 +527,20 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
   dialog.okno-form{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0}
   .okno-form .okno-glowa{padding-top:calc(12px + env(safe-area-inset-top))}
 }
-@media (max-height:700px){.kanal-a{min-height:50px;padding:5px 12px 5px 6px}.kanal-ik{width:36px;height:36px}}
+/* dawniej @media (max-height:700px) — klasa .h700 ustawiana raz (stała wysokość ekranu) */
+:where(.h700) .kanal-a{min-height:50px;padding:5px 12px 5px 6px}:where(.h700) .kanal-ik{width:36px;height:36px}
 .okno-form .btn--glowny{background:var(--glowny);color:var(--na-glownym)}
 .okno-form .btn--glowny:hover{background:var(--glowny-h)}
-@media (max-height:680px){
-  .kanaly{gap:6px;margin-top:.7em}
-  .kanal-a{min-height:46px;padding:4px 10px 4px 5px;gap:10px}
-  .kanal-ik{width:32px;height:32px}
-  .kanal-ik-svg{width:18px;height:18px}
-  .kontakt{gap:14px}
-  .kontakt-obszar h3{font-size:1.1rem}
-  .kontakt-obszar p,.miasta{font-size:.92rem;margin-bottom:.2em}
-}
+/* dawniej @media (max-height:680px) — klasa .h680 ustawiana raz (stała wysokość ekranu) */
+
+  :where(.h680) .kanaly{gap:6px;margin-top:.7em}
+  :where(.h680) .kanal-a{min-height:46px;padding:4px 10px 4px 5px;gap:10px}
+  :where(.h680) .kanal-ik{width:32px;height:32px}
+  :where(.h680) .kanal-ik-svg{width:18px;height:18px}
+  :where(.h680) .kontakt{gap:14px}
+  :where(.h680) .kontakt-obszar h3{font-size:1.1rem}
+  :where(.h680) .kontakt-obszar p,:where(.h680) .miasta{font-size:.92rem;margin-bottom:.2em}
+
 
 /* =====================================================================
    HISTORIA — dwa warianty (panel → Historia → Układ sekcji)
@@ -584,7 +588,8 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
   .os--1 .os-el{flex-basis:100%}
   .os-ster .moz-btn{width:40px;height:40px}
 }
-@media (max-height:700px){.os-foto img{max-height:calc(var(--wys) * .26)}.os-tekst{padding:10px 14px 4px}}
+/* dawniej @media (max-height:700px) — klasa .h700 ustawiana raz (stała wysokość ekranu) */
+:where(.h700) .os-foto img{max-height:calc(var(--wys) * .26)}:where(.h700) .os-tekst{padding:10px 14px 4px}
 
 /* Wariant 2: jedna opowieść — duże zdjęcie + tekst + wyróżnienie */
 .opowiesc{display:grid;gap:clamp(18px,4vw,72px);align-items:start}
@@ -728,12 +733,14 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 [data-motyw="noc"] .kanal--glowny .kanal-ik{background:var(--na-glownym);color:var(--glowny)}
 [data-motyw="noc"] .hero-nazwa{font-weight:300;letter-spacing:.01em}
 [data-motyw="terakota"] .op-foto::after{display:none}
-@media (max-height:700px){
-  [data-motyw="terakota"] .sek h2::after{width:44px;height:3px;margin-top:.28em}
-  [data-motyw="terakota"] .nadtytul{padding:.25em .7em}
-  [data-motyw="terakota"] .sek h2{font-size:clamp(1.3rem,.7rem + 1.2vw + calc(1.2 * var(--vh1)),2.5rem)}
-}
-@media (max-height:660px){[data-motyw="terakota"] .sek h2::after{display:none}}
+/* dawniej @media (max-height:700px) — klasa .h700 ustawiana raz (stała wysokość ekranu) */
+
+  :where(.h700)[data-motyw="terakota"] .sek h2::after{width:44px;height:3px;margin-top:.28em}
+  :where(.h700)[data-motyw="terakota"] .nadtytul{padding:.25em .7em}
+  :where(.h700)[data-motyw="terakota"] .sek h2{font-size:clamp(1.3rem,.7rem + 1.2vw + calc(1.2 * var(--vh1)),2.5rem)}
+
+/* dawniej @media (max-height:660px) — klasa .h660 ustawiana raz (stała wysokość ekranu) */
+:where(.h660)[data-motyw="terakota"] .sek h2::after{display:none}
 
 /* ---------- Formularz: telefon z numerem kierunkowym, podpowiedzi ---------- */
 .tel{display:flex;gap:6px;align-items:stretch}
@@ -761,7 +768,8 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
 .pasek-lista li{min-width:0}
 .pasek-lista a{display:flex;max-width:100%;min-height:44px;white-space:nowrap}
 .pasek-lista strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media (max-height:700px){.pasek{height:36px}.pasek-lista a{min-height:36px}}
+/* dawniej @media (max-height:700px) — klasa .h700 ustawiana raz (stała wysokość ekranu) */
+:where(.h700) .pasek{height:36px}:where(.h700) .pasek-lista a{min-height:36px}
 /* na ekranach dotykowych treść jest widoczna od razu (bez wsuwania) */
 @media (hover:none),(max-width:899px){
   .anim .sek:not(.sek-hero):not(.widac) .sek-in > *{opacity:1;transform:none}
@@ -818,7 +826,8 @@ dialog.lightbox::backdrop{background:rgba(var(--ciemne-rgb),.96)}
   .igz-punkty{margin:.6em 0 1em;font-size:.9rem}
   .igz-logo-ik{width:54px;height:54px}
 }
-@media (max-height:700px){.igz-punkty{display:none}}
+/* dawniej @media (max-height:700px) — klasa .h700 ustawiana raz (stała wysokość ekranu) */
+:where(.h700) .igz-punkty{display:none}
 [data-motyw="terakota"] .igz-handle,[data-motyw="terakota"] .igz-tresc{font-family:var(--f-tekst);font-style:normal}
 [data-motyw="terakota"] .igz-handle{font-weight:600}
 [data-motyw="terakota"] .igz-logo-ik{border-radius:0}

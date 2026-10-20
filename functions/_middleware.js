@@ -6,6 +6,7 @@ import '../public/assets/js/dane.js';
 import '../public/assets/js/render.js';
 
 const POMIN = /^\/(api|assets)\//;
+const STARY_ADRES = /^anfotografiaprojekt\.pages\.dev$/i;
 
 function zPrefiksem(html, prefix) {
   return html.replace(/href="#/g, `href="${prefix}#`).replace(/href="polityka-prywatnosci\.html/g, `href="${prefix}polityka-prywatnosci.html`);
@@ -14,6 +15,10 @@ function zPrefiksem(html, prefix) {
 export async function onRequest(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
+  /* Stary adres próbny → docelowa domena (301). Podglądy wersji (xxx.anfotografiaprojekt.pages.dev) działają dalej. */
+  if (STARY_ADRES.test(url.hostname) && (request.method === 'GET' || request.method === 'HEAD') && !url.pathname.startsWith('/api/')) {
+    return Response.redirect(globalThis.ANF.DOMENA.replace(/\/$/, '') + url.pathname + url.search, 301);
+  }
   if (request.method !== 'GET' || POMIN.test(url.pathname)) return next();
   const odp = await next();
   const ct = odp.headers.get('Content-Type') || '';

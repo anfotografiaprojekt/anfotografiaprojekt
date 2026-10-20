@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://[DOMENA]/sitemap.xml
+Sitemap: https://annanfoto.pl/sitemap.xml
